@@ -5,6 +5,7 @@ export default function AuthForm({ isSignUp = false }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
+  const [storeNumber, setStoreNumber] = useState("");
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
 
@@ -20,6 +21,14 @@ export default function AuthForm({ isSignUp = false }) {
       return;
     }
 
+    // Validate store number
+    const storeNum = parseInt(storeNumber, 10);
+    if (isNaN(storeNum) || storeNum <= 0) {
+      setError("Please enter a valid store number.");
+      setLoading(false);
+      return;
+    }
+
     try {
       if (isSignUp) {
         // Sign up user
@@ -30,19 +39,18 @@ export default function AuthForm({ isSignUp = false }) {
 
         if (signUpError) throw signUpError;
 
-        // Ensure user is inserted into agents table
+        // Insert user into agents table
         const { error: agentError } = await supabase.from("agents").insert([
           {
             email,
             name,
+            store_number: storeNum,
             role: "agent", // Default role
-            store_number: null, // Can be updated by admins later
             status: "offline",
           },
         ]);
 
         if (agentError) throw agentError;
-
       } else {
         // Log in user
         const { error: signInError } = await supabase.auth.signInWithPassword({
@@ -60,44 +68,58 @@ export default function AuthForm({ isSignUp = false }) {
   };
 
   return (
-    <div className="max-w-md mx-auto bg-white p-6 rounded-lg shadow-md">
-      <h2 className="text-2xl font-bold mb-4">{isSignUp ? "Sign Up" : "Login"}</h2>
-      {error && <p className="text-red-500">{error}</p>}
-      <form onSubmit={handleAuth} className="space-y-4">
-        {isSignUp && (
+    <div className="min-h-screen flex items-center justify-center bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-white">
+      <div className="max-w-md w-full bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md">
+        <h2 className="text-2xl font-bold text-center mb-4 bg-blue-600 text-white p-3 rounded-md">
+          {isSignUp ? "Create Your Account" : "Login to Your Account"}
+        </h2>
+        {error && <p className="text-red-500 text-center">{error}</p>}
+        <form onSubmit={handleAuth} className="space-y-4">
+          {isSignUp && (
+            <>
+              <input
+                type="text"
+                placeholder="Full Name"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                required
+                className="w-full p-3 border rounded-md focus:ring-2 focus:ring-blue-500"
+              />
+              <input
+                type="number"
+                placeholder="Store Number"
+                value={storeNumber}
+                onChange={(e) => setStoreNumber(e.target.value)}
+                required
+                className="w-full p-3 border rounded-md focus:ring-2 focus:ring-blue-500"
+              />
+            </>
+          )}
           <input
-            type="text"
-            placeholder="Full Name"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
+            type="email"
+            placeholder="Email Address"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
             required
-            className="w-full p-2 border rounded"
+            className="w-full p-3 border rounded-md focus:ring-2 focus:ring-blue-500"
           />
-        )}
-        <input
-          type="email"
-          placeholder="Email Address"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          required
-          className="w-full p-2 border rounded"
-        />
-        <input
-          type="password"
-          placeholder="Password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          required
-          className="w-full p-2 border rounded"
-        />
-        <button
-          type="submit"
-          disabled={loading}
-          className="w-full bg-blue-500 text-white p-2 rounded"
-        >
-          {loading ? "Processing..." : isSignUp ? "Sign Up" : "Login"}
-        </button>
-      </form>
+          <input
+            type="password"
+            placeholder="Password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+            className="w-full p-3 border rounded-md focus:ring-2 focus:ring-blue-500"
+          />
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full bg-blue-600 hover:bg-blue-700 text-white p-3 rounded-md transition duration-300"
+          >
+            {loading ? "Processing..." : isSignUp ? "Sign Up" : "Login"}
+          </button>
+        </form>
+      </div>
     </div>
   );
 }
