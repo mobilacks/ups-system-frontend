@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { supabase } from "../lib/supabase";
 import { useRouter } from "next/router";
+import "../styles/globals.css";
 
 export default function MyApp({ Component, pageProps }) {
   const [session, setSession] = useState(null);
@@ -16,11 +17,15 @@ export default function MyApp({ Component, pageProps }) {
     
     const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
-      if (session) router.push("/dashboard"); // Redirect to dashboard
+      if (session) router.push("/dashboard");
     });
 
     return () => listener?.subscription.unsubscribe();
   }, []);
 
-  return <Component {...pageProps} />;
+  return (
+    <div className="font-roboto">
+      <Component {...pageProps} />
+    </div>
+  );
 }
