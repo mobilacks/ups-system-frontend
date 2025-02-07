@@ -93,6 +93,9 @@ export default function AuthForm({ isSignUp = false }) {
           .eq("email", email)
           .select();
 
+        console.log("🛠️ SQL Query Response:", updateData);
+        console.log("⚠️ SQL Query Error (if any):", updateError);
+
         if (updateError) {
           console.error("⚠️ Failed to update agent status:", updateError);
         } else {
