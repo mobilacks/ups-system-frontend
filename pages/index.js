@@ -1,3 +1,12 @@
+import { useEffect } from "react";
+import { useRouter } from "next/router";
+
 export default function Home() {
-  return <h1>Welcome to UPS System</h1>;
+  const router = useRouter();
+
+  useEffect(() => {
+    router.replace("/login"); // Redirect to /login
+  }, []);
+
+  return null; // No content needed, it redirects instantly
 }
