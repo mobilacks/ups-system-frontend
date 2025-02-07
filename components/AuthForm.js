@@ -94,6 +94,7 @@ export default function AuthForm({ isSignUp = false }) {
 
         console.log("🔍 Raw Supabase Response:", existingAgent);
         console.log("⚠️ Fetch Error (if any):", fetchError);
+        console.log("🔍 Searching for email:", email.toLowerCase());
 
         if (existingAgent.length > 0) {
           const { data: updateResponse, error: updateError } = await supabase
