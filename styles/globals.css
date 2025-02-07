@@ -9,28 +9,70 @@
   font-family: "Roboto", sans-serif;
 }
 
+/* ✅ Dark & Light Mode Support */
+:root {
+  --bg-light: #f4f4f4;
+  --bg-dark: #1e1e1e;
+  --text-light: #000;
+  --text-dark: #fff;
+  --primary-color: #007bff;
+  --border-radius: 10px;
+}
+
+/* ✅ Default Light Mode */
+body {
+  background-color: var(--bg-light);
+  color: var(--text-light);
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* ✅ Dark Mode */
+@media (prefers-color-scheme: dark) {
+  body {
+    background-color: var(--bg-dark);
+    color: var(--text-dark);
+  }
+}
+
 /* ✅ Center Forms */
 .auth-container {
   display: flex;
   justify-content: center;
   align-items: center;
   height: 100vh;
-  background-color: #f4f4f4;
+  background-color: var(--bg-light);
+  transition: background-color 0.3s ease;
 }
 
+@media (prefers-color-scheme: dark) {
+  .auth-container {
+    background-color: var(--bg-dark);
+  }
+}
+
+/* ✅ Auth Box */
 .auth-box {
   background: white;
   padding: 20px;
-  border-radius: 10px;
+  border-radius: var(--border-radius);
   box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
   width: 100%;
   max-width: 400px;
   text-align: center;
+  transition: background 0.3s ease, color 0.3s ease;
+}
+
+@media (prefers-color-scheme: dark) {
+  .auth-box {
+    background: #2a2a2a;
+    color: white;
+    box-shadow: 0px 4px 6px rgba(255, 255, 255, 0.1);
+  }
 }
 
 /* ✅ Headings */
 h2 {
-  background-color: #007bff;
+  background-color: var(--primary-color);
   color: white;
   padding: 10px;
   border-radius: 5px;
@@ -44,13 +86,22 @@ input {
   margin: 10px 0;
   border: 1px solid #ccc;
   border-radius: 5px;
+  transition: background 0.3s ease, color 0.3s ease;
+}
+
+@media (prefers-color-scheme: dark) {
+  input {
+    background: #333;
+    color: white;
+    border: 1px solid #555;
+  }
 }
 
 /* ✅ Buttons */
 button {
   width: 100%;
   padding: 10px;
-  background-color: #007bff;
+  background-color: var(--primary-color);
   color: white;
   border: none;
   border-radius: 5px;
