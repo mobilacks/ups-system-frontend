@@ -21,12 +21,14 @@ export default function AuthForm({ isSignUp = false }) {
       return;
     }
 
-    // Validate store number
-    const storeNum = parseInt(storeNumber, 10);
-    if (isNaN(storeNum) || storeNum <= 0) {
-      setError("Please enter a valid store number.");
-      setLoading(false);
-      return;
+    // Only validate store number for signup
+    if (isSignUp) {
+      const storeNum = parseInt(storeNumber, 10);
+      if (isNaN(storeNum) || storeNum <= 0) {
+        setError("Please enter a valid store number.");
+        setLoading(false);
+        return;
+      }
     }
 
     try {
@@ -52,7 +54,7 @@ export default function AuthForm({ isSignUp = false }) {
           {
             email,
             name,
-            store_number: storeNum,
+            store_number: isSignUp ? parseInt(storeNumber, 10) : null, // Store number only for signup
             role: "agent",
             status: "offline",
           },
