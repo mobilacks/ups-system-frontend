@@ -90,7 +90,7 @@ export default function AuthForm({ isSignUp = false }) {
         const { data: existingAgent, error: fetchError } = await supabase
           .from("agents")
           .select("*") // Fetch all columns for debugging
-          .eq("email", email);
+          .ilike("email", email);  // Case-insensitive search
 
         console.log("🔍 Agent lookup result:", existingAgent);
         console.log("⚠️ Fetch Error (if any):", fetchError);
