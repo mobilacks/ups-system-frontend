@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { useRouter } from "next/router"; // Import Next.js router for navigation
+import { useState, useEffect } from "react";
+import { useRouter } from "next/router";
 import { supabase } from "../lib/supabase";
 
 export default function AuthForm({ isSignUp = false }) {
@@ -9,35 +9,25 @@ export default function AuthForm({ isSignUp = false }) {
   const [storeNumber, setStoreNumber] = useState("");
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
-  const router = useRouter(); // Initialize Next.js router
+  const router = useRouter();
 
+  // ✅ Handle Authentication (Login & Signup)
   const handleAuth = async (event) => {
     event.preventDefault();
     setError(null);
     setLoading(true);
 
-    // Validate email domain
     if (!email.endsWith("@lacksvalley.com")) {
       setError("You must use a valid Lacks email address");
       setLoading(false);
       return;
     }
 
-    // Only validate store number for signup
-    if (isSignUp) {
-      const storeNum = parseInt(storeNumber, 10);
-      if (isNaN(storeNum) || storeNum <= 0) {
-        setError("Please enter a valid store number.");
-        setLoading(false);
-        return;
-      }
-    }
-
     try {
       if (isSignUp) {
+        // ✅ SIGNUP FLOW
         console.log("🚀 Attempting user signup...");
-        
-        // Sign up user
+
         const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
           email,
           password,
@@ -50,13 +40,13 @@ export default function AuthForm({ isSignUp = false }) {
 
         console.log("✅ Signup successful:", signUpData);
 
-        // Insert user into agents table
+        // ✅ Insert user into agents table
         console.log("🚀 Inserting user into agents table...");
-        const { data: agentData, error: agentError } = await supabase.from("agents").insert([
+        const { error: agentError } = await supabase.from("agents").insert([
           {
             email,
             name,
-            store_number: isSignUp ? parseInt(storeNumber, 10) : null, // Store number only for signup
+            store_number: parseInt(storeNumber, 10),
             role: "agent",
             status: "offline",
           },
@@ -67,13 +57,12 @@ export default function AuthForm({ isSignUp = false }) {
           throw agentError;
         }
 
-        console.log("✅ Agent inserted successfully:", agentData);
-
+        console.log("✅ Agent inserted successfully");
       } else {
+        // ✅ LOGIN FLOW
         console.log("🚀 Attempting login...");
-        
-        // Log in user
-        const { error: signInError } = await supabase.auth.signInWithPassword({
+
+        const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
           email,
           password,
         });
@@ -83,23 +72,23 @@ export default function AuthForm({ isSignUp = false }) {
           throw signInError;
         }
 
-        console.log("✅ Login successful");
+        console.log("✅ Login successful", signInData);
 
         // ✅ Update agent status to "online"
+        console.log("🔄 Updating agent status to online...");
         const { error: updateError } = await supabase
           .from("agents")
           .update({ status: "online" })
           .eq("email", email);
 
         if (updateError) {
-          console.error("❌ Error updating status:", updateError);
+          console.error("❌ Error updating agent status:", updateError);
         } else {
           console.log("✅ Agent status updated to online");
         }
       }
 
-      // ✅ Redirect to Dashboard on Success
-      router.push("/dashboard");
+      router.push("/dashboard"); // Redirect to dashboard
 
     } catch (err) {
       console.error("🚨 Error:", err.message);
@@ -109,15 +98,26 @@ export default function AuthForm({ isSignUp = false }) {
     }
   };
 
-  // ✅ Logout function to update status before signing out
+  // ✅ Handle Logout
   const handleLogout = async () => {
-    const { data: user } = await supabase.auth.getUser();
-    
-    if (user && user.email) {
-        await supabase
-            .from("agents")
-            .update({ status: "offline" })
-            .eq("email", user.email);
+    console.log("🚀 Logging out...");
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (user) {
+      // ✅ Update agent status to "offline" before logging out
+      console.log("🔄 Setting agent status to offline...");
+      const { error } = await supabase
+        .from("agents")
+        .update({ status: "offline" })
+        .eq("email", user.email);
+
+      if (error) {
+        console.error("❌ Error updating agent status:", error);
+      } else {
+        console.log("✅ Agent status updated to offline");
+      }
     }
 
     await supabase.auth.signOut();
@@ -166,7 +166,11 @@ export default function AuthForm({ isSignUp = false }) {
             {loading ? "Processing..." : isSignUp ? "Sign Up" : "Login"}
           </button>
         </form>
-        <button onClick={handleLogout} className="logout-button">Logout</button>
+        {!isSignUp && (
+          <button onClick={handleLogout} className="logout-button">
+            Logout
+          </button>
+        )}
       </div>
     </div>
   );
