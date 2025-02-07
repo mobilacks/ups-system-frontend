@@ -86,10 +86,10 @@ export default function AuthForm({ isSignUp = false }) {
         console.log("✅ Login successful");
 
         // ✅ UPDATE AGENT STATUS TO ONLINE ON LOGIN
-        console.log("🔍 Checking if agent exists before update...");
+        console.log("🔍 Checking if agent exists before update with email:", email);
         const { data: existingAgent, error: fetchError } = await supabase
           .from("agents")
-          .select("email, status")
+          .select("*") // Fetch all columns for debugging
           .eq("email", email);
 
         console.log("🔍 Agent lookup result:", existingAgent);
