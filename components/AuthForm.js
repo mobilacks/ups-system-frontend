@@ -85,28 +85,16 @@ export default function AuthForm({ isSignUp = false }) {
 
         console.log("✅ Login successful");
 
-        // ✅ UPDATE AGENT STATUS TO ONLINE ON LOGIN
-        console.log("🔍 Checking if agent exists before update with email:", email);
-        const { data: existingAgent, error: fetchError } = await supabase
+        // ✅ Update agent status to "online"
+        const { error: updateError } = await supabase
           .from("agents")
-          .select("*") // Fetch all columns for debugging
-          .ilike("email", email);  // Case-insensitive search
+          .update({ status: "online" })
+          .eq("email", email);
 
-        console.log("🔍 Raw Supabase Response:", existingAgent);
-        console.log("⚠️ Fetch Error (if any):", fetchError);
-        console.log("🔍 Searching for email:", email.toLowerCase());
-
-        if (existingAgent.length > 0) {
-          const { data: updateResponse, error: updateError } = await supabase
-            .from("agents")
-            .update({ status: "online" })
-            .eq("email", email)
-            .select();
-
-          console.log("🛠️ SQL Query Response:", updateResponse);
-          console.log("⚠️ SQL Query Error (if any):", updateError);
+        if (updateError) {
+          console.error("❌ Error updating status:", updateError);
         } else {
-          console.error("❌ No matching agent found in the database!");
+          console.log("✅ Agent status updated to online");
         }
       }
 
@@ -119,6 +107,21 @@ export default function AuthForm({ isSignUp = false }) {
     } finally {
       setLoading(false);
     }
+  };
+
+  // ✅ Logout function to update status before signing out
+  const handleLogout = async () => {
+    const { data: user } = await supabase.auth.getUser();
+    
+    if (user && user.email) {
+        await supabase
+            .from("agents")
+            .update({ status: "offline" })
+            .eq("email", user.email);
+    }
+
+    await supabase.auth.signOut();
+    router.push("/login");
   };
 
   return (
@@ -163,6 +166,7 @@ export default function AuthForm({ isSignUp = false }) {
             {loading ? "Processing..." : isSignUp ? "Sign Up" : "Login"}
           </button>
         </form>
+        <button onClick={handleLogout} className="logout-button">Logout</button>
       </div>
     </div>
   );
