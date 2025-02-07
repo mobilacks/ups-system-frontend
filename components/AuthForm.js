@@ -92,7 +92,7 @@ export default function AuthForm({ isSignUp = false }) {
           .select("*") // Fetch all columns for debugging
           .ilike("email", email);  // Case-insensitive search
 
-        console.log("🔍 Agent lookup result:", existingAgent);
+        console.log("🔍 Raw Supabase Response:", existingAgent);
         console.log("⚠️ Fetch Error (if any):", fetchError);
 
         if (existingAgent.length > 0) {
