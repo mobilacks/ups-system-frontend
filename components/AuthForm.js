@@ -112,28 +112,50 @@ export default function AuthForm({ isSignUp = false }) {
   // ✅ Handle Logout
   const handleLogout = async () => {
     console.log("🚀 Logging out...");
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
+    
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    
+    if (userError || !user) {
+      console.error("❌ Error fetching user data:", userError);
+      return;
+    }
 
-    if (user) {
-      // ✅ Update agent status to "offline" before logging out
+    console.log(`🔍 Checking agent before logout: ${user.email}`);
+    
+    const { data: agentData, error: agentFetchError } = await supabase
+      .from("agents")
+      .select("email")
+      .eq("email", user.email)
+      .single();
+
+    if (agentFetchError || !agentData) {
+      console.error("❌ No matching agent found:", agentFetchError);
+    } else {
+      // ✅ Update agent status to "offline"
       console.log("🔄 Setting agent status to offline...");
-      const { error } = await supabase
+      const { error: updateError } = await supabase
         .from("agents")
         .update({ status: "offline" })
         .eq("email", user.email);
 
-      if (error) {
-        console.error("❌ Error updating agent status:", error);
+      if (updateError) {
+        console.error("❌ Error updating agent status:", updateError);
       } else {
         console.log("✅ Agent status updated to offline");
       }
     }
 
-    await supabase.auth.signOut();
-    setIsLoggedIn(false);
-    router.push("/login");
+    // ✅ Sign out user
+    console.log("🚪 Signing out from Supabase...");
+    const { error: signOutError } = await supabase.auth.signOut();
+
+    if (signOutError) {
+      console.error("❌ Error signing out:", signOutError);
+    } else {
+      console.log("✅ Successfully logged out!");
+      setIsLoggedIn(false);
+      router.push("/login"); // Redirect to login page
+    }
   };
 
   return (
