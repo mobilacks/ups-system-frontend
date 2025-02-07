@@ -90,13 +90,11 @@ export default function AuthForm({ isSignUp = false }) {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-white">
-      <div className="max-w-md w-full bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md">
-        <h2 className="text-2xl font-bold text-center mb-4 bg-blue-600 text-white p-3 rounded-md">
-          {isSignUp ? "Create Your Account" : "Login to Your Account"}
-        </h2>
-        {error && <p className="text-red-500 text-center">{error}</p>}
-        <form onSubmit={handleAuth} className="space-y-4">
+    <div className="auth-container">
+      <div className="auth-box">
+        <h2>{isSignUp ? "Create Your Account" : "Login to Your Account"}</h2>
+        {error && <p className="error-message">{error}</p>}
+        <form onSubmit={handleAuth}>
           {isSignUp && (
             <>
               <input
@@ -105,7 +103,6 @@ export default function AuthForm({ isSignUp = false }) {
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 required
-                className="w-full p-3 border rounded-md focus:ring-2 focus:ring-blue-500"
               />
               <input
                 type="number"
@@ -113,7 +110,6 @@ export default function AuthForm({ isSignUp = false }) {
                 value={storeNumber}
                 onChange={(e) => setStoreNumber(e.target.value)}
                 required
-                className="w-full p-3 border rounded-md focus:ring-2 focus:ring-blue-500"
               />
             </>
           )}
@@ -123,7 +119,6 @@ export default function AuthForm({ isSignUp = false }) {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
-            className="w-full p-3 border rounded-md focus:ring-2 focus:ring-blue-500"
           />
           <input
             type="password"
@@ -131,13 +126,8 @@ export default function AuthForm({ isSignUp = false }) {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
-            className="w-full p-3 border rounded-md focus:ring-2 focus:ring-blue-500"
           />
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full bg-blue-600 hover:bg-blue-700 text-white p-3 rounded-md transition duration-300"
-          >
+          <button type="submit" disabled={loading}>
             {loading ? "Processing..." : isSignUp ? "Sign Up" : "Login"}
           </button>
         </form>
