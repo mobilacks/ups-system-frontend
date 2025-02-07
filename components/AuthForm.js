@@ -9,7 +9,17 @@ export default function AuthForm({ isSignUp = false }) {
   const [storeNumber, setStoreNumber] = useState("");
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
   const router = useRouter();
+
+  // ✅ Check if User is Logged In
+  useEffect(() => {
+    async function checkUser() {
+      const { data: { user } } = await supabase.auth.getUser();
+      setIsLoggedIn(!!user);
+    }
+    checkUser();
+  }, []);
 
   // ✅ Handle Authentication (Login & Signup)
   const handleAuth = async (event) => {
@@ -88,6 +98,7 @@ export default function AuthForm({ isSignUp = false }) {
         }
       }
 
+      setIsLoggedIn(true);
       router.push("/dashboard"); // Redirect to dashboard
 
     } catch (err) {
@@ -121,6 +132,7 @@ export default function AuthForm({ isSignUp = false }) {
     }
 
     await supabase.auth.signOut();
+    setIsLoggedIn(false);
     router.push("/login");
   };
 
@@ -166,7 +178,7 @@ export default function AuthForm({ isSignUp = false }) {
             {loading ? "Processing..." : isSignUp ? "Sign Up" : "Login"}
           </button>
         </form>
-        {!isSignUp && (
+        {isLoggedIn && (
           <button onClick={handleLogout} className="logout-button">
             Logout
           </button>
