@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useRouter } from "next/router"; // Import Next.js router for navigation
 import { supabase } from "../lib/supabase";
 
 export default function AuthForm({ isSignUp = false }) {
@@ -8,6 +9,7 @@ export default function AuthForm({ isSignUp = false }) {
   const [storeNumber, setStoreNumber] = useState("");
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
+  const router = useRouter(); // Initialize Next.js router
 
   const handleAuth = async (event) => {
     event.preventDefault();
@@ -83,6 +85,10 @@ export default function AuthForm({ isSignUp = false }) {
 
         console.log("✅ Login successful");
       }
+
+      // ✅ Redirect to Dashboard on Success
+      router.push("/dashboard");
+
     } catch (err) {
       console.error("🚨 Error:", err.message);
       setError(err.message);
