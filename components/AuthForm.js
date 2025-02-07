@@ -85,39 +85,27 @@ export default function AuthForm({ isSignUp = false }) {
 
         console.log("✅ Login successful");
 
-        // ✅ Update Agent Status to "Online"
-        console.log("🔹 Attempting to update agent status to ONLINE...");
-        // Step 1: Verify if the agent exists BEFORE updating
-		const { data: existingAgent, error: fetchError } = await supabase
-			.from("agents")
-			.select("email, status")
-			.eq("email", email);
+        // ✅ UPDATE AGENT STATUS TO ONLINE ON LOGIN
+        console.log("🔍 Checking if agent exists before update...");
+        const { data: existingAgent, error: fetchError } = await supabase
+          .from("agents")
+          .select("email, status")
+          .eq("email", email);
 
-		console.log("🔍 Checking if agent exists before update:", existingAgent);
-		console.log("⚠️ Fetch Error (if any):", fetchError);
+        console.log("🔍 Agent lookup result:", existingAgent);
+        console.log("⚠️ Fetch Error (if any):", fetchError);
 
-		// Step 2: If the agent exists, attempt to update status
-		if (existingAgent.length > 0) {
-			const { error: updateError, data: updateData } = await supabase
-				.from("agents")
-				.update({ status: "online" })
-				.eq("email", email)
-				.select();
+        if (existingAgent.length > 0) {
+          const { data: updateResponse, error: updateError } = await supabase
+            .from("agents")
+            .update({ status: "online" })
+            .eq("email", email)
+            .select();
 
-			console.log("🛠️ SQL Query Response:", updateData);
-			console.log("⚠️ SQL Query Error (if any):", updateError);
-		} else {
-			console.error("❌ No matching agent found in the database!");
-		}
-
-
-        console.log("🛠️ SQL Query Response:", updateData);
-        console.log("⚠️ SQL Query Error (if any):", updateError);
-
-        if (updateError) {
-          console.error("⚠️ Failed to update agent status:", updateError);
+          console.log("🛠️ SQL Query Response:", updateResponse);
+          console.log("⚠️ SQL Query Error (if any):", updateError);
         } else {
-          console.log("✅ Agent status updated successfully:", updateData);
+          console.error("❌ No matching agent found in the database!");
         }
       }
 
