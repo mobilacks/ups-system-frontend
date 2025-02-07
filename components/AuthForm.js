@@ -85,16 +85,18 @@ export default function AuthForm({ isSignUp = false }) {
 
         console.log("✅ Login successful");
 
-        // ✅ Update agent's status to "online" on login
-        const { error: updateError } = await supabase
+        // ✅ Update Agent Status to "Online"
+        console.log("🔹 Attempting to update agent status to ONLINE...");
+        const { error: updateError, data: updateData } = await supabase
           .from("agents")
           .update({ status: "online" })
-          .eq("email", email);
+          .eq("email", email)
+          .select();
 
         if (updateError) {
           console.error("⚠️ Failed to update agent status:", updateError);
         } else {
-          console.log("✅ Agent status updated to ONLINE");
+          console.log("✅ Agent status updated successfully:", updateData);
         }
       }
 
