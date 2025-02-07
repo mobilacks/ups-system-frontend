@@ -1,7 +1,7 @@
 /* ✅ Apply Roboto Font */
 @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap');
 
-/* ✅ Base Styles */
+/* ✅ Ensure Global Styling */
 * {
   margin: 0;
   padding: 0;
@@ -9,18 +9,16 @@
   font-family: "Roboto", sans-serif;
 }
 
-/* ✅ Body Styling */
-body {
-  background-color: #f4f4f4; /* Light gray background */
-  color: #333;
+/* ✅ Center Forms */
+.auth-container {
   display: flex;
   justify-content: center;
   align-items: center;
   height: 100vh;
+  background-color: #f4f4f4;
 }
 
-/* ✅ Center Forms */
-.form-container {
+.auth-box {
   background: white;
   padding: 20px;
   border-radius: 10px;
@@ -31,28 +29,16 @@ body {
 }
 
 /* ✅ Headings */
-h1, h2, h3, h4, h5, h6 {
-  font-weight: bold;
-  color: #222;
-}
-
-/* ✅ Buttons */
-.btn-primary {
+h2 {
   background-color: #007bff;
   color: white;
-  padding: 10px 20px;
-  border: none;
+  padding: 10px;
   border-radius: 5px;
-  cursor: pointer;
-  transition: background 0.3s;
+  margin-bottom: 15px;
 }
 
-.btn-primary:hover {
-  background-color: #0056b3;
-}
-
-/* ✅ Forms */
-input, select, textarea {
+/* ✅ Inputs */
+input {
   width: 100%;
   padding: 10px;
   margin: 10px 0;
@@ -60,19 +46,25 @@ input, select, textarea {
   border-radius: 5px;
 }
 
-/* ✅ Tables */
-table {
+/* ✅ Buttons */
+button {
   width: 100%;
-  border-collapse: collapse;
-}
-
-th, td {
   padding: 10px;
-  border: 1px solid #ddd;
-  text-align: left;
-}
-
-th {
   background-color: #007bff;
   color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+button:hover {
+  background-color: #0056b3;
+}
+
+/* ✅ Error Message */
+.error-message {
+  color: red;
+  font-size: 14px;
+  margin-bottom: 10px;
 }
