@@ -112,37 +112,27 @@ export default function AuthForm({ isSignUp = false }) {
   // ✅ Handle Logout
   const handleLogout = async () => {
     console.log("🚀 Logging out...");
-    
+
     const { data: { user }, error: userError } = await supabase.auth.getUser();
-    
+
     if (userError || !user) {
       console.error("❌ Error fetching user data:", userError);
       return;
     }
 
     console.log(`🔍 Checking agent before logout: ${user.email}`);
-    
-    const { data: agentData, error: agentFetchError } = await supabase
+
+    // ✅ Update agent status to "offline" before logging out
+    console.log("🔄 Setting agent status to offline...");
+    const { error: updateError } = await supabase
       .from("agents")
-      .select("email")
-      .eq("email", user.email)
-      .single();
+      .update({ status: "offline" })
+      .eq("email", user.email);
 
-    if (agentFetchError || !agentData) {
-      console.error("❌ No matching agent found:", agentFetchError);
+    if (updateError) {
+      console.error("❌ Error updating agent status:", updateError);
     } else {
-      // ✅ Update agent status to "offline"
-      console.log("🔄 Setting agent status to offline...");
-      const { error: updateError } = await supabase
-        .from("agents")
-        .update({ status: "offline" })
-        .eq("email", user.email);
-
-      if (updateError) {
-        console.error("❌ Error updating agent status:", updateError);
-      } else {
-        console.log("✅ Agent status updated to offline");
-      }
+      console.log("✅ Agent status updated to offline");
     }
 
     // ✅ Sign out user
