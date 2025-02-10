@@ -4,6 +4,7 @@ import { supabase } from "../lib/supabase";
 
 export default function Dashboard() {
   const [user, setUser] = useState(null);
+  const [storeNumber, setStoreNumber] = useState(null);
   const [agentsWaiting, setAgentsWaiting] = useState([]);
   const [inQueue, setInQueue] = useState([]);
   const [withCustomer, setWithCustomer] = useState([]);
@@ -15,9 +16,7 @@ export default function Dashboard() {
       const { data: { user }, error } = await supabase.auth.getUser();
       if (user) {
         setUser(user);
-        resetQueueOnLogin(user.email);
-        fetchQueueData();
-        fetchStats();
+        fetchUserStore(user.email);
       } else {
         router.push("/login");
       }
@@ -25,12 +24,31 @@ export default function Dashboard() {
     fetchUser();
   }, []);
 
+  async function fetchUserStore(email) {
+    const { data, error } = await supabase
+      .from("agents")
+      .select("store_number")
+      .eq("email", email)
+      .single();
+
+    if (!error) {
+      setStoreNumber(data.store_number);
+      resetQueueOnLogin(email);
+      fetchQueueData(data.store_number);
+      fetchStats();
+    }
+  }
+
   async function resetQueueOnLogin(email) {
     await supabase.rpc("move_to_agents_waiting", { p_email: email });
   }
 
-  async function fetchQueueData() {
-    const { data, error } = await supabase.from("queue").select("*");
+  async function fetchQueueData(storeNum) {
+    const { data, error } = await supabase
+      .from("queue")
+      .select("*")
+      .eq("store_number", storeNum); // ✅ Only fetch agents from the same store
+
     if (!error) {
       setAgentsWaiting(data.filter(a => a.agents_waiting));
       setInQueue(data.filter(a => a.in_queue));
@@ -68,6 +86,11 @@ export default function Dashboard() {
   }
 
   async function handleQueueAction(action, email) {
+    if (email !== user.email) {
+      alert("You can only manage your own queue status!");
+      return;
+    }
+
     const functionMap = {
       "join_queue": "join_queue",
       "move_to_agents_waiting": "move_to_agents_waiting",
@@ -77,7 +100,7 @@ export default function Dashboard() {
 
     const { error } = await supabase.rpc(functionMap[action], { p_email: email });
     if (!error) {
-      fetchQueueData();
+      fetchQueueData(storeNumber);
       fetchStats();
     } else {
       console.error("Error updating queue:", error);
@@ -85,6 +108,11 @@ export default function Dashboard() {
   }
 
   async function handleSaleClosure(email, contractNumber, saleAmount) {
+    if (email !== user.email) {
+      alert("You can only log your own sales!");
+      return;
+    }
+
     const { error } = await supabase.from("sales").insert([
       { email, contract_number: contractNumber, sale_amount: saleAmount }
     ]);
@@ -121,9 +149,11 @@ export default function Dashboard() {
           {agentsWaiting.map(agent => (
             <li key={agent.email} className="queue-item">
               <span>{agent.email} (Store {agent.store_number})</span>
-              <button className="btn-primary" onClick={() => handleQueueAction("join_queue", agent.email)}>
-                Join Queue
-              </button>
+              {agent.email === user.email && (
+                <button className="btn-primary" onClick={() => handleQueueAction("join_queue", agent.email)}>
+                  Join Queue
+                </button>
+              )}
             </li>
           ))}
         </ul>
@@ -136,14 +166,16 @@ export default function Dashboard() {
           {inQueue.map(agent => (
             <li key={agent.email} className="queue-item">
               <span>{agent.email} (Store {agent.store_number})</span>
-              <div className="btn-group">
-                <button className="btn-green" onClick={() => handleQueueAction("move_to_with_customer", agent.email)}>
-                  With Customer
-                </button>
-                <button className="btn-red" onClick={() => handleQueueAction("move_to_agents_waiting", agent.email)}>
-                  Move to Agents Waiting
-                </button>
-              </div>
+              {agent.email === user.email && (
+                <div className="btn-group">
+                  <button className="btn-green" onClick={() => handleQueueAction("move_to_with_customer", agent.email)}>
+                    With Customer
+                  </button>
+                  <button className="btn-red" onClick={() => handleQueueAction("move_to_agents_waiting", agent.email)}>
+                    Move to Agents Waiting
+                  </button>
+                </div>
+              )}
             </li>
           ))}
         </ul>
@@ -156,17 +188,19 @@ export default function Dashboard() {
           {withCustomer.map(agent => (
             <li key={agent.email} className="queue-item">
               <span>{agent.email} (Store {agent.store_number})</span>
-              <div className="btn-group">
-                <button className="btn-primary" onClick={() => handleQueueAction("move_to_in_queue", agent.email)}>
-                  Back to Queue
-                </button>
-                <button className="btn-green" onClick={() => handleSaleClosure(agent.email, prompt("Enter Contract #"), prompt("Enter Sale Amount"))}>
-                  Close Sale
-                </button>
-                <button className="btn-yellow" onClick={() => handleQueueAction("move_to_agents_waiting", agent.email)}>
-                  No Sale
-                </button>
-              </div>
+              {agent.email === user.email && (
+                <div className="btn-group">
+                  <button className="btn-primary" onClick={() => handleQueueAction("move_to_in_queue", agent.email)}>
+                    Back to Queue
+                  </button>
+                  <button className="btn-green" onClick={() => handleSaleClosure(agent.email, prompt("Enter Contract #"), prompt("Enter Sale Amount"))}>
+                    Close Sale
+                  </button>
+                  <button className="btn-yellow" onClick={() => handleQueueAction("move_to_agents_waiting", agent.email)}>
+                    No Sale
+                  </button>
+                </div>
+              )}
             </li>
           ))}
         </ul>
