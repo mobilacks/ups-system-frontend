@@ -94,8 +94,10 @@ export default function AuthForm({ isSignUp = false }) {
     }
   };
 
-  // ✅ Handle Logout
+  // ✅ Handle Logout (Only for Logged-in Users)
   const handleLogout = async () => {
+    if (!isLoggedIn) return; // ❌ Prevents logout from showing when not logged in
+
     console.log("🚀 Logging out...");
 
     const { data: { user }, error: userError } = await supabase.auth.getUser();
@@ -171,11 +173,14 @@ export default function AuthForm({ isSignUp = false }) {
             {loading ? "Processing..." : isSignUp ? "Sign Up" : "Login"}
           </button>
         </form>
-        {isLoggedIn && (
+
+        {/* ✅ Show Logout Button ONLY if user is logged in */}
+        {isLoggedIn && router.pathname !== "/login" && (
           <button onClick={handleLogout} className="logout-button">
             Logout
           </button>
         )}
+
         <p>
           {isSignUp ? "Already have an account?" : "Don't have an account?"}{" "}
           <a href={isSignUp ? "/login" : "/signup"} className="text-blue-500 hover:underline">
