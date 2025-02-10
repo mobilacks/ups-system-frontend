@@ -4,56 +4,64 @@ import ProtectedRoute from "../lib/protectedRoute";
 
 function LogsPage() {
   const [logs, setLogs] = useState([]);
-  const [filter, setFilter] = useState("");
-  
+  const [searchQuery, setSearchQuery] = useState("");
+  const [filteredLogs, setFilteredLogs] = useState([]);
+
   useEffect(() => {
     fetchLogs();
   }, []);
 
-  // ✅ Fetch Logs and Agent Names
+  // ✅ Fetch Logs from Supabase
   const fetchLogs = async () => {
     const { data, error } = await supabase
-  .from("logs")
-  .select("id, email, action_type, table_name, details, created_at")
-  .order("created_at", { ascending: false });
+      .from("logs")
+      .select("id, email, action_type, table_name, details, created_at, agents(name)")
+      .order("created_at", { ascending: false });
 
-    const { data, error } = await supabase
-  .from("logs")
-  .select("id, email, action_type, table_name, details, created_at, agents(name)")
-  .order("created_at", { ascending: false });
-
-    
-    if (!error) setLogs(data);
-    else console.error("❌ Error fetching logs:", error);
+    if (!error) {
+      console.log("✅ Logs Fetched:", data);
+      setLogs(data);
+      setFilteredLogs(data); // Initialize filtered logs
+    } else {
+      console.error("❌ Error fetching logs:", error);
+    }
   };
 
-  // ✅ Handle Filter Change
-  const handleFilterChange = (e) => {
-    setFilter(e.target.value);
-  };
-
-  const filteredLogs = logs.filter((log) =>
-    log.email.toLowerCase().includes(filter.toLowerCase()) ||
-    log.name?.toLowerCase().includes(filter.toLowerCase()) ||
-    log.action_type.toLowerCase().includes(filter.toLowerCase()) ||
-    log.table_name.toLowerCase().includes(filter.toLowerCase())
-  );
+  // ✅ Handle Search Filtering
+  useEffect(() => {
+    if (!searchQuery.trim()) {
+      setFilteredLogs(logs);
+    } else {
+      const lowercasedQuery = searchQuery.toLowerCase();
+      const filtered = logs.filter((log) =>
+        log.email.toLowerCase().includes(lowercasedQuery) ||
+        log.agents?.name?.toLowerCase().includes(lowercasedQuery) ||
+        log.action_type.toLowerCase().includes(lowercasedQuery) ||
+        log.table_name.toLowerCase().includes(lowercasedQuery) ||
+        log.details.toLowerCase().includes(lowercasedQuery)
+      );
+      setFilteredLogs(filtered);
+    }
+  }, [searchQuery, logs]);
 
   return (
     <div className="logs-container">
       <h2>System Logs</h2>
+
+      {/* ✅ Search Bar */}
       <input
         type="text"
-        placeholder="Filter logs..."
-        value={filter}
-        onChange={handleFilterChange}
-        className="filter-input"
+        placeholder="Search logs..."
+        value={searchQuery}
+        onChange={(e) => setSearchQuery(e.target.value)}
+        className="search-bar"
       />
+
+      {/* ✅ Logs Table */}
       <table className="logs-table">
         <thead>
           <tr>
-            <th>Name</th>
-            <th>Email</th>
+            <th>User</th>
             <th>Action</th>
             <th>Table</th>
             <th>Details</th>
@@ -63,18 +71,17 @@ function LogsPage() {
         <tbody>
           {filteredLogs.length > 0 ? (
             filteredLogs.map((log) => (
-              <tr key={log.record_id}>
-                <td>{log.agents?.name || "Unknown"}</td>
-                <td>{log.email}</td>
+              <tr key={log.id}>
+                <td>{log.agents?.name || log.email}</td> {/* ✅ Show Agent Name if available */}
                 <td>{log.action_type}</td>
                 <td>{log.table_name}</td>
                 <td>{log.details}</td>
-                <td>{new Date(log.timestamp).toLocaleString()}</td>
+                <td>{new Date(log.created_at).toLocaleString()}</td>
               </tr>
             ))
           ) : (
             <tr>
-              <td colSpan="6">No logs available.</td>
+              <td colSpan="5" className="no-logs">No logs available.</td>
             </tr>
           )}
         </tbody>
@@ -83,4 +90,4 @@ function LogsPage() {
   );
 }
 
-export default ProtectedRoute(LogsPage);
+export default ProtectedRoute(LogsPage); // ✅ Protect the Logs Page
