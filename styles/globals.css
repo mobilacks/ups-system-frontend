@@ -300,3 +300,61 @@ button:hover {
     background: var(--bg-dark);
   }
 }
+/* ✅ Logs Page Styling */
+.logs-container {
+  padding: 20px;
+}
+
+.filters {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 15px;
+}
+
+.filters input {
+  padding: 8px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+}
+
+.btn-filter {
+  background-color: #007bff;
+  color: white;
+  padding: 8px 12px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.btn-filter:hover {
+  background-color: #0056b3;
+}
+
+.logs-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: #fff;
+  color: #333;
+}
+
+.logs-table th, .logs-table td {
+  border: 1px solid #ccc;
+  padding: 10px;
+  text-align: left;
+}
+
+.logs-table th {
+  background: #007bff;
+  color: white;
+}
+
+.logs-table tbody tr:nth-child(even) {
+  background: #f9f9f9;
+}
+
+.no-logs {
+  text-align: center;
+  font-weight: bold;
+  color: red;
+}
+
