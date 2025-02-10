@@ -24,9 +24,13 @@ export default function AdminPage() {
 
   // ✅ Fetch Reasons from Supabase
   const fetchReasons = async () => {
-    const { data, error } = await supabase.from("reasons").select("*");
-    if (!error) setReasons(data);
-    else console.error("❌ Error fetching reasons:", error);
+    const { data, error } = await supabase.from("reasons").select("id, reason, ups_count");
+    if (!error) {
+      console.log("✅ Fetched Reasons:", data);
+      setReasons(data);
+    } else {
+      console.error("❌ Error fetching reasons:", error);
+    }
   };
 
   // ✅ Delete Agent
@@ -111,7 +115,6 @@ export default function AdminPage() {
       {editingAgent && (
         <div className="edit-section">
           <h3>Edit Agent</h3>
-
           <label>Name</label>
           <input
             type="text"
@@ -119,7 +122,6 @@ export default function AdminPage() {
             onChange={(e) => setUpdatedName(e.target.value)}
             placeholder={editingAgent.name}
           />
-
           <label>Store #</label>
           <input
             type="number"
@@ -127,14 +129,12 @@ export default function AdminPage() {
             onChange={(e) => setUpdatedStore(e.target.value)}
             placeholder={editingAgent.store_number}
           />
-
           <label>Role</label>
           <select value={updatedRole} onChange={(e) => setUpdatedRole(e.target.value)}>
             <option value="agent">Agent</option>
             <option value="manager">Manager</option>
             <option value="admin">Admin</option>
           </select>
-
           <button className="btn-save" onClick={saveAgentUpdate}>Save</button>
           <button className="btn-cancel" onClick={() => setEditingAgent(null)}>Cancel</button>
         </div>
