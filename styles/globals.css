@@ -34,152 +34,102 @@ body {
   }
 }
 
-/* ✅ Unified Table Styling (Applied to Dashboard, Stats, Admin, Logs) */
-.table-container {
-  width: 100%;
-  margin: 20px auto;
-  padding: 20px;
-  background: var(--bg-light);
-  border-radius: var(--border-radius);
-  box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
-  overflow-x: auto;
+/* ✅ Center Forms */
+.auth-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  background-color: var(--bg-light);
+  transition: background-color 0.3s ease;
 }
 
 @media (prefers-color-scheme: dark) {
-  .table-container {
-    background: var(--bg-dark);
-    color: var(--text-dark);
+  .auth-container {
+    background-color: var(--bg-dark);
   }
 }
 
-.unified-table {
-  width: 100%;
-  border-collapse: collapse;
+/* ✅ Auth Box */
+.auth-box {
+  background: white;
+  padding: 20px;
   border-radius: var(--border-radius);
-  overflow: hidden;
-  border: 1px solid #ccc; /* ✅ Added border to fix missing outlines */
-}
-
-.unified-table th, 
-.unified-table td {
-  padding: 12px;
-  border: 1px solid #ccc; /* ✅ Ensures all cells have proper outlines */
+  box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+  width: 100%;
+  max-width: 400px;
   text-align: center;
+  transition: background 0.3s ease, color 0.3s ease;
 }
 
-.unified-table th {
+@media (prefers-color-scheme: dark) {
+  .auth-box {
+    background: #2a2a2a;
+    color: white;
+    box-shadow: 0px 4px 6px rgba(255, 255, 255, 0.1);
+  }
+}
+
+/* ✅ Buttons */
+button {
+  padding: 10px 15px;
+  font-size: 14px;
+  font-weight: 500;
   background-color: var(--primary-color);
   color: white;
+  border: none;
+  border-radius: var(--border-radius);
   cursor: pointer;
-  font-weight: bold;
+  transition: background 0.3s;
+  text-align: center;
+  width: auto;
 }
 
-.unified-table th:hover {
+button:hover {
   background-color: #0056b3;
 }
 
-.unified-table tbody tr:nth-child(even) {
-  background: #f9f9f9;
-}
-
-.unified-table tbody tr:hover {
-  background: rgba(0, 123, 255, 0.1);
-}
-
-/* ✅ Dark Mode Table Styles */
-@media (prefers-color-scheme: dark) {
-  .unified-table th {
-    background-color: #0056b3;
-  }
-  
-  .unified-table td {
-    border: 1px solid #555; /* ✅ Ensures dark mode outlines */
-  }
-
-  .unified-table tbody tr:nth-child(even) {
-    background: #2a2a2a;
-  }
-
-  .unified-table tbody tr:hover {
-    background: rgba(0, 123, 255, 0.2);
-  }
-}
-
-/* ✅ Dashboard Page */
-.dashboard-container {
-  padding: 20px;
-}
-
-.dashboard-container h2 {
-  text-align: center;
-  background-color: var(--primary-color);
-  color: white;
-  padding: 15px;
-  border-radius: var(--border-radius);
-  margin-bottom: 20px;
-}
-
-/* ✅ Stats Page */
-.stats-container {
-  padding: 20px;
-}
-
-.stats-container h2 {
-  text-align: center;
-  background-color: var(--primary-color);
-  color: white;
-  padding: 15px;
-  border-radius: var(--border-radius);
-  margin-bottom: 20px;
-}
-
-/* ✅ Logs Page */
-.logs-container {
-  padding: 20px;
-}
-
-.logs-table {
+/* ✅ Table Styling */
+table {
   width: 100%;
   border-collapse: collapse;
-  background: #fff;
+  background: white;
   color: #333;
+  border-radius: var(--border-radius);
+  overflow: hidden;
 }
 
-.logs-table th, 
-.logs-table td {
+@media (prefers-color-scheme: dark) {
+  table {
+    background: #333;
+    color: white;
+  }
+}
+
+table th, table td {
+  padding: 10px;
   border: 1px solid #ccc;
-  padding: 12px;
-  text-align: center;
+  text-align: left;
 }
 
-.logs-table th {
+@media (prefers-color-scheme: dark) {
+  table th, table td {
+    border: 1px solid #555;
+  }
+}
+
+table th {
   background: var(--primary-color);
   color: white;
 }
 
-.logs-table tbody tr:nth-child(even) {
+table tbody tr:nth-child(even) {
   background: #f9f9f9;
 }
 
-.no-logs {
-  text-align: center;
-  font-weight: bold;
-  color: red;
-}
-
-/* ✅ Admin Page */
-.admin-container {
-  max-width: 900px;
-  margin: 20px auto;
-  padding: 20px;
-  background: var(--bg-light);
-  border-radius: var(--border-radius);
-}
-
 @media (prefers-color-scheme: dark) {
-  .admin-container {
-    background: var(--bg-dark);
-    color: var(--text-dark);
+  table tbody tr:nth-child(even) {
+    background: #444;
   }
 }
 
@@ -190,45 +140,20 @@ body {
   gap: 10px;
   background-color: var(--primary-color);
   padding: 10px;
-  border-radius: 8px;
+  border-radius: var(--border-radius);
 }
 
-/* ✅ Navbar Buttons */
-.navbar ul {
-  list-style: none;
-  display: flex;
-  gap: 10px;
-}
-
-.navbar li {
-  display: inline;
-}
-
-/* ✅ Styling for All Navbar Buttons */
-.navbar a,
-.navbar button {
+.navbar a, .navbar button {
   background-color: white;
   color: var(--primary-color);
   border: none;
   padding: 8px 15px;
-  border-radius: 5px;
+  border-radius: var(--border-radius);
   cursor: pointer;
   font-weight: bold;
   text-decoration: none;
 }
 
-.navbar a:hover,
-.navbar button:hover {
+.navbar a:hover, .navbar button:hover {
   background-color: #ddd;
-}
-
-/* ✅ Fix Logout Button Styling */
-.navbar button {
-  background-color: white !important;
-  color: var(--primary-color) !important;
-  border: none !important;
-}
-
-.navbar button:hover {
-  background-color: #ddd !important;
 }
