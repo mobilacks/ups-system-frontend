@@ -119,3 +119,67 @@ button:hover {
   font-size: 14px;
   margin-bottom: 10px;
 }
+
+/* ✅ Queue Section */
+.queue-section {
+  margin-bottom: 20px;
+  padding: 10px;
+  background: var(--bg-light);
+  border-radius: var(--border-radius);
+}
+
+@media (prefers-color-scheme: dark) {
+  .queue-section {
+    background: var(--bg-dark);
+  }
+}
+
+/* ✅ Queue List */
+.queue-list {
+  list-style: none;
+  padding: 0;
+}
+/* ✅ Queue Item */
+.queue-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px;
+  border-bottom: 1px solid #ccc;
+}
+
+/* ✅ Button Groups */
+.btn-group {
+  display: flex;
+  gap: 10px;
+}
+
+/* ✅ Buttons */
+.btn-primary {
+  background-color: var(--primary-color);
+  color: white;
+  padding: 5px 10px;
+  border-radius: 5px;
+}
+
+.btn-green {
+  background-color: green;
+  color: white;
+  padding: 5px 10px;
+  border-radius: 5px;
+}
+
+.btn-red {
+  background-color: red;
+  color: white;
+  padding: 5px 10px;
+  border-radius: 5px;
+}
+
+.btn-yellow {
+  background-color: orange;
+  color: white;
+  padding: 5px 10px;
+  border-radius: 5px;
+}
+
