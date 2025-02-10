@@ -13,10 +13,16 @@ function LogsPage() {
   // ✅ Fetch Logs and Agent Names
   const fetchLogs = async () => {
     const { data, error } = await supabase
-      .from("logs")
-      .select("email, action_type, table_name, record_id, details, timestamp, agents(name)")
-      .order("timestamp", { ascending: false });
+  .from("logs")
+  .select("id, email, action_type, table_name, details, created_at")
+  .order("created_at", { ascending: false });
 
+    const { data, error } = await supabase
+  .from("logs")
+  .select("id, email, action_type, table_name, details, created_at, agents(name)")
+  .order("created_at", { ascending: false });
+
+    
     if (!error) setLogs(data);
     else console.error("❌ Error fetching logs:", error);
   };
