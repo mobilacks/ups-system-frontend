@@ -28,7 +28,6 @@ const fetchStats = async () => {
       SUM(sale_amount) as total_sales,
       agents (name, store_number)
     `)
-    .groupBy("email, agents.name, agents.store_number")
     .order("total_sales", { ascending: false });
 
   if (!error) {
