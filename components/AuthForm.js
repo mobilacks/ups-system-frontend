@@ -27,62 +27,52 @@ export default function AuthForm({ isSignUp = false }) {
     setError(null);
     setLoading(true);
 
+    // ✅ Validate email domain
     if (!email.endsWith("@lacksvalley.com")) {
-      setError("You must use a valid Lacks email address");
+      setError("You must use a valid Lacks email address.");
       setLoading(false);
       return;
     }
 
     try {
       if (isSignUp) {
-        // ✅ SIGNUP FLOW
         console.log("🚀 Attempting user signup...");
 
+        // ✅ Step 1: Create User in Supabase Auth
         const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
           email,
           password,
         });
 
-        if (signUpError) {
-          console.error("❌ Signup error:", signUpError);
-          throw signUpError;
-        }
+        if (signUpError) throw signUpError;
+        console.log("✅ User created in Supabase Auth:", signUpData);
 
-        console.log("✅ Signup successful:", signUpData);
-
-        // ✅ Insert user into agents table
-        console.log("🚀 Inserting user into agents table...");
+        // ✅ Step 2: Insert into Agents Table
         const { error: agentError } = await supabase.from("agents").insert([
           {
             email,
             name,
             store_number: parseInt(storeNumber, 10),
-            role: "agent",
+            role: "agent", // Default role
             status: "offline",
           },
         ]);
 
-        if (agentError) {
-          console.error("❌ Error inserting into agents:", agentError);
-          throw agentError;
-        }
+        if (agentError) throw agentError;
+        console.log("✅ User added to Agents table.");
 
-        console.log("✅ Agent inserted successfully");
+        alert("Signup successful! You can now log in.");
       } else {
-        // ✅ LOGIN FLOW
         console.log("🚀 Attempting login...");
 
+        // ✅ LOGIN FLOW
         const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
           email,
           password,
         });
 
-        if (signInError) {
-          console.error("❌ Login error:", signInError);
-          throw signInError;
-        }
-
-        console.log("✅ Login successful", signInData);
+        if (signInError) throw signInError;
+        console.log("✅ Login successful");
 
         // ✅ Update agent status to "online"
         console.log("🔄 Updating agent status to online...");
@@ -91,18 +81,13 @@ export default function AuthForm({ isSignUp = false }) {
           .update({ status: "online" })
           .eq("email", email);
 
-        if (updateError) {
-          console.error("❌ Error updating agent status:", updateError);
-        } else {
-          console.log("✅ Agent status updated to online");
-        }
+        if (updateError) console.error("❌ Error updating agent status:", updateError);
+        else console.log("✅ Agent status updated to online");
+
+        router.push("/dashboard"); // Redirect to dashboard
       }
-
-      setIsLoggedIn(true);
-      router.push("/dashboard"); // Redirect to dashboard
-
     } catch (err) {
-      console.error("🚨 Error:", err.message);
+      console.error("❌ Error:", err.message);
       setError(err.message);
     } finally {
       setLoading(false);
@@ -129,19 +114,15 @@ export default function AuthForm({ isSignUp = false }) {
       .update({ status: "offline" })
       .eq("email", user.email);
 
-    if (updateError) {
-      console.error("❌ Error updating agent status:", updateError);
-    } else {
-      console.log("✅ Agent status updated to offline");
-    }
+    if (updateError) console.error("❌ Error updating agent status:", updateError);
+    else console.log("✅ Agent status updated to offline");
 
     // ✅ Sign out user
     console.log("🚪 Signing out from Supabase...");
     const { error: signOutError } = await supabase.auth.signOut();
 
-    if (signOutError) {
-      console.error("❌ Error signing out:", signOutError);
-    } else {
+    if (signOutError) console.error("❌ Error signing out:", signOutError);
+    else {
       console.log("✅ Successfully logged out!");
       setIsLoggedIn(false);
       router.push("/login"); // Redirect to login page
@@ -195,6 +176,12 @@ export default function AuthForm({ isSignUp = false }) {
             Logout
           </button>
         )}
+        <p>
+          {isSignUp ? "Already have an account?" : "Don't have an account?"}{" "}
+          <a href={isSignUp ? "/login" : "/signup"} className="text-blue-500 hover:underline">
+            {isSignUp ? "Login" : "Sign Up"}
+          </a>
+        </p>
       </div>
     </div>
   );
