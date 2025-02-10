@@ -15,6 +15,7 @@ export default function Dashboard() {
       const { data: { user }, error } = await supabase.auth.getUser();
       if (user) {
         setUser(user);
+        resetQueueOnLogin(user.email); // Reset queue state on login
         fetchQueueData();
         fetchStats();
       } else {
@@ -23,6 +24,11 @@ export default function Dashboard() {
     }
     fetchUser();
   }, []);
+
+  // ✅ Reset queue state when agent logs in
+  async function resetQueueOnLogin(email) {
+    await supabase.rpc("move_to_agents_waiting", { p_email: email });
+  }
 
   // ✅ Fetch queue data
   async function fetchQueueData() {
@@ -82,8 +88,24 @@ export default function Dashboard() {
     }
   }
 
-  // ✅ Handle logout
+  // ✅ Handle sale closure
+  async function handleSaleClosure(email, contractNumber, saleAmount) {
+    const { error } = await supabase.from("sales").insert([
+      { email, contract_number: contractNumber, sale_amount: saleAmount }
+    ]);
+    
+    if (!error) {
+      await handleQueueAction("move_to_agents_waiting", email);
+    } else {
+      console.error("Error closing sale:", error);
+    }
+  }
+
+  // ✅ Handle logout (resets queue status)
   async function handleLogout() {
+    if (user) {
+      await supabase.rpc("move_to_agents_waiting", { p_email: user.email });
+    }
     await supabase.auth.signOut();
     router.push("/login");
   }
@@ -101,97 +123,59 @@ export default function Dashboard() {
       {/* Agents Waiting Section */}
       <div className="mb-6">
         <h2 className="text-xl font-semibold bg-gray-200 p-2 rounded-md">Agents Waiting</h2>
-        <table className="min-w-full border mt-2">
-          <thead>
-            <tr className="bg-gray-100">
-              <th className="border p-2">Agent Name</th>
-              <th className="border p-2">Store</th>
-              <th className="border p-2">Action</th>
-            </tr>
-          </thead>
-          <tbody>
-            {agentsWaiting.map((agent) => (
-              <tr key={agent.email} className="border">
-                <td className="border p-2">{agent.email}</td>
-                <td className="border p-2">{agent.store_number}</td>
-                <td className="border p-2">
-                  <button
-                    className="bg-blue-500 text-white px-2 py-1 rounded-md"
-                    onClick={() => handleQueueAction("join_queue", agent.email)}
-                  >
-                    Join Queue
-                  </button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+        <ul>
+          {agentsWaiting.map(agent => (
+            <li key={agent.email} className="flex justify-between items-center border-b p-2">
+              <span>{agent.email} (Store {agent.store_number})</span>
+              <button className="bg-blue-500 text-white px-3 py-1 rounded-md" onClick={() => handleQueueAction("join_queue", agent.email)}>
+                Join Queue
+              </button>
+            </li>
+          ))}
+        </ul>
       </div>
 
       {/* In Queue Section */}
       <div className="mb-6">
         <h2 className="text-xl font-semibold bg-gray-200 p-2 rounded-md">In Queue</h2>
-        <table className="min-w-full border mt-2">
-          <thead>
-            <tr className="bg-gray-100">
-              <th className="border p-2">Agent Name</th>
-              <th className="border p-2">Store</th>
-              <th className="border p-2">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {inQueue.map((agent) => (
-              <tr key={agent.email} className="border">
-                <td className="border p-2">{agent.email}</td>
-                <td className="border p-2">{agent.store_number}</td>
-                <td className="border p-2 flex space-x-2">
-                  <button
-                    className="bg-green-500 text-white px-2 py-1 rounded-md"
-                    onClick={() => handleQueueAction("move_to_with_customer", agent.email)}
-                  >
-                    With Customer
-                  </button>
-                  <button
-                    className="bg-red-500 text-white px-2 py-1 rounded-md"
-                    onClick={() => handleQueueAction("move_to_agents_waiting", agent.email)}
-                  >
-                    Move to Agents Waiting
-                  </button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+        <ul>
+          {inQueue.map(agent => (
+            <li key={agent.email} className="flex justify-between items-center border-b p-2">
+              <span>{agent.email} (Store {agent.store_number})</span>
+              <div>
+                <button className="bg-green-500 text-white px-3 py-1 rounded-md mr-2" onClick={() => handleQueueAction("move_to_with_customer", agent.email)}>
+                  With Customer
+                </button>
+                <button className="bg-red-500 text-white px-3 py-1 rounded-md" onClick={() => handleQueueAction("move_to_agents_waiting", agent.email)}>
+                  Move to Agents Waiting
+                </button>
+              </div>
+            </li>
+          ))}
+        </ul>
       </div>
 
       {/* With Customer Section */}
       <div className="mb-6">
         <h2 className="text-xl font-semibold bg-gray-200 p-2 rounded-md">With Customer</h2>
-        <table className="min-w-full border mt-2">
-          <thead>
-            <tr className="bg-gray-100">
-              <th className="border p-2">Agent Name</th>
-              <th className="border p-2">Store</th>
-              <th className="border p-2">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {withCustomer.map((agent) => (
-              <tr key={agent.email} className="border">
-                <td className="border p-2">{agent.email}</td>
-                <td className="border p-2">{agent.store_number}</td>
-                <td className="border p-2 flex space-x-2">
-                  <button
-                    className="bg-blue-500 text-white px-2 py-1 rounded-md"
-                    onClick={() => handleQueueAction("move_to_in_queue", agent.email)}
-                  >
-                    Back to Queue
-                  </button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+        <ul>
+          {withCustomer.map(agent => (
+            <li key={agent.email} className="border-b p-2">
+              <span>{agent.email} (Store {agent.store_number})</span>
+              <div className="flex space-x-2 mt-2">
+                <button className="bg-blue-500 text-white px-3 py-1 rounded-md" onClick={() => handleQueueAction("move_to_in_queue", agent.email)}>
+                  Back to Queue
+                </button>
+                <button className="bg-green-500 text-white px-3 py-1 rounded-md" onClick={() => handleSaleClosure(agent.email, prompt("Enter Contract #"), prompt("Enter Sale Amount"))}>
+                  Close Sale
+                </button>
+                <button className="bg-yellow-500 text-white px-3 py-1 rounded-md" onClick={() => handleQueueAction("move_to_agents_waiting", agent.email)}>
+                  No Sale
+                </button>
+              </div>
+            </li>
+          ))}
+        </ul>
       </div>
 
       {/* Daily Stats Section */}
@@ -208,7 +192,7 @@ export default function Dashboard() {
             </tr>
           </thead>
           <tbody>
-            {stats.map((stat) => (
+            {stats.map(stat => (
               <tr key={stat.email} className="border">
                 <td className="border p-2">{stat.email}</td>
                 <td className="border p-2">{stat.ups}</td>
