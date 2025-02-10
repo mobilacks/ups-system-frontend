@@ -4,159 +4,154 @@ import { supabase } from "../lib/supabase";
 export default function AdminPage() {
   const [agents, setAgents] = useState([]);
   const [reasons, setReasons] = useState([]);
-  const [newAgent, setNewAgent] = useState({ name: "", email: "", storeNumber: "", role: "agent" });
-  const [newReason, setNewReason] = useState({ reason_text: "", ups_count: false });
+  const [newReason, setNewReason] = useState("");
+  const [upsCount, setUpsCount] = useState(false);
+  const [editingAgent, setEditingAgent] = useState(null);
+  const [updatedStore, setUpdatedStore] = useState("");
+  const [updatedRole, setUpdatedRole] = useState("");
 
   useEffect(() => {
     fetchAgents();
     fetchReasons();
   }, []);
 
-  async function fetchAgents() {
+  // ✅ Fetch Agents from Supabase
+  const fetchAgents = async () => {
     const { data, error } = await supabase.from("agents").select("*");
-    if (error) console.error("❌ Error fetching agents:", error);
-    else setAgents(data);
-  }
+    if (!error) setAgents(data);
+  };
 
-  async function fetchReasons() {
+  // ✅ Fetch Reasons from Supabase
+  const fetchReasons = async () => {
     const { data, error } = await supabase.from("reasons").select("*");
-    if (error) console.error("❌ Error fetching reasons:", error);
-    else setReasons(data);
-  }
+    if (!error) setReasons(data);
+  };
 
-  async function addAgent() {
-    if (!newAgent.email.endsWith("@lacksvalley.com")) {
-      alert("Agents must have a valid Lacks email.");
-      return;
-    }
-
-    const { data, error } = await supabase.auth.signUp({
-      email: newAgent.email,
-      password: "TemporaryPass123", // Temporary password
-    });
-
-    if (error) {
-      console.error("❌ Error creating user:", error);
-      return;
-    }
-
-    const { error: agentError } = await supabase.from("agents").insert([
-      {
-        email: newAgent.email,
-        name: newAgent.name,
-        store_number: parseInt(newAgent.storeNumber, 10),
-        role: newAgent.role,
-        status: "offline",
-      },
-    ]);
-
-    if (agentError) console.error("❌ Error adding agent:", agentError);
-    else fetchAgents();
-  }
-
-  async function deleteAgent(email) {
-    if (!window.confirm("Are you sure you want to delete this agent?")) return;
-
+  // ✅ Delete Agent
+  const deleteAgent = async (email) => {
+    if (!confirm("Are you sure you want to delete this agent?")) return;
     await supabase.from("agents").delete().eq("email", email);
     await supabase.auth.admin.deleteUser(email);
     fetchAgents();
-  }
+  };
 
-  async function addReason() {
-    const { error } = await supabase.from("reasons").insert([newReason]);
-    if (error) console.error("❌ Error adding reason:", error);
-    else fetchReasons();
-  }
+  // ✅ Save Updated Agent Details
+  const saveAgentUpdate = async () => {
+    if (!editingAgent) return;
 
-  async function deleteReason(id) {
-    if (!window.confirm("Are you sure you want to delete this reason?")) return;
+    const { error } = await supabase
+      .from("agents")
+      .update({ store_number: updatedStore, role: updatedRole })
+      .eq("email", editingAgent.email);
 
+    if (!error) {
+      setEditingAgent(null);
+      setUpdatedStore("");
+      setUpdatedRole("");
+      fetchAgents();
+    }
+  };
+
+  // ✅ Delete Reason
+  const deleteReason = async (id) => {
+    if (!confirm("Are you sure you want to delete this reason?")) return;
     await supabase.from("reasons").delete().eq("id", id);
     fetchReasons();
-  }
+  };
+
+  // ✅ Add New Reason
+  const addReason = async () => {
+    if (!newReason.trim()) return;
+    await supabase.from("reasons").insert([{ reason: newReason, ups_count: upsCount }]);
+    setNewReason("");
+    setUpsCount(false);
+    fetchReasons();
+  };
 
   return (
     <div className="admin-container">
-      <h1>Admin Panel</h1>
-
-      {/* Manage Users */}
-      <section className="admin-section">
-        <h2>Manage Users</h2>
-        <table className="admin-table">
-          <thead>
-            <tr>
-              <th>Name</th>
-              <th>Email</th>
-              <th>Store</th>
-              <th>Role</th>
-              <th>Status</th>
-              <th>Actions</th>
+      <h2>Manage Users</h2>
+      <table className="admin-table">
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Email</th>
+            <th>Store #</th>
+            <th>Role</th>
+            <th>Status</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {agents.map((agent) => (
+            <tr key={agent.email}>
+              <td>{agent.name}</td>
+              <td>{agent.email}</td>
+              <td>{agent.store_number}</td>
+              <td>{agent.role}</td>
+              <td>{agent.status}</td>
+              <td>
+                <button className="btn-edit" onClick={() => setEditingAgent(agent)}>Edit</button>
+                <button className="btn-delete" onClick={() => deleteAgent(agent.email)}>Delete</button>
+              </td>
             </tr>
-          </thead>
-          <tbody>
-            {agents.map((agent) => (
-              <tr key={agent.email}>
-                <td>{agent.name}</td>
-                <td>{agent.email}</td>
-                <td>{agent.store_number}</td>
-                <td>{agent.role}</td>
-                <td>{agent.status}</td>
-                <td>
-                  <button className="btn-red" onClick={() => deleteAgent(agent.email)}>Delete</button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+          ))}
+        </tbody>
+      </table>
 
-        {/* Add Agent Form */}
-        <div className="admin-form">
-          <input type="text" placeholder="Full Name" onChange={(e) => setNewAgent({ ...newAgent, name: e.target.value })} />
-          <input type="email" placeholder="Email" onChange={(e) => setNewAgent({ ...newAgent, email: e.target.value })} />
-          <input type="number" placeholder="Store #" onChange={(e) => setNewAgent({ ...newAgent, storeNumber: e.target.value })} />
-          <select onChange={(e) => setNewAgent({ ...newAgent, role: e.target.value })}>
+      {editingAgent && (
+        <div className="edit-section">
+          <h3>Edit Agent</h3>
+          <label>Store #</label>
+          <input
+            type="number"
+            value={updatedStore}
+            onChange={(e) => setUpdatedStore(e.target.value)}
+            placeholder={editingAgent.store_number}
+          />
+
+          <label>Role</label>
+          <select value={updatedRole} onChange={(e) => setUpdatedRole(e.target.value)}>
             <option value="agent">Agent</option>
-            <option value="store_manager">Store Manager</option>
+            <option value="manager">Manager</option>
             <option value="admin">Admin</option>
           </select>
-          <button className="btn-green" onClick={addAgent}>Add Agent</button>
-        </div>
-      </section>
 
-      {/* Manage Reasons */}
-      <section className="admin-section">
-        <h2>Manage Reasons</h2>
-        <table className="admin-table">
-          <thead>
-            <tr>
-              <th>Reason</th>
-              <th>UPS Count</th>
-              <th>Actions</th>
+          <button className="btn-save" onClick={saveAgentUpdate}>Save</button>
+          <button className="btn-cancel" onClick={() => setEditingAgent(null)}>Cancel</button>
+        </div>
+      )}
+
+      <h2>Manage Reasons</h2>
+      <table className="admin-table">
+        <thead>
+          <tr>
+            <th>Reason</th>
+            <th>UPS Count</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {reasons.map((reason) => (
+            <tr key={reason.id}>
+              <td>{reason.reason}</td>
+              <td>{reason.ups_count ? "Yes" : "No"}</td>
+              <td>
+                <button className="btn-delete" onClick={() => deleteReason(reason.id)}>Delete</button>
+              </td>
             </tr>
-          </thead>
-          <tbody>
-            {reasons.map((reason) => (
-              <tr key={reason.id}>
-                <td>{reason.reason_text}</td>
-                <td>{reason.ups_count ? "Yes" : "No"}</td>
-                <td>
-                  <button className="btn-red" onClick={() => deleteReason(reason.id)}>Delete</button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+          ))}
+        </tbody>
+      </table>
 
-        {/* Add Reason Form */}
-        <div className="admin-form">
-          <input type="text" placeholder="New Reason" onChange={(e) => setNewReason({ ...newReason, reason_text: e.target.value })} />
-          <label>
-            <input type="checkbox" onChange={(e) => setNewReason({ ...newReason, ups_count: e.target.checked })} />
-            Count towards UPS?
-          </label>
-          <button className="btn-green" onClick={addReason}>Add Reason</button>
-        </div>
-      </section>
+      <div className="add-reason">
+        <input type="text" placeholder="New Reason" value={newReason} onChange={(e) => setNewReason(e.target.value)} />
+        <label>
+          <input type="checkbox" checked={upsCount} onChange={(e) => setUpsCount(e.target.checked)} />
+          Count towards UPS?
+        </label>
+        <button className="btn-add" onClick={addReason}>Add Reason</button>
+      </div>
     </div>
   );
 }
