@@ -19,21 +19,20 @@ function StatsPage() {
 
   // ✅ Fetch Stats from Supabase
   const fetchStats = async () => {
-  const { data, error } = await supabase
-    .from("sales")
-    .select("email, agents(name, store_number), COUNT(*) as sale_count, SUM(sale_amount) as total_sales")
-    .group("email, agents(name, store_number)")
-    .order("total_sales", { ascending: false });
+    const { data, error } = await supabase
+      .from("sales")
+      .select("email, COUNT(email) as ups_count, COUNT(contract_number) as sale_count, SUM(sale_amount) as total_sales, agents(name, store_number)")
+      .group("email, agents.name, agents.store_number")
+      .order("total_sales", { ascending: false });
 
-  if (!error) {
-    console.log("✅ Sales Stats Fetched:", data);
-    setStats(data);
-    setFilteredStats(data);
-  } else {
-    console.error("❌ Error fetching stats:", error);
-  }
-};
-
+    if (!error) {
+      console.log("✅ Sales Stats Fetched:", data);
+      setStats(data);
+      setFilteredStats(data);
+    } else {
+      console.error("❌ Error fetching stats:", error);
+    }
+  };
 
   // ✅ Handle Filters & Sorting
   useEffect(() => {
@@ -143,7 +142,7 @@ function StatsPage() {
                 <td>{stat.agents?.name || stat.email}</td>
                 <td>{stat.ups_count}</td>
                 <td>{stat.sale_count}</td>
-                <td>${stat.total_sales.toFixed(2)}</td>
+                <td>${stat.total_sales ? stat.total_sales.toFixed(2) : "0.00"}</td>
                 <td>{stat.ups_count > 0 ? ((stat.sale_count / stat.ups_count) * 100).toFixed(2) + "%" : "0%"}</td>
               </tr>
             ))
