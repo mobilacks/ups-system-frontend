@@ -452,23 +452,27 @@ body {
   padding: 15px;
 }
 /* ✅ Navbar Styling *//* ✅ Navbar Styling */
+/* ✅ Navbar Styling */
 .navbar {
   display: flex;
-  justify-content: flex-end; /* Align items to the right */
+  justify-content: flex-end;
   align-items: center;
-  background-color: #007bff; /* Primary color */
+  background-color: var(--primary-color);
   padding: 10px 20px;
+  box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
 }
 
 .navbar a {
-  color: white;
   text-decoration: none;
-  margin-left: 15px;
-  padding: 10px 15px;
+  background-color: white;
+  color: var(--primary-color);
+  padding: 8px 15px;
+  margin: 5px;
   border-radius: 5px;
-  transition: background 0.3s;
+  font-weight: bold;
+  transition: background-color 0.3s ease;
 }
 
 .navbar a:hover {
-  background: #0056b3; /* Darker hover effect */
+  background-color: #ddd;
 }
