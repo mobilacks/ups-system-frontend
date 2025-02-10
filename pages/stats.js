@@ -19,28 +19,14 @@ function StatsPage() {
 
   // ✅ Fetch Stats from Supabase
 const fetchStats = async () => {
-  const { data, error } = await supabase
-    .from("sales")
-    .select("email, agents(name, store_number)")
-    .group("email, agents.name, agents.store_number");
+  const { data, error } = await supabase.rpc("get_sales_stats");
 
-  if (data && data.length > 0) {
-    const aggregatedStats = data.map((stat) => ({
-      email: stat.email,
-      name: stat.agents?.name || "Unknown",
-      store_number: stat.agents?.store_number || "N/A",
-      ups_count: data.filter((s) => s.email === stat.email).length,
-      sale_count: data.filter((s) => s.email === stat.email && s.contract_number).length,
-      total_sales: data
-        .filter((s) => s.email === stat.email)
-        .reduce((acc, sale) => acc + (sale.sale_amount || 0), 0),
-    }));
-
-    setStats(aggregatedStats);
-    setFilteredStats(aggregatedStats);
-    console.log("✅ Sales Stats Fetched:", aggregatedStats);
-  } else {
+  if (error) {
     console.error("❌ Error fetching stats:", error);
+  } else {
+    console.log("✅ Sales Stats Fetched:", data);
+    setStats(data);
+    setFilteredStats(data);
   }
 };
 
