@@ -132,22 +132,23 @@ const fetchStats = async () => {
           </tr>
         </thead>
         <tbody>
-          {filteredStats.length > 0 ? (
-            filteredStats.map((stat) => (
-              <tr key={stat.email}>
-                <td>{stat.agents?.name || stat.email}</td>
-                <td>{stat.ups_count}</td>
-                <td>{stat.sale_count}</td>
-                <td>${stat.total_sales ? stat.total_sales.toFixed(2) : "0.00"}</td>
-                <td>{stat.ups_count > 0 ? ((stat.sale_count / stat.ups_count) * 100).toFixed(2) + "%" : "0%"}</td>
-              </tr>
-            ))
-          ) : (
-            <tr>
-              <td colSpan="5" className="no-stats">No stats available.</td>
-            </tr>
-          )}
-        </tbody>
+  {filteredStats.length > 0 ? (
+    filteredStats.map((stat) => (
+      <tr key={stat.email}>
+        <td>{stat.name}</td> {/* ✅ Show agent's name instead of email */}
+        <td>{stat.ups_count}</td>
+        <td>{stat.sale_count}</td>
+        <td>${stat.total_sales.toFixed(2)}</td>
+        <td>{stat.close_ratio.toFixed(2)}%</td>
+        <td>${stat.avg_sale.toFixed(2)}</td>
+      </tr>
+    ))
+  ) : (
+    <tr>
+      <td colSpan="6" className="no-stats">No stats available.</td>
+    </tr>
+  )}
+</tbody>
       </table>
     </div>
   );
