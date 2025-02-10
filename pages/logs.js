@@ -13,7 +13,7 @@ function LogsPage() {
   const fetchLogs = async () => {
     const { data, error } = await supabase
       .from("logs")
-      .select("id, user_email, action_type, table_name, details, created_at")
+      .select("id, email, action_type, table_name, details, created_at")
       .order("created_at", { ascending: false });
     
     if (!error) setLogs(data);
