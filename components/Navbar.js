@@ -43,16 +43,16 @@ export default function Navbar() {
   return (
     <nav className="navbar">
       <ul>
-        <li><a href="/dashboard">Dashboard</a></li>
-        <li><a href="/stats">Stats</a></li>
-        {role === "store_manager" && <li><a href="/logs">Logs</a></li>}
+        <li><a href="/dashboard" className="nav-btn">Dashboard</a></li>
+        <li><a href="/stats" className="nav-btn">Stats</a></li>
+        {role === "store_manager" && <li><a href="/logs" className="nav-btn">Logs</a></li>}
         {role === "admin" && (
           <>
-            <li><a href="/admin">Admin</a></li>
-            <li><a href="/logs">Logs</a></li>
+            <li><a href="/admin" className="nav-btn">Admin</a></li>
+            <li><a href="/logs" className="nav-btn">Logs</a></li>
           </>
-        )}
-        <li><button onClick={handleLogout}>Logout</button></li>
+          )}
+        <li><button onClick={handleLogout} className="logout-btn">Logout</button></li>
       </ul>
     </nav>
   );
