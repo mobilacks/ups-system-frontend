@@ -75,7 +75,7 @@ export default function AdminPage() {
   // ✅ Add New Reason
   const addReason = async () => {
     if (!newReason.trim()) return;
-    await supabase.from("reasons").insert([{ reason: newReason, ups_count: upsCount }]);
+    await supabase.from("reasons").insert([{ reason_text: newReason, ups_count: upsCount }]);
     setNewReason("");
     setUpsCount(false);
     fetchReasons();
@@ -152,7 +152,7 @@ export default function AdminPage() {
         <tbody>
           {reasons.map((reason) => (
             <tr key={reason.id}>
-              <td>{reason.reason}</td>
+              <td>{reason.reason_text}</td> {/* ✅ Fixed this line */}
               <td>{reason.ups_count ? "Yes" : "No"}</td>
               <td>
                 <button className="btn-delete" onClick={() => deleteReason(reason.id)}>Delete</button>
