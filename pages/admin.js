@@ -26,6 +26,7 @@ export default function AdminPage() {
   const fetchReasons = async () => {
     const { data, error } = await supabase.from("reasons").select("*");
     if (!error) setReasons(data);
+    else console.error("❌ Error fetching reasons:", error);
   };
 
   // ✅ Delete Agent
@@ -42,10 +43,10 @@ export default function AdminPage() {
 
     const { error } = await supabase
       .from("agents")
-      .update({ 
+      .update({
         name: updatedName || editingAgent.name,
-        store_number: updatedStore || editingAgent.store_number, 
-        role: updatedRole || editingAgent.role 
+        store_number: updatedStore || editingAgent.store_number,
+        role: updatedRole || editingAgent.role,
       })
       .eq("email", editingAgent.email);
 
@@ -110,7 +111,7 @@ export default function AdminPage() {
       {editingAgent && (
         <div className="edit-section">
           <h3>Edit Agent</h3>
-          
+
           <label>Name</label>
           <input
             type="text"
