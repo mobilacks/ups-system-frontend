@@ -18,21 +18,28 @@ function StatsPage() {
   }, []);
 
   // ✅ Fetch Stats from Supabase
-  const fetchStats = async () => {
-    const { data, error } = await supabase
-      .from("sales")
-      .select("email, COUNT(email) as ups_count, COUNT(contract_number) as sale_count, SUM(sale_amount) as total_sales, agents(name, store_number)")
-      .group("email, agents.name, agents.store_number")
-      .order("total_sales", { ascending: false });
+const fetchStats = async () => {
+  const { data, error } = await supabase
+    .from("sales")
+    .select(`
+      email,
+      COUNT(email) as ups_count,
+      COUNT(contract_number) as sale_count,
+      SUM(sale_amount) as total_sales,
+      agents (name, store_number)
+    `)
+    .groupBy("email, agents.name, agents.store_number")
+    .order("total_sales", { ascending: false });
 
-    if (!error) {
-      console.log("✅ Sales Stats Fetched:", data);
-      setStats(data);
-      setFilteredStats(data);
-    } else {
-      console.error("❌ Error fetching stats:", error);
-    }
-  };
+  if (!error) {
+    console.log("✅ Sales Stats Fetched:", data);
+    setStats(data);
+    setFilteredStats(data);
+  } else {
+    console.error("❌ Error fetching stats:", error);
+  }
+};
+
 
   // ✅ Handle Filters & Sorting
   useEffect(() => {
