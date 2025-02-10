@@ -19,19 +19,21 @@ function StatsPage() {
 
   // ✅ Fetch Stats from Supabase
   const fetchStats = async () => {
-    const { data, error } = await supabase
-      .from("stats")
-      .select("email, agents(name, store_number), ups_count, sale_count, total_sales")
-      .order("total_sales", { ascending: false });
+  const { data, error } = await supabase
+    .from("sales")
+    .select("email, agents(name, store_number), COUNT(*) as sale_count, SUM(sale_amount) as total_sales")
+    .group("email, agents(name, store_number)")
+    .order("total_sales", { ascending: false });
 
-    if (!error) {
-      console.log("✅ Stats Fetched:", data);
-      setStats(data);
-      setFilteredStats(data);
-    } else {
-      console.error("❌ Error fetching stats:", error);
-    }
-  };
+  if (!error) {
+    console.log("✅ Sales Stats Fetched:", data);
+    setStats(data);
+    setFilteredStats(data);
+  } else {
+    console.error("❌ Error fetching stats:", error);
+  }
+};
+
 
   // ✅ Handle Filters & Sorting
   useEffect(() => {
