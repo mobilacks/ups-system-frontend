@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { supabase } from "../lib/supabase";
+import ProtectedRoute from "../lib/protectedRoute";
 
 export default function AdminPage() {
   const [agents, setAgents] = useState([]);
@@ -15,6 +16,13 @@ export default function AdminPage() {
     fetchAgents();
     fetchReasons();
   }, []);
+
+//Protect Admin page with authetication
+  function AdminPage() {
+  return <div>Admin Panel - Protected</div>;
+}
+
+export default ProtectedRoute(AdminPage);
 
   // ✅ Fetch Agents from Supabase
   const fetchAgents = async () => {
