@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
+import { useRouter } from "next/router";
 import { supabase } from "../lib/supabase";
 import ProtectedRoute from "../lib/protectedRoute";
 
-export default function AdminPage() {
+function AdminPage() {
   const [agents, setAgents] = useState([]);
   const [reasons, setReasons] = useState([]);
   const [newReason, setNewReason] = useState("");
@@ -11,18 +12,12 @@ export default function AdminPage() {
   const [updatedName, setUpdatedName] = useState("");
   const [updatedStore, setUpdatedStore] = useState("");
   const [updatedRole, setUpdatedRole] = useState("");
+  const router = useRouter();
 
   useEffect(() => {
     fetchAgents();
     fetchReasons();
   }, []);
-
-//Protect Admin page with authetication
-  function AdminPage() {
-  return <div>Admin Panel - Protected</div>;
-}
-
-export default ProtectedRoute(AdminPage);
 
   // ✅ Fetch Agents from Supabase
   const fetchAgents = async () => {
@@ -160,7 +155,7 @@ export default ProtectedRoute(AdminPage);
         <tbody>
           {reasons.map((reason) => (
             <tr key={reason.id}>
-              <td>{reason.reason_text}</td> {/* ✅ Fixed this line */}
+              <td>{reason.reason_text}</td>
               <td>{reason.ups_count ? "Yes" : "No"}</td>
               <td>
                 <button className="btn-delete" onClick={() => deleteReason(reason.id)}>Delete</button>
@@ -181,3 +176,5 @@ export default ProtectedRoute(AdminPage);
     </div>
   );
 }
+
+export default ProtectedRoute(AdminPage);
