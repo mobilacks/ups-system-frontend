@@ -16,7 +16,11 @@ function LogsPage() {
 
   // ✅ Fetch logs from Supabase
   const fetchLogs = async () => {
-    const { data, error } = await supabase.from("logs").select("*").order("timestamp", { ascending: false });
+    const { data, error } = await supabase
+      .from("logs")
+      .select("email, action, table_name, details, timestamp")
+      .order("timestamp", { ascending: false });
+
     if (!error) {
       console.log("✅ Fetched logs:", data);
       setLogs(data);
@@ -31,7 +35,7 @@ function LogsPage() {
     let filtered = logs;
 
     if (searchUser) {
-      filtered = filtered.filter((log) => log.user_email.toLowerCase().includes(searchUser.toLowerCase()));
+      filtered = filtered.filter((log) => log.email.toLowerCase().includes(searchUser.toLowerCase()));
     }
 
     if (searchAction) {
@@ -78,7 +82,7 @@ function LogsPage() {
           {filteredLogs.length > 0 ? (
             filteredLogs.map((log, index) => (
               <tr key={index}>
-                <td>{log.user_email}</td>
+                <td>{log.email}</td> {/* ✅ Fixed this line */}
                 <td>{log.action}</td>
                 <td>{log.table_name}</td>
                 <td>{log.details}</td>
