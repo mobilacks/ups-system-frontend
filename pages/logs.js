@@ -15,10 +15,10 @@ function LogsPage() {
   }, []);
 
   // ✅ Fetch logs from Supabase
-  const fetchLogs = async () => {
+const fetchLogs = async () => {
     const { data, error } = await supabase
       .from("logs")
-      .select("email, action, table_name, details, timestamp")
+      .select("email, log_action, table_name, details, timestamp") // 🔄 Updated column names
       .order("timestamp", { ascending: false });
 
     if (!error) {
@@ -28,7 +28,7 @@ function LogsPage() {
     } else {
       console.error("❌ Error fetching logs:", error);
     }
-  };
+};
 
   // ✅ Handle Filtering
   const handleFilter = () => {
