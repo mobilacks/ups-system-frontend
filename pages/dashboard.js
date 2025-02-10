@@ -47,7 +47,7 @@ export default function Dashboard() {
     const { data, error } = await supabase
       .from("queue")
       .select("*")
-      .eq("store_number", storeNum); // ✅ Only fetch agents from the same store
+      .eq("store_number", storeNum); // ✅ Fetch only agents from the same store
 
     if (!error) {
       setAgentsWaiting(data.filter(a => a.agents_waiting));
@@ -137,9 +137,7 @@ export default function Dashboard() {
       {/* Top Navigation Bar */}
       <div className="flex justify-between items-center mb-4">
         <h1 className="text-2xl font-bold">Dashboard</h1>
-        <button className="bg-red-500 text-white px-3 py-2 rounded-md text-sm" onClick={handleLogout}>
-          Logout
-        </button>
+        <button className="logout-btn" onClick={handleLogout}>Logout</button>
       </div>
 
       {/* Agents Waiting Section */}
@@ -204,33 +202,6 @@ export default function Dashboard() {
             </li>
           ))}
         </ul>
-      </div>
-
-      {/* Daily Stats Section */}
-      <div className="queue-section">
-        <h2>Daily Stats</h2>
-        <table className="stats-table">
-          <thead>
-            <tr>
-              <th>Agent</th>
-              <th>UPS</th>
-              <th>Sales</th>
-              <th>Total Sales</th>
-              <th>Avg Sale</th>
-            </tr>
-          </thead>
-          <tbody>
-            {stats.map(stat => (
-              <tr key={stat.email}>
-                <td>{stat.email}</td>
-                <td>{stat.ups}</td>
-                <td>{stat.sales}</td>
-                <td>${stat.totalSales}</td>
-                <td>${stat.avgSale}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
       </div>
     </div>
   );
