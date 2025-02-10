@@ -451,51 +451,52 @@ body {
   font-style: italic;
   padding: 15px;
 }
-/* ✅ Navbar Container */
+/* ✅ Navbar Styling */
 .navbar {
   display: flex;
-  justify-content: flex-end;
-  align-items: center;
+  justify-content: center;
+  gap: 10px;
   background-color: var(--primary-color);
-  padding: 10px 20px;
-  box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+  padding: 10px;
+  border-radius: 8px;
 }
 
-/* ✅ Navbar List */
+/* ✅ Navbar Buttons */
 .navbar ul {
   list-style: none;
   display: flex;
-  align-items: center;
-  gap: 15px;
+  gap: 10px;
 }
 
-/* ✅ Navbar Links Styled as Buttons */
-.navbar .nav-btn {
-  text-decoration: none;
+.navbar li {
+  display: inline;
+}
+
+/* ✅ Styling for All Navbar Buttons */
+.navbar a,
+.navbar button {
   background-color: white;
   color: var(--primary-color);
-  padding: 8px 15px;
-  border-radius: 5px;
-  font-weight: bold;
-  transition: background-color 0.3s ease;
-}
-
-.navbar .nav-btn:hover {
-  background-color: #ddd;
-}
-
-/* ✅ Logout Button */
-.navbar .logout-btn {
-  background-color: red;
-  color: white;
-  padding: 8px 15px;
   border: none;
+  padding: 8px 15px;
   border-radius: 5px;
   cursor: pointer;
   font-weight: bold;
-  transition: background-color 0.3s ease;
+  text-decoration: none;
 }
 
-.navbar .logout-btn:hover {
-  background-color: darkred;
+.navbar a:hover,
+.navbar button:hover {
+  background-color: #ddd;
+}
+
+/* ✅ Fix Logout Button Styling */
+.navbar button {
+  background-color: white !important;
+  color: var(--primary-color) !important;
+  border: none !important;
+}
+
+.navbar button:hover {
+  background-color: #ddd !important;
 }
