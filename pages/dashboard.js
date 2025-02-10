@@ -15,22 +15,20 @@ export default function Dashboard() {
       const { data: { user }, error } = await supabase.auth.getUser();
       if (user) {
         setUser(user);
-        resetQueueOnLogin(user.email); // Reset queue state on login
+        resetQueueOnLogin(user.email);
         fetchQueueData();
         fetchStats();
       } else {
-        router.push("/login"); // Redirect to login if not authenticated
+        router.push("/login");
       }
     }
     fetchUser();
   }, []);
 
-  // ✅ Reset queue state when agent logs in
   async function resetQueueOnLogin(email) {
     await supabase.rpc("move_to_agents_waiting", { p_email: email });
   }
 
-  // ✅ Fetch queue data
   async function fetchQueueData() {
     const { data, error } = await supabase.from("queue").select("*");
     if (!error) {
@@ -40,7 +38,6 @@ export default function Dashboard() {
     }
   }
 
-  // ✅ Fetch daily stats
   async function fetchStats() {
     const { data, error } = await supabase
       .from("sales")
@@ -70,7 +67,6 @@ export default function Dashboard() {
     }
   }
 
-  // ✅ Handle queue movements
   async function handleQueueAction(action, email) {
     const functionMap = {
       "join_queue": "join_queue",
@@ -88,7 +84,6 @@ export default function Dashboard() {
     }
   }
 
-  // ✅ Handle sale closure
   async function handleSaleClosure(email, contractNumber, saleAmount) {
     const { error } = await supabase.from("sales").insert([
       { email, contract_number: contractNumber, sale_amount: saleAmount }
@@ -101,7 +96,6 @@ export default function Dashboard() {
     }
   }
 
-  // ✅ Handle logout (resets queue status)
   async function handleLogout() {
     if (user) {
       await supabase.rpc("move_to_agents_waiting", { p_email: user.email });
@@ -121,13 +115,13 @@ export default function Dashboard() {
       </div>
 
       {/* Agents Waiting Section */}
-      <div className="mb-6">
-        <h2 className="text-xl font-semibold bg-gray-200 p-2 rounded-md">Agents Waiting</h2>
-        <ul>
+      <div className="queue-section">
+        <h2>Agents Waiting</h2>
+        <ul className="queue-list">
           {agentsWaiting.map(agent => (
-            <li key={agent.email} className="flex justify-between items-center border-b p-2">
+            <li key={agent.email} className="queue-item">
               <span>{agent.email} (Store {agent.store_number})</span>
-              <button className="bg-blue-500 text-white px-3 py-1 rounded-md" onClick={() => handleQueueAction("join_queue", agent.email)}>
+              <button className="btn-primary" onClick={() => handleQueueAction("join_queue", agent.email)}>
                 Join Queue
               </button>
             </li>
@@ -136,17 +130,17 @@ export default function Dashboard() {
       </div>
 
       {/* In Queue Section */}
-      <div className="mb-6">
-        <h2 className="text-xl font-semibold bg-gray-200 p-2 rounded-md">In Queue</h2>
-        <ul>
+      <div className="queue-section">
+        <h2>In Queue</h2>
+        <ul className="queue-list">
           {inQueue.map(agent => (
-            <li key={agent.email} className="flex justify-between items-center border-b p-2">
+            <li key={agent.email} className="queue-item">
               <span>{agent.email} (Store {agent.store_number})</span>
-              <div>
-                <button className="bg-green-500 text-white px-3 py-1 rounded-md mr-2" onClick={() => handleQueueAction("move_to_with_customer", agent.email)}>
+              <div className="btn-group">
+                <button className="btn-green" onClick={() => handleQueueAction("move_to_with_customer", agent.email)}>
                   With Customer
                 </button>
-                <button className="bg-red-500 text-white px-3 py-1 rounded-md" onClick={() => handleQueueAction("move_to_agents_waiting", agent.email)}>
+                <button className="btn-red" onClick={() => handleQueueAction("move_to_agents_waiting", agent.email)}>
                   Move to Agents Waiting
                 </button>
               </div>
@@ -156,20 +150,20 @@ export default function Dashboard() {
       </div>
 
       {/* With Customer Section */}
-      <div className="mb-6">
-        <h2 className="text-xl font-semibold bg-gray-200 p-2 rounded-md">With Customer</h2>
-        <ul>
+      <div className="queue-section">
+        <h2>With Customer</h2>
+        <ul className="queue-list">
           {withCustomer.map(agent => (
-            <li key={agent.email} className="border-b p-2">
+            <li key={agent.email} className="queue-item">
               <span>{agent.email} (Store {agent.store_number})</span>
-              <div className="flex space-x-2 mt-2">
-                <button className="bg-blue-500 text-white px-3 py-1 rounded-md" onClick={() => handleQueueAction("move_to_in_queue", agent.email)}>
+              <div className="btn-group">
+                <button className="btn-primary" onClick={() => handleQueueAction("move_to_in_queue", agent.email)}>
                   Back to Queue
                 </button>
-                <button className="bg-green-500 text-white px-3 py-1 rounded-md" onClick={() => handleSaleClosure(agent.email, prompt("Enter Contract #"), prompt("Enter Sale Amount"))}>
+                <button className="btn-green" onClick={() => handleSaleClosure(agent.email, prompt("Enter Contract #"), prompt("Enter Sale Amount"))}>
                   Close Sale
                 </button>
-                <button className="bg-yellow-500 text-white px-3 py-1 rounded-md" onClick={() => handleQueueAction("move_to_agents_waiting", agent.email)}>
+                <button className="btn-yellow" onClick={() => handleQueueAction("move_to_agents_waiting", agent.email)}>
                   No Sale
                 </button>
               </div>
@@ -179,26 +173,26 @@ export default function Dashboard() {
       </div>
 
       {/* Daily Stats Section */}
-      <div>
-        <h2 className="text-xl font-semibold bg-gray-200 p-2 rounded-md">Daily Stats</h2>
-        <table className="min-w-full border mt-2">
+      <div className="queue-section">
+        <h2>Daily Stats</h2>
+        <table className="stats-table">
           <thead>
-            <tr className="bg-gray-100">
-              <th className="border p-2">Agent</th>
-              <th className="border p-2">UPS</th>
-              <th className="border p-2">Sales</th>
-              <th className="border p-2">Total Sales</th>
-              <th className="border p-2">Avg Sale</th>
+            <tr>
+              <th>Agent</th>
+              <th>UPS</th>
+              <th>Sales</th>
+              <th>Total Sales</th>
+              <th>Avg Sale</th>
             </tr>
           </thead>
           <tbody>
             {stats.map(stat => (
-              <tr key={stat.email} className="border">
-                <td className="border p-2">{stat.email}</td>
-                <td className="border p-2">{stat.ups}</td>
-                <td className="border p-2">{stat.sales}</td>
-                <td className="border p-2">${stat.totalSales}</td>
-                <td className="border p-2">${stat.avgSale}</td>
+              <tr key={stat.email}>
+                <td>{stat.email}</td>
+                <td>{stat.ups}</td>
+                <td>{stat.sales}</td>
+                <td>${stat.totalSales}</td>
+                <td>${stat.avgSale}</td>
               </tr>
             ))}
           </tbody>
