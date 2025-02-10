@@ -228,3 +228,89 @@ button:hover {
   top: 10px;
   right: 10px;
 }
+/* ✅ Admin Page Styling */
+.admin-container {
+  max-width: 800px;
+  margin: 20px auto;
+  padding: 20px;
+  background: var(--bg-light);
+  border-radius: var(--border-radius);
+}
+
+@media (prefers-color-scheme: dark) {
+  .admin-container {
+    background: var(--bg-dark);
+    color: var(--text-dark);
+  }
+}
+
+.admin-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 20px;
+}
+
+.admin-table th,
+.admin-table td {
+  padding: 10px;
+  border-bottom: 1px solid #ccc;
+}
+
+@media (prefers-color-scheme: dark) {
+  .admin-table th,
+  .admin-table td {
+    border-bottom: 1px solid #555;
+  }
+}
+
+.btn-delete {
+  background: red;
+  color: white;
+  padding: 5px 10px;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.btn-edit {
+  background: orange;
+  color: white;
+  padding: 5px 10px;
+  border-radius: 5px;
+  margin-right: 5px;
+}
+
+.btn-save {
+  background: green;
+  color: white;
+  padding: 5px 10px;
+  border-radius: 5px;
+}
+
+.btn-cancel {
+  background: gray;
+  color: white;
+  padding: 5px 10px;
+  border-radius: 5px;
+}
+
+.add-reason {
+  margin-top: 20px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.add-reason input {
+  padding: 8px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+}
+
+@media (prefers-color-scheme: dark) {
+  .add-reason input {
+    background: #333;
+    color: white;
+    border: 1px solid #555;
+  }
+}
+
