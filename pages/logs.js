@@ -6,8 +6,13 @@ function LogsPage() {
   const [logs, setLogs] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [filteredLogs, setFilteredLogs] = useState([]);
-  const [actionFilter, setActionFilter] = useState(""); // ✅ Filter by Action
-  const [tableFilter, setTableFilter] = useState(""); // ✅ Filter by Table Name
+  const [actionFilter, setActionFilter] = useState("");
+  const [tableFilter, setTableFilter] = useState("");
+  const [agentFilter, setAgentFilter] = useState("");
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
+  const [sortColumn, setSortColumn] = useState("created_at");
+  const [sortOrder, setSortOrder] = useState("desc");
 
   useEffect(() => {
     fetchLogs();
@@ -23,13 +28,13 @@ function LogsPage() {
     if (!error) {
       console.log("✅ Logs Fetched:", data);
       setLogs(data);
-      setFilteredLogs(data); // Initialize filtered logs
+      setFilteredLogs(data);
     } else {
       console.error("❌ Error fetching logs:", error);
     }
   };
 
-  // ✅ Handle Search & Filters
+  // ✅ Handle Filters & Sorting
   useEffect(() => {
     let filtered = logs;
 
@@ -52,18 +57,40 @@ function LogsPage() {
       filtered = filtered.filter((log) => log.table_name === tableFilter);
     }
 
-    setFilteredLogs(filtered);
-  }, [searchQuery, actionFilter, tableFilter, logs]);
+    if (agentFilter) {
+      filtered = filtered.filter((log) => log.email === agentFilter);
+    }
 
-  // ✅ Get unique actions & tables for dropdowns
+    if (startDate) {
+      filtered = filtered.filter((log) => new Date(log.created_at) >= new Date(startDate));
+    }
+
+    if (endDate) {
+      filtered = filtered.filter((log) => new Date(log.created_at) <= new Date(endDate));
+    }
+
+    // ✅ Sorting Functionality
+    filtered.sort((a, b) => {
+      if (sortOrder === "asc") {
+        return a[sortColumn] > b[sortColumn] ? 1 : -1;
+      } else {
+        return a[sortColumn] < b[sortColumn] ? 1 : -1;
+      }
+    });
+
+    setFilteredLogs(filtered);
+  }, [searchQuery, actionFilter, tableFilter, agentFilter, startDate, endDate, sortColumn, sortOrder, logs]);
+
+  // ✅ Get unique values for dropdown filters
   const uniqueActions = [...new Set(logs.map((log) => log.action_type))];
   const uniqueTables = [...new Set(logs.map((log) => log.table_name))];
+  const uniqueAgents = [...new Set(logs.map((log) => log.email))];
 
   return (
     <div className="logs-container">
       <h2>System Logs</h2>
 
-      {/* ✅ Filters */}
+      {/* ✅ Filters Section */}
       <div className="filters">
         <input
           type="text"
@@ -90,24 +117,52 @@ function LogsPage() {
             </option>
           ))}
         </select>
+
+        <select value={agentFilter} onChange={(e) => setAgentFilter(e.target.value)}>
+          <option value="">All Agents</option>
+          {uniqueAgents.map((agent) => (
+            <option key={agent} value={agent}>
+              {agent}
+            </option>
+          ))}
+        </select>
+
+        <input
+          type="date"
+          value={startDate}
+          onChange={(e) => setStartDate(e.target.value)}
+        />
+        <input
+          type="date"
+          value={endDate}
+          onChange={(e) => setEndDate(e.target.value)}
+        />
       </div>
 
       {/* ✅ Logs Table */}
       <table className="logs-table">
         <thead>
           <tr>
-            <th>User</th>
-            <th>Action</th>
-            <th>Table</th>
+            <th onClick={() => setSortColumn("email")}>
+              User {sortColumn === "email" ? (sortOrder === "asc" ? "⬆" : "⬇") : ""}
+            </th>
+            <th onClick={() => setSortColumn("action_type")}>
+              Action {sortColumn === "action_type" ? (sortOrder === "asc" ? "⬆" : "⬇") : ""}
+            </th>
+            <th onClick={() => setSortColumn("table_name")}>
+              Table {sortColumn === "table_name" ? (sortOrder === "asc" ? "⬆" : "⬇") : ""}
+            </th>
             <th>Details</th>
-            <th>Timestamp</th>
+            <th onClick={() => setSortColumn("created_at")}>
+              Timestamp {sortColumn === "created_at" ? (sortOrder === "asc" ? "⬆" : "⬇") : ""}
+            </th>
           </tr>
         </thead>
         <tbody>
           {filteredLogs.length > 0 ? (
             filteredLogs.map((log) => (
               <tr key={log.id}>
-                <td>{log.agents?.name || log.email}</td> {/* ✅ Show Agent Name if available */}
+                <td>{log.agents?.name || log.email}</td>
                 <td>{log.action_type}</td>
                 <td>{log.table_name}</td>
                 <td>{log.details}</td>
