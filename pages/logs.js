@@ -6,6 +6,8 @@ function LogsPage() {
   const [logs, setLogs] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [filteredLogs, setFilteredLogs] = useState([]);
+  const [actionFilter, setActionFilter] = useState(""); // ✅ Filter by Action
+  const [tableFilter, setTableFilter] = useState(""); // ✅ Filter by Table Name
 
   useEffect(() => {
     fetchLogs();
@@ -27,35 +29,68 @@ function LogsPage() {
     }
   };
 
-  // ✅ Handle Search Filtering
+  // ✅ Handle Search & Filters
   useEffect(() => {
-    if (!searchQuery.trim()) {
-      setFilteredLogs(logs);
-    } else {
+    let filtered = logs;
+
+    if (searchQuery.trim()) {
       const lowercasedQuery = searchQuery.toLowerCase();
-      const filtered = logs.filter((log) =>
+      filtered = filtered.filter((log) =>
         log.email.toLowerCase().includes(lowercasedQuery) ||
         log.agents?.name?.toLowerCase().includes(lowercasedQuery) ||
         log.action_type.toLowerCase().includes(lowercasedQuery) ||
         log.table_name.toLowerCase().includes(lowercasedQuery) ||
         log.details.toLowerCase().includes(lowercasedQuery)
       );
-      setFilteredLogs(filtered);
     }
-  }, [searchQuery, logs]);
+
+    if (actionFilter) {
+      filtered = filtered.filter((log) => log.action_type === actionFilter);
+    }
+
+    if (tableFilter) {
+      filtered = filtered.filter((log) => log.table_name === tableFilter);
+    }
+
+    setFilteredLogs(filtered);
+  }, [searchQuery, actionFilter, tableFilter, logs]);
+
+  // ✅ Get unique actions & tables for dropdowns
+  const uniqueActions = [...new Set(logs.map((log) => log.action_type))];
+  const uniqueTables = [...new Set(logs.map((log) => log.table_name))];
 
   return (
     <div className="logs-container">
       <h2>System Logs</h2>
 
-      {/* ✅ Search Bar */}
-      <input
-        type="text"
-        placeholder="Search logs..."
-        value={searchQuery}
-        onChange={(e) => setSearchQuery(e.target.value)}
-        className="search-bar"
-      />
+      {/* ✅ Filters */}
+      <div className="filters">
+        <input
+          type="text"
+          placeholder="Search logs..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="search-bar"
+        />
+
+        <select value={actionFilter} onChange={(e) => setActionFilter(e.target.value)}>
+          <option value="">All Actions</option>
+          {uniqueActions.map((action) => (
+            <option key={action} value={action}>
+              {action}
+            </option>
+          ))}
+        </select>
+
+        <select value={tableFilter} onChange={(e) => setTableFilter(e.target.value)}>
+          <option value="">All Tables</option>
+          {uniqueTables.map((table) => (
+            <option key={table} value={table}>
+              {table}
+            </option>
+          ))}
+        </select>
+      </div>
 
       {/* ✅ Logs Table */}
       <table className="logs-table">
