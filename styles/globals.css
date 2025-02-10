@@ -34,44 +34,90 @@ body {
   }
 }
 
-/* ✅ General Table Styling (Applied to Stats, Admin, and Logs) */
-table {
+/* ✅ Unified Table Styling (Applied to Dashboard, Stats, Admin, Logs) */
+.table-container {
+  width: 100%;
+  margin: 20px auto;
+  padding: 20px;
+  background: var(--bg-light);
+  border-radius: var(--border-radius);
+  box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+  overflow-x: auto;
+}
+
+@media (prefers-color-scheme: dark) {
+  .table-container {
+    background: var(--bg-dark);
+    color: var(--text-dark);
+  }
+}
+
+.unified-table {
   width: 100%;
   border-collapse: collapse;
-  background: #fff;
-  color: #333;
-  font-size: 14px;
+  border-radius: var(--border-radius);
+  overflow: hidden;
 }
 
-th, td {
-  border: 1px solid #ccc;
+.unified-table th, .unified-table td {
   padding: 12px;
-  text-align: left;
+  border: 1px solid #ccc;
+  text-align: center;
 }
 
-th {
-  background: #007bff;
+.unified-table th {
+  background-color: var(--primary-color);
   color: white;
-  font-weight: bold;
-  text-transform: uppercase;
   cursor: pointer;
+  font-weight: bold;
 }
 
-th:hover {
+.unified-table th:hover {
   background-color: #0056b3;
 }
 
-tbody tr:nth-child(even) {
+.unified-table tbody tr:nth-child(even) {
   background: #f9f9f9;
 }
 
-.no-data {
-  text-align: center;
-  font-style: italic;
-  padding: 15px;
+.unified-table tbody tr:hover {
+  background: rgba(0, 123, 255, 0.1);
 }
 
-/* ✅ Stats Table */
+/* ✅ Dark Mode Table Styles */
+@media (prefers-color-scheme: dark) {
+  .unified-table th {
+    background-color: #0056b3;
+  }
+  
+  .unified-table td {
+    border: 1px solid #555;
+  }
+
+  .unified-table tbody tr:nth-child(even) {
+    background: #2a2a2a;
+  }
+
+  .unified-table tbody tr:hover {
+    background: rgba(0, 123, 255, 0.2);
+  }
+}
+
+/* ✅ Dashboard Page */
+.dashboard-container {
+  padding: 20px;
+}
+
+.dashboard-container h2 {
+  text-align: center;
+  background-color: var(--primary-color);
+  color: white;
+  padding: 15px;
+  border-radius: var(--border-radius);
+  margin-bottom: 20px;
+}
+
+/* ✅ Stats Page */
 .stats-container {
   padding: 20px;
 }
@@ -85,7 +131,7 @@ tbody tr:nth-child(even) {
   margin-bottom: 20px;
 }
 
-/* ✅ Logs Table */
+/* ✅ Logs Page */
 .logs-container {
   padding: 20px;
 }
@@ -93,16 +139,18 @@ tbody tr:nth-child(even) {
 .logs-table {
   width: 100%;
   border-collapse: collapse;
+  background: #fff;
+  color: #333;
 }
 
 .logs-table th, .logs-table td {
   border: 1px solid #ccc;
-  padding: 10px;
-  text-align: left;
+  padding: 12px;
+  text-align: center;
 }
 
 .logs-table th {
-  background: #007bff;
+  background: var(--primary-color);
   color: white;
 }
 
@@ -110,7 +158,13 @@ tbody tr:nth-child(even) {
   background: #f9f9f9;
 }
 
-/* ✅ Admin Tables (Manage Agents & Manage Reasons) */
+.no-logs {
+  text-align: center;
+  font-weight: bold;
+  color: red;
+}
+
+/* ✅ Admin Page */
 .admin-container {
   max-width: 900px;
   margin: 20px auto;
@@ -119,67 +173,59 @@ tbody tr:nth-child(even) {
   border-radius: var(--border-radius);
 }
 
-.admin-table {
-  width: 100%;
-  border-collapse: collapse;
+@media (prefers-color-scheme: dark) {
+  .admin-container {
+    background: var(--bg-dark);
+    color: var(--text-dark);
+  }
 }
 
-.admin-table th, .admin-table td {
-  border: 1px solid #ccc;
-  padding: 10px;
-  text-align: left;
-}
-
-.admin-table th {
-  background: #007bff;
-  color: white;
-}
-
-.admin-table tbody tr:nth-child(even) {
-  background: #f9f9f9;
-}
-
-/* ✅ Buttons inside tables */
-.btn-table {
-  background: #007bff;
-  color: white;
-  padding: 6px 10px;
-  border-radius: var(--border-radius);
-  font-size: 13px;
-  cursor: pointer;
-  border: none;
-}
-
-.btn-table:hover {
-  background: #0056b3;
-}
-
-.btn-delete {
-  background: red;
-  color: white;
-  padding: 6px 10px;
-  border-radius: var(--border-radius);
-  font-size: 13px;
-  cursor: pointer;
-  border: none;
-}
-
-.btn-delete:hover {
-  background: darkred;
-}
-
-/* ✅ Filters Section */
-.filters {
+/* ✅ Navbar Styling */
+.navbar {
   display: flex;
-  justify-content: space-between;
+  justify-content: center;
   gap: 10px;
-  margin-bottom: 20px;
+  background-color: var(--primary-color);
+  padding: 10px;
+  border-radius: 8px;
 }
 
-.filters input,
-.filters select {
-  padding: 10px;
-  border: 1px solid #ccc;
-  border-radius: var(--border-radius);
-  font-family: "Roboto Flex", sans-serif;
+/* ✅ Navbar Buttons */
+.navbar ul {
+  list-style: none;
+  display: flex;
+  gap: 10px;
+}
+
+.navbar li {
+  display: inline;
+}
+
+/* ✅ Styling for All Navbar Buttons */
+.navbar a,
+.navbar button {
+  background-color: white;
+  color: var(--primary-color);
+  border: none;
+  padding: 8px 15px;
+  border-radius: 5px;
+  cursor: pointer;
+  font-weight: bold;
+  text-decoration: none;
+}
+
+.navbar a:hover,
+.navbar button:hover {
+  background-color: #ddd;
+}
+
+/* ✅ Fix Logout Button Styling */
+.navbar button {
+  background-color: white !important;
+  color: var(--primary-color) !important;
+  border: none !important;
+}
+
+.navbar button:hover {
+  background-color: #ddd !important;
 }
