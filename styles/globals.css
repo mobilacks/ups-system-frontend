@@ -358,3 +358,96 @@ button:hover {
   color: red;
 }
 
+/* ✅ Apply Roboto Font */
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap');
+
+/* ✅ Ensure Global Styling */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: "Roboto", sans-serif;
+}
+
+/* ✅ Dark & Light Mode Support */
+:root {
+  --bg-light: #f4f4f4;
+  --bg-dark: #1e1e1e;
+  --text-light: #000;
+  --text-dark: #fff;
+  --primary-color: #007bff;
+  --border-radius: 10px;
+}
+
+/* ✅ Default Light Mode */
+body {
+  background-color: var(--bg-light);
+  color: var(--text-light);
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* ✅ Dark Mode */
+@media (prefers-color-scheme: dark) {
+  body {
+    background-color: var(--bg-dark);
+    color: var(--text-dark);
+  }
+}
+
+/* ✅ Stats Page */
+.stats-container {
+  padding: 20px;
+}
+
+.stats-container h2 {
+  text-align: center;
+  background-color: var(--primary-color);
+  color: white;
+  padding: 15px;
+  border-radius: var(--border-radius);
+  margin-bottom: 20px;
+}
+
+/* ✅ Filters Section */
+.filters {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.filters input,
+.filters select {
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: var(--border-radius);
+}
+
+/* ✅ Stats Table */
+.stats-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.stats-table th,
+.stats-table td {
+  padding: 10px;
+  border: 1px solid #ccc;
+  text-align: center;
+}
+
+.stats-table th {
+  background-color: var(--primary-color);
+  color: white;
+  cursor: pointer;
+}
+
+.stats-table th:hover {
+  background-color: #0056b3;
+}
+
+.stats-table .no-stats {
+  text-align: center;
+  font-style: italic;
+  padding: 15px;
+}
