@@ -57,11 +57,13 @@ body {
   border-collapse: collapse;
   border-radius: var(--border-radius);
   overflow: hidden;
+  border: 1px solid #ccc; /* ✅ Added border to fix missing outlines */
 }
 
-.unified-table th, .unified-table td {
+.unified-table th, 
+.unified-table td {
   padding: 12px;
-  border: 1px solid #ccc;
+  border: 1px solid #ccc; /* ✅ Ensures all cells have proper outlines */
   text-align: center;
 }
 
@@ -91,7 +93,7 @@ body {
   }
   
   .unified-table td {
-    border: 1px solid #555;
+    border: 1px solid #555; /* ✅ Ensures dark mode outlines */
   }
 
   .unified-table tbody tr:nth-child(even) {
@@ -143,7 +145,8 @@ body {
   color: #333;
 }
 
-.logs-table th, .logs-table td {
+.logs-table th, 
+.logs-table td {
   border: 1px solid #ccc;
   padding: 12px;
   text-align: center;
