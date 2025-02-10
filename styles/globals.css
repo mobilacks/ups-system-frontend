@@ -1,12 +1,12 @@
-/* ✅ Apply Roboto Font */
-@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap');
+/* ✅ Apply Roboto Flex Font */
+@import url('https://fonts.googleapis.com/css2?family=Roboto+Flex:wght@300;400;500;700&display=swap');
 
 /* ✅ Ensure Global Styling */
 * {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
-  font-family: "Roboto", sans-serif;
+  font-family: "Roboto Flex", sans-serif;
 }
 
 /* ✅ Dark & Light Mode Support */
@@ -165,292 +165,6 @@ button:hover {
   }
 }
 
-/* ✅ Button Groups */
-.btn-group {
-  display: flex;
-  gap: 10px;
-}
-
-/* ✅ Individual Buttons */
-.btn-primary {
-  background-color: var(--primary-color);
-}
-
-.btn-green {
-  background-color: green;
-}
-
-.btn-red {
-  background-color: red;
-}
-
-.btn-yellow {
-  background-color: orange;
-}
-
-.btn-primary,
-.btn-green,
-.btn-red,
-.btn-yellow {
-  padding: 8px 12px;
-  font-size: 14px;
-  font-weight: 500;
-  border-radius: var(--border-radius);
-  color: white;
-  cursor: pointer;
-  transition: background 0.3s ease;
-}
-
-.btn-primary:hover {
-  background-color: #0056b3;
-}
-
-.btn-green:hover {
-  background-color: darkgreen;
-}
-
-.btn-red:hover {
-  background-color: darkred;
-}
-
-.btn-yellow:hover {
-  background-color: darkorange;
-}
-
-/* ✅ Logout Button */
-.logout-btn {
-  background-color: red;
-  color: white;
-  padding: 8px 12px;
-  border-radius: 5px;
-  font-size: 14px;
-  position: absolute;
-  top: 10px;
-  right: 10px;
-}
-/* ✅ Admin Page Styling */
-.admin-container {
-  max-width: 800px;
-  margin: 20px auto;
-  padding: 20px;
-  background: var(--bg-light);
-  border-radius: var(--border-radius);
-}
-
-@media (prefers-color-scheme: dark) {
-  .admin-container {
-    background: var(--bg-dark);
-    color: var(--text-dark);
-  }
-}
-
-.admin-table {
-  width: 100%;
-  border-collapse: collapse;
-  margin-bottom: 20px;
-}
-
-.admin-table th,
-.admin-table td {
-  padding: 10px;
-  border-bottom: 1px solid #ccc;
-}
-
-@media (prefers-color-scheme: dark) {
-  .admin-table th,
-  .admin-table td {
-    border-bottom: 1px solid #555;
-  }
-}
-
-.btn-edit {
-  background: orange;
-  color: white;
-  padding: 5px 10px;
-  border-radius: 5px;
-  margin-right: 5px;
-}
-
-.btn-save {
-  background: green;
-  color: white;
-  padding: 5px 10px;
-  border-radius: 5px;
-}
-
-.btn-cancel {
-  background: gray;
-  color: white;
-  padding: 5px 10px;
-  border-radius: 5px;
-}
-
-.edit-section {
-  margin-top: 20px;
-  padding: 15px;
-  background: var(--bg-light);
-  border-radius: var(--border-radius);
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-@media (prefers-color-scheme: dark) {
-  .edit-section {
-    background: var(--bg-dark);
-  }
-}
-/* ✅ Logs Page Styling */
-.logs-container {
-  padding: 20px;
-}
-
-.filters {
-  display: flex;
-  gap: 10px;
-  margin-bottom: 15px;
-}
-
-.filters input {
-  padding: 8px;
-  border: 1px solid #ccc;
-  border-radius: 5px;
-}
-
-.btn-filter {
-  background-color: #007bff;
-  color: white;
-  padding: 8px 12px;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-}
-
-.btn-filter:hover {
-  background-color: #0056b3;
-}
-
-.logs-table {
-  width: 100%;
-  border-collapse: collapse;
-  background: #fff;
-  color: #333;
-}
-
-.logs-table th, .logs-table td {
-  border: 1px solid #ccc;
-  padding: 10px;
-  text-align: left;
-}
-
-.logs-table th {
-  background: #007bff;
-  color: white;
-}
-
-.logs-table tbody tr:nth-child(even) {
-  background: #f9f9f9;
-}
-
-.no-logs {
-  text-align: center;
-  font-weight: bold;
-  color: red;
-}
-
-/* ✅ Apply Roboto Font */
-@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap');
-
-/* ✅ Ensure Global Styling */
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-  font-family: "Roboto", sans-serif;
-}
-
-/* ✅ Dark & Light Mode Support */
-:root {
-  --bg-light: #f4f4f4;
-  --bg-dark: #1e1e1e;
-  --text-light: #000;
-  --text-dark: #fff;
-  --primary-color: #007bff;
-  --border-radius: 10px;
-}
-
-/* ✅ Default Light Mode */
-body {
-  background-color: var(--bg-light);
-  color: var(--text-light);
-  transition: background-color 0.3s ease, color 0.3s ease;
-}
-
-/* ✅ Dark Mode */
-@media (prefers-color-scheme: dark) {
-  body {
-    background-color: var(--bg-dark);
-    color: var(--text-dark);
-  }
-}
-
-/* ✅ Stats Page */
-.stats-container {
-  padding: 20px;
-}
-
-.stats-container h2 {
-  text-align: center;
-  background-color: var(--primary-color);
-  color: white;
-  padding: 15px;
-  border-radius: var(--border-radius);
-  margin-bottom: 20px;
-}
-
-/* ✅ Filters Section */
-.filters {
-  display: flex;
-  justify-content: space-between;
-  gap: 10px;
-  margin-bottom: 20px;
-}
-
-.filters input,
-.filters select {
-  padding: 10px;
-  border: 1px solid #ccc;
-  border-radius: var(--border-radius);
-}
-
-/* ✅ Stats Table */
-.stats-table {
-  width: 100%;
-  border-collapse: collapse;
-}
-
-.stats-table th,
-.stats-table td {
-  padding: 10px;
-  border: 1px solid #ccc;
-  text-align: center;
-}
-
-.stats-table th {
-  background-color: var(--primary-color);
-  color: white;
-  cursor: pointer;
-}
-
-.stats-table th:hover {
-  background-color: #0056b3;
-}
-
-.stats-table .no-stats {
-  text-align: center;
-  font-style: italic;
-  padding: 15px;
-}
 /* ✅ Navbar Styling */
 .navbar {
   display: flex;
@@ -483,6 +197,7 @@ body {
   cursor: pointer;
   font-weight: bold;
   text-decoration: none;
+  font-family: "Roboto Flex", sans-serif;
 }
 
 .navbar a:hover,
@@ -499,4 +214,109 @@ body {
 
 .navbar button:hover {
   background-color: #ddd !important;
+}
+
+/* ✅ Stats Page */
+.stats-container {
+  padding: 20px;
+  font-family: "Roboto Flex", sans-serif;
+}
+
+.stats-container h2 {
+  text-align: center;
+  background-color: var(--primary-color);
+  color: white;
+  padding: 15px;
+  border-radius: var(--border-radius);
+  margin-bottom: 20px;
+}
+
+/* ✅ Filters Section */
+.filters {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.filters input,
+.filters select {
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: var(--border-radius);
+  font-family: "Roboto Flex", sans-serif;
+}
+
+/* ✅ Stats Table */
+.stats-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: "Roboto Flex", sans-serif;
+}
+
+.stats-table th,
+.stats-table td {
+  padding: 10px;
+  border: 1px solid #ccc;
+  text-align: center;
+}
+
+.stats-table th {
+  background-color: var(--primary-color);
+  color: white;
+  cursor: pointer;
+}
+
+.stats-table th:hover {
+  background-color: #0056b3;
+}
+
+.stats-table .no-stats {
+  text-align: center;
+  font-style: italic;
+  padding: 15px;
+}
+
+/* ✅ Logs Page */
+.logs-container {
+  padding: 20px;
+  font-family: "Roboto Flex", sans-serif;
+}
+
+.logs-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: #fff;
+  color: #333;
+}
+
+.logs-table th, .logs-table td {
+  border: 1px solid #ccc;
+  padding: 10px;
+  text-align: left;
+}
+
+.logs-table th {
+  background: #007bff;
+  color: white;
+}
+
+.logs-table tbody tr:nth-child(even) {
+  background: #f9f9f9;
+}
+
+.no-logs {
+  text-align: center;
+  font-weight: bold;
+  color: red;
+}
+
+/* ✅ Admin Page */
+.admin-container {
+  max-width: 800px;
+  margin: 20px auto;
+  padding: 20px;
+  background: var(--bg-light);
+  border-radius: var(--border-radius);
+  font-family: "Roboto Flex", sans-serif;
 }
