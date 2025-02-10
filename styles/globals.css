@@ -99,14 +99,17 @@ input {
 
 /* ✅ Buttons */
 button {
-  width: 100%;
-  padding: 10px;
+  padding: 10px 15px;
+  font-size: 14px;
+  font-weight: 500;
   background-color: var(--primary-color);
   color: white;
   border: none;
-  border-radius: 5px;
+  border-radius: var(--border-radius);
   cursor: pointer;
   transition: background 0.3s;
+  text-align: center;
+  width: auto;
 }
 
 button:hover {
@@ -123,9 +126,10 @@ button:hover {
 /* ✅ Queue Section */
 .queue-section {
   margin-bottom: 20px;
-  padding: 10px;
+  padding: 15px;
   background: var(--bg-light);
   border-radius: var(--border-radius);
+  box-shadow: 0px 2px 6px rgba(0, 0, 0, 0.1);
 }
 
 @media (prefers-color-scheme: dark) {
@@ -138,14 +142,27 @@ button:hover {
 .queue-list {
   list-style: none;
   padding: 0;
+  margin: 0;
 }
+
 /* ✅ Queue Item */
 .queue-item {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 8px;
+  padding: 8px 15px;
   border-bottom: 1px solid #ccc;
+  border-radius: var(--border-radius);
+  background: white;
+  margin: 5px 0;
+}
+
+@media (prefers-color-scheme: dark) {
+  .queue-item {
+    background: #2a2a2a;
+    color: white;
+    border-bottom: 1px solid #444;
+  }
 }
 
 /* ✅ Button Groups */
@@ -154,32 +171,60 @@ button:hover {
   gap: 10px;
 }
 
-/* ✅ Buttons */
+/* ✅ Individual Buttons */
 .btn-primary {
   background-color: var(--primary-color);
-  color: white;
-  padding: 5px 10px;
-  border-radius: 5px;
 }
 
 .btn-green {
   background-color: green;
-  color: white;
-  padding: 5px 10px;
-  border-radius: 5px;
 }
 
 .btn-red {
   background-color: red;
-  color: white;
-  padding: 5px 10px;
-  border-radius: 5px;
 }
 
 .btn-yellow {
   background-color: orange;
-  color: white;
-  padding: 5px 10px;
-  border-radius: 5px;
 }
 
+.btn-primary,
+.btn-green,
+.btn-red,
+.btn-yellow {
+  padding: 8px 12px;
+  font-size: 14px;
+  font-weight: 500;
+  border-radius: var(--border-radius);
+  color: white;
+  cursor: pointer;
+  transition: background 0.3s ease;
+}
+
+.btn-primary:hover {
+  background-color: #0056b3;
+}
+
+.btn-green:hover {
+  background-color: darkgreen;
+}
+
+.btn-red:hover {
+  background-color: darkred;
+}
+
+.btn-yellow:hover {
+  background-color: darkorange;
+}
+
+/* ✅ Logout Button */
+.logout-btn {
+  background-color: red;
+  color: white;
+  padding: 8px 12px;
+  border-radius: 5px;
+  font-size: 14px;
+  position: absolute;
+  top: 10px;
+  right: 10px;
+}
