@@ -111,6 +111,7 @@ const fetchStats = async () => {
       </div>
 
       {/* ✅ Stats Table */}
+{/* ✅ Stats Table */}
       <table className="stats-table">
         <thead>
           <tr>
@@ -128,8 +129,9 @@ const fetchStats = async () => {
             </th>
             <th onClick={() => setSortColumn("close_rate")}>
               Close Rate {sortColumn === "close_rate" ? (sortOrder === "asc" ? "⬆" : "⬇") : ""}
-            <th onClick={() => setSortColumn("avg_sale")}>
-              Average Sale {sortColumn === "avg_sale" ? (sortOrder === "asc" ? "⬆" : "⬇") : ""}
+            </th>
+            <th onClick={() => setSortColumn("average_sales")}>
+              Average Sales {sortColumn === "average_sales" ? (sortOrder === "asc" ? "⬆" : "⬇") : ""}
             </th>
           </tr>
         </thead>
