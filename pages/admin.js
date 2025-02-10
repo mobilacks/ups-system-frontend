@@ -7,6 +7,7 @@ export default function AdminPage() {
   const [newReason, setNewReason] = useState("");
   const [upsCount, setUpsCount] = useState(false);
   const [editingAgent, setEditingAgent] = useState(null);
+  const [updatedName, setUpdatedName] = useState("");
   const [updatedStore, setUpdatedStore] = useState("");
   const [updatedRole, setUpdatedRole] = useState("");
 
@@ -41,14 +42,21 @@ export default function AdminPage() {
 
     const { error } = await supabase
       .from("agents")
-      .update({ store_number: updatedStore, role: updatedRole })
+      .update({ 
+        name: updatedName || editingAgent.name,
+        store_number: updatedStore || editingAgent.store_number, 
+        role: updatedRole || editingAgent.role 
+      })
       .eq("email", editingAgent.email);
 
     if (!error) {
       setEditingAgent(null);
+      setUpdatedName("");
       setUpdatedStore("");
       setUpdatedRole("");
       fetchAgents();
+    } else {
+      console.error("❌ Error updating agent:", error);
     }
   };
 
@@ -102,6 +110,15 @@ export default function AdminPage() {
       {editingAgent && (
         <div className="edit-section">
           <h3>Edit Agent</h3>
+          
+          <label>Name</label>
+          <input
+            type="text"
+            value={updatedName}
+            onChange={(e) => setUpdatedName(e.target.value)}
+            placeholder={editingAgent.name}
+          />
+
           <label>Store #</label>
           <input
             type="number"
