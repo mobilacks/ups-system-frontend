@@ -24,7 +24,7 @@ export default function AdminPage() {
 
   // ✅ Fetch Reasons from Supabase
   const fetchReasons = async () => {
-    const { data, error } = await supabase.from("reasons").select("id, reason, ups_count");
+    const { data, error } = await supabase.from("reasons").select("id, reason_text, ups_count");
     if (!error) {
       console.log("✅ Fetched Reasons:", data);
       setReasons(data);
