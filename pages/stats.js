@@ -128,6 +128,8 @@ const fetchStats = async () => {
             </th>
             <th onClick={() => setSortColumn("close_rate")}>
               Close Rate {sortColumn === "close_rate" ? (sortOrder === "asc" ? "⬆" : "⬇") : ""}
+            <th onClick={() => setSortColumn("avg_sale")}>
+              Average Sale {sortColumn === "avg_sale" ? (sortOrder === "asc" ? "⬆" : "⬇") : ""}
             </th>
           </tr>
         </thead>
