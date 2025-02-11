@@ -9,6 +9,7 @@ export default function Dashboard() {
   const [inQueue, setInQueue] = useState([]);
   const [withCustomer, setWithCustomer] = useState([]);
   const [stats, setStats] = useState([]);
+  const [reasons, setReasons] = useState([]); // Store reasons for "No Sale"
   const [selectedStore, setSelectedStore] = useState(""); // Store filter
   const router = useRouter();
 
@@ -18,6 +19,7 @@ export default function Dashboard() {
       if (user) {
         setUser(user);
         fetchUserStore(user.email);
+        fetchReasons(); // Fetch reasons on load
       } else {
         router.push("/login");
       }
@@ -48,7 +50,7 @@ export default function Dashboard() {
     const { data, error } = await supabase
       .from("queue")
       .select("*")
-      .eq("store_number", storeNum); 
+      .eq("store_number", storeNum);
 
     if (!error) {
       setAgentsWaiting(data.filter(a => a.agents_waiting));
@@ -61,6 +63,13 @@ export default function Dashboard() {
     const { data, error } = await supabase.rpc("get_sales_stats");
     if (!error) {
       setStats(data);
+    }
+  }
+
+  async function fetchReasons() {
+    const { data, error } = await supabase.from("reasons").select("*");
+    if (!error) {
+      setReasons(data);
     }
   }
 
@@ -86,44 +95,88 @@ export default function Dashboard() {
     }
   }
 
-async function handleSaleClosure(email, contractNumber, saleAmount) {
-  if (email !== user.email) {
-    alert("You can only log your own sales!");
-    return;
-  }
-
-  // ✅ Fetch agent's store number before inserting the sale
-  const { data: agentData, error: agentError } = await supabase
-    .from("agents")
-    .select("store_number")
-    .eq("email", email)
-    .single();
-
-  if (agentError || !agentData) {
-    console.error("❌ Error fetching agent's store number:", agentError);
-    alert("Error fetching agent details. Please try again.");
-    return;
-  }
-
-  // ✅ Insert Sale with Store Number
-  const { error } = await supabase.from("sales").insert([
-    {
-      email,
-      contract_number: contractNumber,
-      sale_amount: saleAmount,
-      store_number: agentData.store_number, // ✅ Ensure store number is added!
+  async function handleSaleClosure(email) {
+    if (email !== user.email) {
+      alert("You can only log your own sales!");
+      return;
     }
-  ]);
 
-  if (!error) {
-    console.log("✅ Sale recorded successfully!");
-    await handleQueueAction("move_to_agents_waiting", email); // Move agent back
-    alert("Sale recorded successfully!");
-  } else {
-    console.error("❌ Error closing sale:", error);
-    alert("Error recording sale. Please try again.");
+    const contractNumber = prompt("Enter Contract #");
+    const saleAmount = prompt("Enter Sale Amount");
+
+    if (!contractNumber || !saleAmount) {
+      alert("Contract # and Sale Amount are required.");
+      return;
+    }
+
+    const { data: agentData, error: agentError } = await supabase
+      .from("agents")
+      .select("store_number")
+      .eq("email", email)
+      .single();
+
+    if (agentError || !agentData) {
+      alert("Error fetching agent details.");
+      return;
+    }
+
+    const { error } = await supabase.from("sales").insert([
+      {
+        email,
+        contract_number: contractNumber,
+        sale_amount: saleAmount,
+        store_number: agentData.store_number,
+      }
+    ]);
+
+    if (!error) {
+      await supabase.from("logs").insert([
+        {
+          email,
+          action_type: "SALE_CLOSED",
+          table_name: "sales",
+          details: `Contract: ${contractNumber}, Amount: $${saleAmount}`,
+        }
+      ]);
+
+      await handleQueueAction("move_to_agents_waiting", email);
+      alert("Sale recorded successfully!");
+    } else {
+      alert("Error recording sale.");
+    }
   }
-}
+
+  async function handleNoSale(email) {
+    if (email !== user.email) {
+      alert("You can only log your own actions!");
+      return;
+    }
+
+    const reason = prompt("Enter Reason ID (Use dropdown in final UI)"); // Replace with UI dropdown in future
+    const selectedReason = reasons.find(r => r.id === parseInt(reason));
+
+    if (!selectedReason) {
+      alert("Invalid reason selected.");
+      return;
+    }
+
+    await supabase.from("logs").insert([
+      {
+        email,
+        action_type: "NO_SALE",
+        table_name: "sales",
+        details: `No Sale Reason: ${selectedReason.reason_text}`,
+      }
+    ]);
+
+    if (selectedReason.ups_count) {
+      console.log("✅ Adding +1 UPS due to reason policy.");
+      await supabase.rpc("increment_ups", { p_email: email });
+    }
+
+    await handleQueueAction("move_to_agents_waiting", email);
+    alert("No Sale recorded successfully!");
+  }
 
   return (
     <div className="dashboard-container">
@@ -158,40 +211,6 @@ async function handleSaleClosure(email, contractNumber, saleAmount) {
         </table>
       </div>
 
-      {/* In Queue Section */}
-      <div className="dashboard-section">
-        <h3>In Queue</h3>
-        <table>
-          <thead>
-            <tr>
-              <th>Agent Name</th>
-              <th>Store</th>
-              <th>Action</th>
-            </tr>
-          </thead>
-          <tbody>
-            {inQueue.map(agent => (
-              <tr key={agent.email}>
-                <td>{agent.email}</td>
-                <td>{agent.store_number}</td>
-                <td>
-                  {agent.email === user.email && (
-                    <>
-                      <button className="btn-green" onClick={() => handleQueueAction("move_to_with_customer", agent.email)}>
-                        With Customer
-                      </button>
-                      <button className="btn-red" onClick={() => handleQueueAction("move_to_agents_waiting", agent.email)}>
-                        Move to Agents Waiting
-                      </button>
-                    </>
-                  )}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-
       {/* With Customer Section */}
       <div className="dashboard-section">
         <h3>With Customer</h3>
@@ -214,10 +233,10 @@ async function handleSaleClosure(email, contractNumber, saleAmount) {
                       <button className="btn-primary" onClick={() => handleQueueAction("move_to_in_queue", agent.email)}>
                         Back to Queue
                       </button>
-                      <button className="btn-green" onClick={() => handleSaleClosure(agent.email, prompt("Enter Contract #"), prompt("Enter Sale Amount"))}>
+                      <button className="btn-green" onClick={() => handleSaleClosure(agent.email)}>
                         Close Sale
                       </button>
-                      <button className="btn-yellow" onClick={() => handleQueueAction("move_to_agents_waiting", agent.email)}>
+                      <button className="btn-yellow" onClick={() => handleNoSale(agent.email)}>
                         No Sale
                       </button>
                     </>
@@ -225,45 +244,6 @@ async function handleSaleClosure(email, contractNumber, saleAmount) {
                 </td>
               </tr>
             ))}
-          </tbody>
-        </table>
-      </div>
-
-      {/* Daily Stats Section */}
-      <div className="dashboard-section">
-        <h3>Daily Stats</h3>
-        <label>Filter by Store:</label>
-        <select onChange={(e) => setSelectedStore(e.target.value)}>
-          <option value="">All Stores</option>
-          {[...new Set(stats.map(stat => stat.store_number))].map(store => (
-            <option key={store} value={store}>{store}</option>
-          ))}
-        </select>
-
-        <table>
-          <thead>
-            <tr>
-              <th>Name</th>
-              <th># of UPS</th>
-              <th># of Sales</th>
-              <th>Total Sales</th>
-              <th>Close Rate</th>
-              <th>Avg Sale</th>
-            </tr>
-          </thead>
-          <tbody>
-            {stats
-              .filter(stat => !selectedStore || stat.store_number === parseInt(selectedStore))
-              .map((stat) => (
-                <tr key={stat.email}>
-                  <td>{stat.name}</td>
-                  <td>{stat.ups_count}</td>
-                  <td>{stat.sale_count}</td>
-                  <td>${stat.total_sales}</td>
-                  <td>{stat.close_rate}%</td>
-                  <td>${stat.avg_sale}</td>
-                </tr>
-              ))}
           </tbody>
         </table>
       </div>
