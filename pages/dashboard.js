@@ -255,6 +255,13 @@ export default function Dashboard() {
       <div className="dashboard-section">
         <h3>With Customer</h3>
         <table>
+          <thead>
+            <tr>
+              <th>Agent Name</th>
+              <th>Store</th>
+              <th>Action</th>
+            </tr>
+          </thead>
           <tbody>
             {withCustomer.map(agent => (
               <tr key={agent.email}>
