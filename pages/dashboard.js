@@ -281,6 +281,34 @@ export default function Dashboard() {
           </tbody>
         </table>
       </div>
+      {/* Daily Stats Section */}
+      <div className="dashboard-section">
+        <h3>Daily Stats</h3>
+        <table>
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th># of UPS</th>
+              <th># of Sales</th>
+              <th>Total Sales</th>
+              <th>Close Rate</th>
+              <th>Avg Sale</th>
+            </tr>
+          </thead>
+          <tbody>
+            {stats.map(stat => (
+              <tr key={stat.email}>
+                <td>{stat.name}</td>
+                <td>{stat.ups_count}</td>
+                <td>{stat.sale_count}</td>
+                <td>${stat.total_sales}</td>
+                <td>{stat.close_rate}%</td>
+                <td>${stat.avg_sale}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }
