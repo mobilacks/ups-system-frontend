@@ -9,8 +9,8 @@ export default function Dashboard() {
   const [inQueue, setInQueue] = useState([]);
   const [withCustomer, setWithCustomer] = useState([]);
   const [stats, setStats] = useState([]);
-  const [reasons, setReasons] = useState([]);
   const [selectedStore, setSelectedStore] = useState("");
+  const [reasons, setReasons] = useState([]);
   const router = useRouter();
 
   useEffect(() => {
@@ -70,7 +70,6 @@ export default function Dashboard() {
     const { data, error } = await supabase
       .from("reasons")
       .select("id, reason_text, ups_count");
-
     if (!error) {
       setReasons(data);
     } else {
@@ -123,22 +122,19 @@ export default function Dashboard() {
         email,
         contract_number: contractNumber,
         sale_amount: saleAmount,
-        store_number: agentData.store_number
+        store_number: agentData.store_number,
       }
     ]);
 
     if (!error) {
-      console.log("✅ Sale recorded successfully!");
-
       await supabase.from("logs").insert([
         {
           email,
           action_type: "SALE_CLOSED",
           table_name: "sales",
-          details: `Contract: ${contractNumber}, Amount: ${saleAmount}`,
+          details: `Sale closed - Contract: ${contractNumber}, Amount: $${saleAmount}`
         }
       ]);
-
       await handleQueueAction("move_to_agents_waiting", email);
       alert("Sale recorded successfully!");
     } else {
@@ -148,41 +144,30 @@ export default function Dashboard() {
   }
 
   async function handleNoSale(email) {
-    if (email !== user.email) {
-      alert("You can only log your own no-sale!");
-      return;
-    }
+    const reasonId = prompt("Select a reason ID from the list below:\n" + 
+      reasons.map(r => `${r.id}: ${r.reason_text}`).join("\n"));
 
-    const reasonText = reasons.map((r) => `${r.id}: ${r.reason_text}`).join("\n");
-
-    const selectedReasonId = parseInt(prompt(`Select a reason ID:\n${reasonText}`));
-    const selectedReason = reasons.find((r) => r.id === selectedReasonId);
+    const selectedReason = reasons.find(r => r.id === parseInt(reasonId));
 
     if (!selectedReason) {
-      alert("Invalid selection.");
+      alert("Invalid reason selected!");
       return;
     }
 
-    const { error } = await supabase.from("logs").insert([
+    await supabase.from("logs").insert([
       {
         email,
         action_type: "NO_SALE",
-        table_name: "queue",
-        details: `Reason: ${selectedReason.reason_text}`,
+        table_name: "logs",
+        details: `No Sale - Reason: ${selectedReason.reason_text}`
       }
     ]);
 
-    if (!error) {
-      console.log("✅ No Sale logged successfully!");
-
-      if (selectedReason.ups_count) {
-        await supabase.rpc("increment_ups", { p_email: email });
-      }
-
-      await handleQueueAction("move_to_agents_waiting", email);
-    } else {
-      console.error("❌ Error logging No Sale:", error);
+    if (selectedReason.ups_count) {
+      await supabase.rpc("increment_ups_count", { p_email: email });
     }
+
+    await handleQueueAction("move_to_agents_waiting", email);
   }
 
   return (
@@ -193,6 +178,13 @@ export default function Dashboard() {
       <div className="dashboard-section">
         <h3>Agents Waiting</h3>
         <table>
+          <thead>
+            <tr>
+              <th>Agent Name</th>
+              <th>Store</th>
+              <th>Action</th>
+            </tr>
+          </thead>
           <tbody>
             {agentsWaiting.map(agent => (
               <tr key={agent.email}>
@@ -241,7 +233,31 @@ export default function Dashboard() {
       {/* With Customer Section */}
       <div className="dashboard-section">
         <h3>With Customer</h3>
-        <button onClick={fetchReasons}>Reload Reasons</button>
+        <table>
+          <tbody>
+            {withCustomer.map(agent => (
+              <tr key={agent.email}>
+                <td>{agent.email}</td>
+                <td>{agent.store_number}</td>
+                <td>
+                  {agent.email === user.email && (
+                    <>
+                      <button className="btn-primary" onClick={() => handleQueueAction("move_to_in_queue", agent.email)}>
+                        Back to Queue
+                      </button>
+                      <button className="btn-green" onClick={() => handleSaleClosure(agent.email, prompt("Enter Contract #"), prompt("Enter Sale Amount"))}>
+                        Close Sale
+                      </button>
+                      <button className="btn-yellow" onClick={() => handleNoSale(agent.email)}>
+                        No Sale
+                      </button>
+                    </>
+                  )}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </div>
     </div>
   );
