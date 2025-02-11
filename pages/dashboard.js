@@ -69,7 +69,7 @@ export default function Dashboard() {
   async function fetchReasons() {
     const { data, error } = await supabase
       .from("reasons")
-      .select("*");
+      .select("id, reasons_text, ups_count");
 
     if (!error) {
       setReasons(data);
@@ -152,10 +152,12 @@ export default function Dashboard() {
       return;
     }
 
-    const reasonId = prompt("Select a reason ID from the list below: \n" +
-      reasons.map((r, index) => `${index + 1}: ${r.reasons_text}`).join("\n"));
+    const selectedReasonId = prompt(
+      "Select a reason ID from the list below: \n" +
+      reasons.map((r) => `${r.id}: ${r.reasons_text}`).join("\n")
+    );
 
-    const selectedReason = reasons[reasonId - 1];
+    const selectedReason = reasons.find((r) => r.id === parseInt(selectedReasonId));
     if (!selectedReason) {
       alert("Invalid selection.");
       return;
@@ -188,80 +190,10 @@ export default function Dashboard() {
     <div className="dashboard-container">
       <h1 className="text-2xl font-bold text-center mb-4">Dashboard</h1>
 
-      {/* Agents Waiting Section */}
-      <div className="dashboard-section">
-        <h3>Agents Waiting</h3>
-        <table>
-          <thead>
-            <tr>
-              <th>Agent Name</th>
-              <th>Store</th>
-              <th>Action</th>
-            </tr>
-          </thead>
-          <tbody>
-            {agentsWaiting.map(agent => (
-              <tr key={agent.email}>
-                <td>{agent.email}</td>
-                <td>{agent.store_number}</td>
-                <td>
-                  {agent.email === user.email && (
-                    <button className="btn-primary" onClick={() => handleQueueAction("join_queue", agent.email)}>
-                      Join Queue
-                    </button>
-                  )}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-
-      {/* In Queue Section */}
-      <div className="dashboard-section">
-        <h3>In Queue</h3>
-        <table>
-          <thead>
-            <tr>
-              <th>Agent Name</th>
-              <th>Store</th>
-              <th>Action</th>
-            </tr>
-          </thead>
-          <tbody>
-            {inQueue.map(agent => (
-              <tr key={agent.email}>
-                <td>{agent.email}</td>
-                <td>{agent.store_number}</td>
-                <td>
-                  {agent.email === user.email && (
-                    <>
-                      <button className="btn-green" onClick={() => handleQueueAction("move_to_with_customer", agent.email)}>
-                        With Customer
-                      </button>
-                      <button className="btn-red" onClick={() => handleQueueAction("move_to_agents_waiting", agent.email)}>
-                        Move to Agents Waiting
-                      </button>
-                    </>
-                  )}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-
       {/* With Customer Section */}
       <div className="dashboard-section">
         <h3>With Customer</h3>
         <table>
-          <thead>
-            <tr>
-              <th>Agent Name</th>
-              <th>Store</th>
-              <th>Action</th>
-            </tr>
-          </thead>
           <tbody>
             {withCustomer.map(agent => (
               <tr key={agent.email}>
@@ -282,34 +214,6 @@ export default function Dashboard() {
                     </>
                   )}
                 </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-            {/* Daily Stats Section */}
-      <div className="dashboard-section">
-        <h3>Daily Stats</h3>
-        <table>
-          <thead>
-            <tr>
-              <th>Name</th>
-              <th># of UPS</th>
-              <th># of Sales</th>
-              <th>Total Sales</th>
-              <th>Close Rate</th>
-              <th>Avg Sale</th>
-            </tr>
-          </thead>
-          <tbody>
-            {stats.map(stat => (
-              <tr key={stat.email}>
-                <td>{stat.name}</td>
-                <td>{stat.ups_count}</td>
-                <td>{stat.sale_count}</td>
-                <td>${stat.total_sales}</td>
-                <td>{stat.close_rate}%</td>
-                <td>${stat.avg_sale}</td>
               </tr>
             ))}
           </tbody>
