@@ -9,7 +9,6 @@ export default function Dashboard() {
   const [inQueue, setInQueue] = useState([]);
   const [withCustomer, setWithCustomer] = useState([]);
   const [stats, setStats] = useState([]);
-  const [selectedStore, setSelectedStore] = useState("");
   const [reasons, setReasons] = useState([]);
   const router = useRouter();
 
@@ -36,14 +35,9 @@ export default function Dashboard() {
 
     if (!error) {
       setStoreNumber(data.store_number);
-      resetQueueOnLogin(email);
       fetchQueueData(data.store_number);
       fetchStats();
     }
-  }
-
-  async function resetQueueOnLogin(email) {
-    await supabase.rpc("move_to_agents_waiting", { p_email: email });
   }
 
   async function fetchQueueData(storeNum) {
@@ -69,11 +63,10 @@ export default function Dashboard() {
   async function fetchReasons() {
     const { data, error } = await supabase
       .from("reasons")
-      .select("id, reason_text, ups_count");
+      .select("reason_text, ups_count");
+
     if (!error) {
       setReasons(data);
-    } else {
-      console.error("❌ Error fetching reasons:", error);
     }
   }
 
@@ -84,7 +77,7 @@ export default function Dashboard() {
     }
 
     const functionMap = {
-      "join_queue": "join_queue",
+      "join_queue": "move_to_in_queue",
       "move_to_agents_waiting": "move_to_agents_waiting",
       "move_to_with_customer": "move_to_with_customer",
       "move_to_in_queue": "move_to_in_queue"
@@ -112,7 +105,6 @@ export default function Dashboard() {
       .single();
 
     if (agentError || !agentData) {
-      console.error("❌ Error fetching agent's store number:", agentError);
       alert("Error fetching agent details. Please try again.");
       return;
     }
@@ -127,47 +119,43 @@ export default function Dashboard() {
     ]);
 
     if (!error) {
-      await supabase.from("logs").insert([
-        {
-          email,
-          action_type: "SALE_CLOSED",
-          table_name: "sales",
-          details: `Sale closed - Contract: ${contractNumber}, Amount: $${saleAmount}`
-        }
-      ]);
-      await handleQueueAction("move_to_agents_waiting", email);
-      alert("Sale recorded successfully!");
+      await supabase.rpc("move_to_agents_waiting", { p_email: email });
+      fetchQueueData(storeNumber);
+      fetchStats();
     } else {
-      console.error("❌ Error closing sale:", error);
-      alert("Error recording sale. Please try again.");
+      console.error("Error closing sale:", error);
     }
   }
 
   async function handleNoSale(email) {
-    const reasonId = prompt("Select a reason ID from the list below:\n" + 
-      reasons.map(r => `${r.id}: ${r.reason_text}`).join("\n"));
-
-    const selectedReason = reasons.find(r => r.id === parseInt(reasonId));
-
-    if (!selectedReason) {
-      alert("Invalid reason selected!");
+    if (email !== user.email) {
+      alert("You can only log your own queue status!");
       return;
     }
 
-    await supabase.from("logs").insert([
-      {
-        email,
-        action_type: "NO_SALE",
-        table_name: "logs",
-        details: `No Sale - Reason: ${selectedReason.reason_text}`
-      }
-    ]);
+    const selectedReason = prompt(
+      `Select a reason:\n${reasons.map((r, i) => `${i + 1}: ${r.reason_text}`).join("\n")}`
+    );
 
-    if (selectedReason.ups_count) {
-      await supabase.rpc("increment_ups_count", { p_email: email });
+    const reasonIndex = parseInt(selectedReason, 10) - 1;
+    if (reasonIndex < 0 || reasonIndex >= reasons.length) {
+      alert("Invalid reason selected.");
+      return;
     }
 
-    await handleQueueAction("move_to_agents_waiting", email);
+    const reasonText = reasons[reasonIndex].reason_text;
+
+    const { error } = await supabase.rpc("no_sale", { 
+      p_email: email, 
+      p_reason: reasonText 
+    });
+
+    if (!error) {
+      fetchQueueData(storeNumber);
+      fetchStats();
+    } else {
+      console.error("Error logging No Sale:", error);
+    }
   }
 
   return (
@@ -207,6 +195,13 @@ export default function Dashboard() {
       <div className="dashboard-section">
         <h3>In Queue</h3>
         <table>
+          <thead>
+            <tr>
+              <th>Agent Name</th>
+              <th>Store</th>
+              <th>Action</th>
+            </tr>
+          </thead>
           <tbody>
             {inQueue.map(agent => (
               <tr key={agent.email}>
@@ -234,6 +229,13 @@ export default function Dashboard() {
       <div className="dashboard-section">
         <h3>With Customer</h3>
         <table>
+          <thead>
+            <tr>
+              <th>Agent Name</th>
+              <th>Store</th>
+              <th>Action</th>
+            </tr>
+          </thead>
           <tbody>
             {withCustomer.map(agent => (
               <tr key={agent.email}>
