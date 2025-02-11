@@ -1,16 +1,12 @@
 /* ✅ Apply Roboto Flex Font */
-/* @import url('https://fonts.googleapis.com/css2?family=Roboto+Flex:wght@300;400;500;700&display=swap');
-/* Import Google Font */
-@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
-
+@import url('https://fonts.googleapis.com/css2?family=Roboto+Flex:wght@300;400;500;700&display=swap');
 
 /* ✅ Ensure Global Styling */
 * {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
-  font-family: 'Poppins', sans-serif;
-/*  font-family: "Roboto Flex", sans-serif;
+  font-family: "Roboto Flex", sans-serif;
 }
 
 /* ✅ Dark & Light Mode Support */
