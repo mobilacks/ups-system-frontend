@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import { useRouter } from "next/router";
 import { supabase } from "../lib/supabase";
 import ProtectedRoute from "../lib/protectedRoute";
 
@@ -12,28 +11,22 @@ function AdminPage() {
   const [updatedName, setUpdatedName] = useState("");
   const [updatedStore, setUpdatedStore] = useState("");
   const [updatedRole, setUpdatedRole] = useState("");
-  const router = useRouter();
 
   useEffect(() => {
     fetchAgents();
     fetchReasons();
   }, []);
 
-  // ✅ Fetch Agents from Supabase
+  // ✅ Fetch Agents
   const fetchAgents = async () => {
     const { data, error } = await supabase.from("agents").select("*");
     if (!error) setAgents(data);
   };
 
-  // ✅ Fetch Reasons from Supabase
+  // ✅ Fetch Reasons
   const fetchReasons = async () => {
     const { data, error } = await supabase.from("reasons").select("id, reason_text, ups_count");
-    if (!error) {
-      console.log("✅ Fetched Reasons:", data);
-      setReasons(data);
-    } else {
-      console.error("❌ Error fetching reasons:", error);
-    }
+    if (!error) setReasons(data);
   };
 
   // ✅ Delete Agent
@@ -44,16 +37,19 @@ function AdminPage() {
     fetchAgents();
   };
 
-  // ✅ Save Updated Agent Details
+  // ✅ Save Updated Agent Details (Fix: Replace "manager" with "store_manager")
   const saveAgentUpdate = async () => {
     if (!editingAgent) return;
+
+    // Fix: Ensure correct role naming
+    const roleToUpdate = updatedRole === "manager" ? "store_manager" : updatedRole || editingAgent.role;
 
     const { error } = await supabase
       .from("agents")
       .update({
         name: updatedName || editingAgent.name,
         store_number: updatedStore || editingAgent.store_number,
-        role: updatedRole || editingAgent.role,
+        role: roleToUpdate,
       })
       .eq("email", editingAgent.email);
 
@@ -135,7 +131,7 @@ function AdminPage() {
           <label>Role</label>
           <select value={updatedRole} onChange={(e) => setUpdatedRole(e.target.value)}>
             <option value="agent">Agent</option>
-            <option value="manager">Manager</option>
+            <option value="store_manager">Store Manager</option> {/* ✅ Fixed Here */}
             <option value="admin">Admin</option>
           </select>
           <button className="btn-save" onClick={saveAgentUpdate}>Save</button>
