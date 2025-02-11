@@ -10,6 +10,7 @@ export default function Dashboard() {
   const [withCustomer, setWithCustomer] = useState([]);
   const [stats, setStats] = useState([]);
   const [reasons, setReasons] = useState([]);
+  const [selectedStore, setSelectedStore] = useState(""); // Store filter
   const router = useRouter();
 
   useEffect(() => {
@@ -18,7 +19,6 @@ export default function Dashboard() {
       if (user) {
         setUser(user);
         fetchUserStore(user.email);
-        fetchReasons();
       } else {
         router.push("/login");
       }
@@ -35,9 +35,15 @@ export default function Dashboard() {
 
     if (!error) {
       setStoreNumber(data.store_number);
+      resetQueueOnLogin(email);
       fetchQueueData(data.store_number);
       fetchStats();
+      fetchReasons();
     }
+  }
+
+  async function resetQueueOnLogin(email) {
+    await supabase.rpc("move_to_agents_waiting", { p_email: email });
   }
 
   async function fetchQueueData(storeNum) {
@@ -63,10 +69,12 @@ export default function Dashboard() {
   async function fetchReasons() {
     const { data, error } = await supabase
       .from("reasons")
-      .select("reason_text, ups_count");
+      .select("id, reason_text, ups_count");
 
     if (!error) {
       setReasons(data);
+    } else {
+      console.error("❌ Error fetching reasons:", error);
     }
   }
 
@@ -77,7 +85,7 @@ export default function Dashboard() {
     }
 
     const functionMap = {
-      "join_queue": "move_to_in_queue",
+      "join_queue": "join_queue",
       "move_to_agents_waiting": "move_to_agents_waiting",
       "move_to_with_customer": "move_to_with_customer",
       "move_to_in_queue": "move_to_in_queue"
@@ -105,6 +113,7 @@ export default function Dashboard() {
       .single();
 
     if (agentError || !agentData) {
+      console.error("❌ Error fetching agent's store number:", agentError);
       alert("Error fetching agent details. Please try again.");
       return;
     }
@@ -119,42 +128,58 @@ export default function Dashboard() {
     ]);
 
     if (!error) {
-      await supabase.rpc("move_to_agents_waiting", { p_email: email });
-      fetchQueueData(storeNumber);
-      fetchStats();
+      console.log("✅ Sale recorded successfully!");
+      await supabase.from("logs").insert([
+        {
+          email,
+          action_type: "SALE_CLOSED",
+          table_name: "sales",
+          details: `Contract: ${contractNumber}, Amount: ${saleAmount}`
+        }
+      ]);
+      await handleQueueAction("move_to_agents_waiting", email);
     } else {
-      console.error("Error closing sale:", error);
+      console.error("❌ Error closing sale:", error);
     }
   }
 
   async function handleNoSale(email) {
     if (email !== user.email) {
-      alert("You can only log your own queue status!");
+      alert("You can only log your own sales!");
       return;
     }
 
-    const selectedReason = prompt(
-      `Select a reason:\n${reasons.map((r, i) => `${i + 1}: ${r.reason_text}`).join("\n")}`
-    );
+    const reasonOptions = reasons.map((r, index) => `${index + 1}: ${r.reason_text}`).join("\n");
+    const reasonIndex = prompt(`Select a reason:\n${reasonOptions}`);
 
-    const reasonIndex = parseInt(selectedReason, 10) - 1;
-    if (reasonIndex < 0 || reasonIndex >= reasons.length) {
-      alert("Invalid reason selected.");
+    if (!reasonIndex || isNaN(reasonIndex) || reasonIndex < 1 || reasonIndex > reasons.length) {
+      alert("Invalid selection. Please try again.");
       return;
     }
 
-    const reasonText = reasons[reasonIndex].reason_text;
+    const selectedReason = reasons[reasonIndex - 1];
 
-    const { error } = await supabase.rpc("no_sale", { 
-      p_email: email, 
-      p_reason: reasonText 
+    const { error } = await supabase.rpc("no_sale", {
+      p_email: email,
+      p_reason: selectedReason.reason_text
     });
 
     if (!error) {
+      await supabase.from("logs").insert([
+        {
+          email,
+          action_type: "QUEUE_NO_SALE",
+          table_name: "queue",
+          details: `Reason: ${selectedReason.reason_text}`
+        }
+      ]);
+
+      if (selectedReason.ups_count) {
+        await supabase.rpc("increment_ups", { p_email: email });
+      }
       fetchQueueData(storeNumber);
-      fetchStats();
     } else {
-      console.error("Error logging No Sale:", error);
+      console.error("❌ Error logging No Sale:", error);
     }
   }
 
@@ -162,7 +187,6 @@ export default function Dashboard() {
     <div className="dashboard-container">
       <h1 className="text-2xl font-bold text-center mb-4">Dashboard</h1>
 
-      {/* Agents Waiting Section */}
       <div className="dashboard-section">
         <h3>Agents Waiting</h3>
         <table>
@@ -180,7 +204,7 @@ export default function Dashboard() {
                 <td>{agent.store_number}</td>
                 <td>
                   {agent.email === user.email && (
-                    <button className="btn-primary" onClick={() => handleQueueAction("join_queue", agent.email)}>
+                    <button onClick={() => handleQueueAction("join_queue", agent.email)}>
                       Join Queue
                     </button>
                   )}
@@ -191,17 +215,9 @@ export default function Dashboard() {
         </table>
       </div>
 
-      {/* In Queue Section */}
       <div className="dashboard-section">
         <h3>In Queue</h3>
         <table>
-          <thead>
-            <tr>
-              <th>Agent Name</th>
-              <th>Store</th>
-              <th>Action</th>
-            </tr>
-          </thead>
           <tbody>
             {inQueue.map(agent => (
               <tr key={agent.email}>
@@ -210,12 +226,8 @@ export default function Dashboard() {
                 <td>
                   {agent.email === user.email && (
                     <>
-                      <button className="btn-green" onClick={() => handleQueueAction("move_to_with_customer", agent.email)}>
-                        With Customer
-                      </button>
-                      <button className="btn-red" onClick={() => handleQueueAction("move_to_agents_waiting", agent.email)}>
-                        Move to Agents Waiting
-                      </button>
+                      <button onClick={() => handleQueueAction("move_to_with_customer", agent.email)}>With Customer</button>
+                      <button onClick={() => handleQueueAction("move_to_agents_waiting", agent.email)}>Move to Agents Waiting</button>
                     </>
                   )}
                 </td>
@@ -225,17 +237,9 @@ export default function Dashboard() {
         </table>
       </div>
 
-      {/* With Customer Section */}
       <div className="dashboard-section">
         <h3>With Customer</h3>
         <table>
-          <thead>
-            <tr>
-              <th>Agent Name</th>
-              <th>Store</th>
-              <th>Action</th>
-            </tr>
-          </thead>
           <tbody>
             {withCustomer.map(agent => (
               <tr key={agent.email}>
@@ -244,15 +248,9 @@ export default function Dashboard() {
                 <td>
                   {agent.email === user.email && (
                     <>
-                      <button className="btn-primary" onClick={() => handleQueueAction("move_to_in_queue", agent.email)}>
-                        Back to Queue
-                      </button>
-                      <button className="btn-green" onClick={() => handleSaleClosure(agent.email, prompt("Enter Contract #"), prompt("Enter Sale Amount"))}>
-                        Close Sale
-                      </button>
-                      <button className="btn-yellow" onClick={() => handleNoSale(agent.email)}>
-                        No Sale
-                      </button>
+                      <button onClick={() => handleQueueAction("move_to_in_queue", agent.email)}>Back to Queue</button>
+                      <button onClick={() => handleSaleClosure(agent.email, prompt("Enter Contract #"), prompt("Enter Sale Amount"))}>Close Sale</button>
+                      <button onClick={() => handleNoSale(agent.email)}>No Sale</button>
                     </>
                   )}
                 </td>
