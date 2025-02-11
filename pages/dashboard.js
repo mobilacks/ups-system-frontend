@@ -86,22 +86,44 @@ export default function Dashboard() {
     }
   }
 
-  async function handleSaleClosure(email, contractNumber, saleAmount) {
-    if (email !== user.email) {
-      alert("You can only log your own sales!");
-      return;
-    }
-
-    const { error } = await supabase.from("sales").insert([
-      { email, contract_number: contractNumber, sale_amount: saleAmount }
-    ]);
-
-    if (!error) {
-      await handleQueueAction("move_to_agents_waiting", email);
-    } else {
-      console.error("Error closing sale:", error);
-    }
+async function handleSaleClosure(email, contractNumber, saleAmount) {
+  if (email !== user.email) {
+    alert("You can only log your own sales!");
+    return;
   }
+
+  // ✅ Fetch agent's store number before inserting the sale
+  const { data: agentData, error: agentError } = await supabase
+    .from("agents")
+    .select("store_number")
+    .eq("email", email)
+    .single();
+
+  if (agentError || !agentData) {
+    console.error("❌ Error fetching agent's store number:", agentError);
+    alert("Error fetching agent details. Please try again.");
+    return;
+  }
+
+  // ✅ Insert Sale with Store Number
+  const { error } = await supabase.from("sales").insert([
+    {
+      email,
+      contract_number: contractNumber,
+      sale_amount: saleAmount,
+      store_number: agentData.store_number, // ✅ Ensure store number is added!
+    }
+  ]);
+
+  if (!error) {
+    console.log("✅ Sale recorded successfully!");
+    await handleQueueAction("move_to_agents_waiting", email); // Move agent back
+    alert("Sale recorded successfully!");
+  } else {
+    console.error("❌ Error closing sale:", error);
+    alert("Error recording sale. Please try again.");
+  }
+}
 
   return (
     <div className="dashboard-container">
