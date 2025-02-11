@@ -1,12 +1,12 @@
-/* ✅ Apply Roboto Flex Font */
-@import url('https://fonts.googleapis.com/css2?family=Roboto+Flex:wght@300;400;500;700&display=swap');
+/* ✅ Apply Poppins Font */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;700&display=swap');
 
 /* ✅ Ensure Global Styling */
 * {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
-  font-family: "Roboto Flex", sans-serif;
+  font-family: "Poppins", sans-serif;
 }
 
 /* ✅ Dark & Light Mode Support */
@@ -265,4 +265,3 @@ table tbody tr:nth-child(even) {
     text-align: center;
   }
 }
-
