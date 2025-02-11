@@ -19,12 +19,12 @@ export default function Dashboard() {
       if (user) {
         setUser(user);
         fetchUserStore(user.email);
-        fetchReasons(); // Fetch reasons on load
       } else {
         router.push("/login");
       }
     }
     fetchUser();
+    fetchReasons();
   }, []);
 
   async function fetchUserStore(email) {
@@ -67,7 +67,10 @@ export default function Dashboard() {
   }
 
   async function fetchReasons() {
-    const { data, error } = await supabase.from("reasons").select("*");
+    const { data, error } = await supabase
+      .from("reasons")
+      .select("*");
+
     if (!error) {
       setReasons(data);
     }
@@ -95,17 +98,9 @@ export default function Dashboard() {
     }
   }
 
-  async function handleSaleClosure(email) {
+  async function handleSaleClosure(email, contractNumber, saleAmount) {
     if (email !== user.email) {
       alert("You can only log your own sales!");
-      return;
-    }
-
-    const contractNumber = prompt("Enter Contract #");
-    const saleAmount = prompt("Enter Sale Amount");
-
-    if (!contractNumber || !saleAmount) {
-      alert("Contract # and Sale Amount are required.");
       return;
     }
 
@@ -116,7 +111,8 @@ export default function Dashboard() {
       .single();
 
     if (agentError || !agentData) {
-      alert("Error fetching agent details.");
+      console.error("❌ Error fetching agent's store number:", agentError);
+      alert("Error fetching agent details. Please try again.");
       return;
     }
 
@@ -125,57 +121,67 @@ export default function Dashboard() {
         email,
         contract_number: contractNumber,
         sale_amount: saleAmount,
-        store_number: agentData.store_number,
+        store_number: agentData.store_number
       }
     ]);
 
     if (!error) {
+      console.log("✅ Sale recorded successfully!");
+
+      // ✅ Log sale closure
       await supabase.from("logs").insert([
         {
           email,
           action_type: "SALE_CLOSED",
           table_name: "sales",
-          details: `Contract: ${contractNumber}, Amount: $${saleAmount}`,
+          details: `Contract: ${contractNumber}, Amount: ${saleAmount}`,
         }
       ]);
 
       await handleQueueAction("move_to_agents_waiting", email);
       alert("Sale recorded successfully!");
     } else {
-      alert("Error recording sale.");
+      console.error("❌ Error closing sale:", error);
+      alert("Error recording sale. Please try again.");
     }
   }
 
   async function handleNoSale(email) {
     if (email !== user.email) {
-      alert("You can only log your own actions!");
+      alert("You can only log your own no-sale!");
       return;
     }
 
-    const reason = prompt("Enter Reason ID (Use dropdown in final UI)"); // Replace with UI dropdown in future
-    const selectedReason = reasons.find(r => r.id === parseInt(reason));
+    const reasonId = prompt("Select a reason ID from the list below: \n" +
+      reasons.map((r, index) => `${index + 1}: ${r.reasons_text}`).join("\n"));
 
+    const selectedReason = reasons[reasonId - 1];
     if (!selectedReason) {
-      alert("Invalid reason selected.");
+      alert("Invalid selection.");
       return;
     }
 
-    await supabase.from("logs").insert([
+    const { error } = await supabase.from("logs").insert([
       {
         email,
         action_type: "NO_SALE",
-        table_name: "sales",
-        details: `No Sale Reason: ${selectedReason.reason_text}`,
+        table_name: "queue",
+        details: `Reason: ${selectedReason.reasons_text}`,
       }
     ]);
 
-    if (selectedReason.ups_count) {
-      console.log("✅ Adding +1 UPS due to reason policy.");
-      await supabase.rpc("increment_ups", { p_email: email });
-    }
+    if (!error) {
+      console.log("✅ No Sale logged successfully!");
 
-    await handleQueueAction("move_to_agents_waiting", email);
-    alert("No Sale recorded successfully!");
+      // ✅ Check if UPS should be incremented
+      if (selectedReason.ups_count) {
+        await supabase.rpc("increment_ups", { p_email: email });
+      }
+
+      await handleQueueAction("move_to_agents_waiting", email);
+    } else {
+      console.error("❌ Error logging No Sale:", error);
+    }
   }
 
   return (
@@ -249,13 +255,6 @@ export default function Dashboard() {
       <div className="dashboard-section">
         <h3>With Customer</h3>
         <table>
-          <thead>
-            <tr>
-              <th>Agent Name</th>
-              <th>Store</th>
-              <th>Action</th>
-            </tr>
-          </thead>
           <tbody>
             {withCustomer.map(agent => (
               <tr key={agent.email}>
@@ -267,7 +266,7 @@ export default function Dashboard() {
                       <button className="btn-primary" onClick={() => handleQueueAction("move_to_in_queue", agent.email)}>
                         Back to Queue
                       </button>
-                      <button className="btn-green" onClick={() => handleSaleClosure(agent.email)}>
+                      <button className="btn-green" onClick={() => handleSaleClosure(agent.email, prompt("Enter Contract #"), prompt("Enter Sale Amount"))}>
                         Close Sale
                       </button>
                       <button className="btn-yellow" onClick={() => handleNoSale(agent.email)}>
@@ -281,7 +280,7 @@ export default function Dashboard() {
           </tbody>
         </table>
       </div>
-      {/* Daily Stats Section */}
+            {/* Daily Stats Section */}
       <div className="dashboard-section">
         <h3>Daily Stats</h3>
         <table>
