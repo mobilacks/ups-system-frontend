@@ -9,6 +9,7 @@ export default function Dashboard() {
   const [inQueue, setInQueue] = useState([]);
   const [withCustomer, setWithCustomer] = useState([]);
   const [stats, setStats] = useState([]);
+  const [selectedStore, setSelectedStore] = useState(""); // Store filter
   const router = useRouter();
 
   useEffect(() => {
@@ -47,7 +48,7 @@ export default function Dashboard() {
     const { data, error } = await supabase
       .from("queue")
       .select("*")
-      .eq("store_number", storeNum); // ✅ Fetch only agents from the same store
+      .eq("store_number", storeNum); 
 
     if (!error) {
       setAgentsWaiting(data.filter(a => a.agents_waiting));
@@ -57,31 +58,9 @@ export default function Dashboard() {
   }
 
   async function fetchStats() {
-    const { data, error } = await supabase
-      .from("sales")
-      .select("email, contract_number, sale_amount")
-      .order("created_at", { ascending: false });
-
+    const { data, error } = await supabase.rpc("get_sales_stats");
     if (!error) {
-      const groupedStats = data.reduce((acc, sale) => {
-        if (!acc[sale.email]) {
-          acc[sale.email] = { ups: 0, sales: 0, totalSales: 0 };
-        }
-        acc[sale.email].ups += 1;
-        acc[sale.email].sales += sale.sale_amount ? 1 : 0;
-        acc[sale.email].totalSales += sale.sale_amount || 0;
-        return acc;
-      }, {});
-
-      setStats(Object.keys(groupedStats).map(email => ({
-        email,
-        ups: groupedStats[email].ups,
-        sales: groupedStats[email].sales,
-        totalSales: groupedStats[email].totalSales,
-        avgSale: groupedStats[email].sales > 0
-          ? (groupedStats[email].totalSales / groupedStats[email].sales).toFixed(2)
-          : 0
-      })));
+      setStats(data);
     }
   }
 
@@ -224,6 +203,45 @@ export default function Dashboard() {
                 </td>
               </tr>
             ))}
+          </tbody>
+        </table>
+      </div>
+
+      {/* Daily Stats Section */}
+      <div className="dashboard-section">
+        <h3>Daily Stats</h3>
+        <label>Filter by Store:</label>
+        <select onChange={(e) => setSelectedStore(e.target.value)}>
+          <option value="">All Stores</option>
+          {[...new Set(stats.map(stat => stat.store_number))].map(store => (
+            <option key={store} value={store}>{store}</option>
+          ))}
+        </select>
+
+        <table>
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th># of UPS</th>
+              <th># of Sales</th>
+              <th>Total Sales</th>
+              <th>Close Rate</th>
+              <th>Avg Sale</th>
+            </tr>
+          </thead>
+          <tbody>
+            {stats
+              .filter(stat => !selectedStore || stat.store_number === parseInt(selectedStore))
+              .map((stat) => (
+                <tr key={stat.email}>
+                  <td>{stat.name}</td>
+                  <td>{stat.ups_count}</td>
+                  <td>{stat.sale_count}</td>
+                  <td>${stat.total_sales}</td>
+                  <td>{stat.close_rate}%</td>
+                  <td>${stat.avg_sale}</td>
+                </tr>
+              ))}
           </tbody>
         </table>
       </div>
