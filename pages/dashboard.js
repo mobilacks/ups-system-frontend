@@ -67,7 +67,7 @@ export default function Dashboard() {
         if (!acc[sale.email]) {
           acc[sale.email] = { ups: 0, sales: 0, totalSales: 0 };
         }
-        acc[sale.email].ups += 1; 
+        acc[sale.email].ups += 1;
         acc[sale.email].sales += sale.sale_amount ? 1 : 0;
         acc[sale.email].totalSales += sale.sale_amount || 0;
         return acc;
@@ -78,7 +78,7 @@ export default function Dashboard() {
         ups: groupedStats[email].ups,
         sales: groupedStats[email].sales,
         totalSales: groupedStats[email].totalSales,
-        avgSale: groupedStats[email].sales > 0 
+        avgSale: groupedStats[email].sales > 0
           ? (groupedStats[email].totalSales / groupedStats[email].sales).toFixed(2)
           : 0
       })));
@@ -116,7 +116,7 @@ export default function Dashboard() {
     const { error } = await supabase.from("sales").insert([
       { email, contract_number: contractNumber, sale_amount: saleAmount }
     ]);
-    
+
     if (!error) {
       await handleQueueAction("move_to_agents_waiting", email);
     } else {
@@ -124,83 +124,108 @@ export default function Dashboard() {
     }
   }
 
-  async function handleLogout() {
-    if (user) {
-      await supabase.rpc("move_to_agents_waiting", { p_email: user.email });
-    }
-    await supabase.auth.signOut();
-    router.push("/login");
-  }
-
   return (
-    <div className="p-6">
-      {/* Top Navigation Bar */}
-      <div className="flex justify-between items-center mb-4">
-        <h1 className="text-2xl font-bold">Dashboard</h1>
-      </div>
+    <div className="dashboard-container">
+      <h1 className="text-2xl font-bold text-center mb-4">Dashboard</h1>
 
       {/* Agents Waiting Section */}
-      <div className="queue-section">
-        <h2>Agents Waiting</h2>
-        <ul className="queue-list">
-          {agentsWaiting.map(agent => (
-            <li key={agent.email} className="queue-item">
-              <span>{agent.email} (Store {agent.store_number})</span>
-              {agent.email === user.email && (
-                <button className="btn-primary" onClick={() => handleQueueAction("join_queue", agent.email)}>
-                  Join Queue
-                </button>
-              )}
-            </li>
-          ))}
-        </ul>
+      <div className="dashboard-section">
+        <h3>Agents Waiting</h3>
+        <table>
+          <thead>
+            <tr>
+              <th>Agent Name</th>
+              <th>Store</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {agentsWaiting.map(agent => (
+              <tr key={agent.email}>
+                <td>{agent.email}</td>
+                <td>{agent.store_number}</td>
+                <td>
+                  {agent.email === user.email && (
+                    <button className="btn-primary" onClick={() => handleQueueAction("join_queue", agent.email)}>
+                      Join Queue
+                    </button>
+                  )}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </div>
 
       {/* In Queue Section */}
-      <div className="queue-section">
-        <h2>In Queue</h2>
-        <ul className="queue-list">
-          {inQueue.map(agent => (
-            <li key={agent.email} className="queue-item">
-              <span>{agent.email} (Store {agent.store_number})</span>
-              {agent.email === user.email && (
-                <div className="btn-group">
-                  <button className="btn-green" onClick={() => handleQueueAction("move_to_with_customer", agent.email)}>
-                    With Customer
-                  </button>
-                  <button className="btn-red" onClick={() => handleQueueAction("move_to_agents_waiting", agent.email)}>
-                    Move to Agents Waiting
-                  </button>
-                </div>
-              )}
-            </li>
-          ))}
-        </ul>
+      <div className="dashboard-section">
+        <h3>In Queue</h3>
+        <table>
+          <thead>
+            <tr>
+              <th>Agent Name</th>
+              <th>Store</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {inQueue.map(agent => (
+              <tr key={agent.email}>
+                <td>{agent.email}</td>
+                <td>{agent.store_number}</td>
+                <td>
+                  {agent.email === user.email && (
+                    <>
+                      <button className="btn-green" onClick={() => handleQueueAction("move_to_with_customer", agent.email)}>
+                        With Customer
+                      </button>
+                      <button className="btn-red" onClick={() => handleQueueAction("move_to_agents_waiting", agent.email)}>
+                        Move to Agents Waiting
+                      </button>
+                    </>
+                  )}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </div>
 
       {/* With Customer Section */}
-      <div className="queue-section">
-        <h2>With Customer</h2>
-        <ul className="queue-list">
-          {withCustomer.map(agent => (
-            <li key={agent.email} className="queue-item">
-              <span>{agent.email} (Store {agent.store_number})</span>
-              {agent.email === user.email && (
-                <div className="btn-group">
-                  <button className="btn-primary" onClick={() => handleQueueAction("move_to_in_queue", agent.email)}>
-                    Back to Queue
-                  </button>
-                  <button className="btn-green" onClick={() => handleSaleClosure(agent.email, prompt("Enter Contract #"), prompt("Enter Sale Amount"))}>
-                    Close Sale
-                  </button>
-                  <button className="btn-yellow" onClick={() => handleQueueAction("move_to_agents_waiting", agent.email)}>
-                    No Sale
-                  </button>
-                </div>
-              )}
-            </li>
-          ))}
-        </ul>
+      <div className="dashboard-section">
+        <h3>With Customer</h3>
+        <table>
+          <thead>
+            <tr>
+              <th>Agent Name</th>
+              <th>Store</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {withCustomer.map(agent => (
+              <tr key={agent.email}>
+                <td>{agent.email}</td>
+                <td>{agent.store_number}</td>
+                <td>
+                  {agent.email === user.email && (
+                    <>
+                      <button className="btn-primary" onClick={() => handleQueueAction("move_to_in_queue", agent.email)}>
+                        Back to Queue
+                      </button>
+                      <button className="btn-green" onClick={() => handleSaleClosure(agent.email, prompt("Enter Contract #"), prompt("Enter Sale Amount"))}>
+                        Close Sale
+                      </button>
+                      <button className="btn-yellow" onClick={() => handleQueueAction("move_to_agents_waiting", agent.email)}>
+                        No Sale
+                      </button>
+                    </>
+                  )}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </div>
     </div>
   );
