@@ -9,6 +9,7 @@ export default function Dashboard() {
   const [inQueue, setInQueue] = useState([]);
   const [withCustomer, setWithCustomer] = useState([]);
   const [stats, setStats] = useState([]);
+  const [reasons, setReasons] = useState([]);
   const router = useRouter();
 
   useEffect(() => {
@@ -22,6 +23,7 @@ export default function Dashboard() {
       }
     }
     fetchUser();
+    fetchReasons(); // Load reasons on page load
   }, []);
 
   async function fetchUserStore(email) {
@@ -33,9 +35,14 @@ export default function Dashboard() {
 
     if (!error) {
       setStoreNumber(data.store_number);
+      resetQueueOnLogin(email);
       fetchQueueData(data.store_number);
       fetchStats();
     }
+  }
+
+  async function resetQueueOnLogin(email) {
+    await supabase.rpc("move_to_agents_waiting", { p_email: email });
   }
 
   async function fetchQueueData(storeNum) {
@@ -58,6 +65,18 @@ export default function Dashboard() {
     }
   }
 
+  async function fetchReasons() {
+    const { data, error } = await supabase
+      .from("reasons")
+      .select("id, reason_text, ups_count");
+
+    if (!error) {
+      setReasons(data);
+    } else {
+      console.error("❌ Error fetching reasons:", error);
+    }
+  }
+
   async function handleQueueAction(action, email) {
     if (email !== user.email) {
       alert("You can only manage your own queue status!");
@@ -76,29 +95,15 @@ export default function Dashboard() {
       fetchQueueData(storeNumber);
       fetchStats();
     } else {
-      console.error("Error updating queue:", error);
+      console.error("❌ Error updating queue:", error);
     }
   }
 
-  async function handleSaleClosure(email) {
+  async function handleSaleClosure(email, contractNumber, saleAmount) {
     if (email !== user.email) {
       alert("You can only log your own sales!");
       return;
     }
-
-    let contractNumber;
-    while (!contractNumber) {
-      contractNumber = prompt("Enter Contract # (Required)");
-      if (contractNumber === null) return;
-    }
-
-    let saleAmount;
-    while (!saleAmount || isNaN(saleAmount) || parseFloat(saleAmount) <= 0) {
-      saleAmount = prompt("Enter Sale Amount (Required, must be a number)");
-      if (saleAmount === null) return;
-    }
-
-    saleAmount = parseFloat(saleAmount);
 
     const { data: agentData, error: agentError } = await supabase
       .from("agents")
@@ -107,40 +112,56 @@ export default function Dashboard() {
       .single();
 
     if (agentError || !agentData) {
-      console.error("❌ Error fetching agent's store number:", agentError);
+      console.error("❌ Error fetching agent store number:", agentError);
+      alert("Error fetching agent details.");
       return;
     }
 
     const { error } = await supabase.from("sales").insert([
-      {
-        email,
-        contract_number: contractNumber,
-        sale_amount: saleAmount,
-        store_number: agentData.store_number,
-      }
+      { email, contract_number: contractNumber, sale_amount: saleAmount, store_number: agentData.store_number }
     ]);
 
     if (!error) {
-      console.log("✅ Sale recorded successfully!");
+      await supabase.from("logs").insert([
+        { email, action_type: "SALE_CLOSED", table_name: "sales", details: `Contract: ${contractNumber}, Amount: $${saleAmount}` }
+      ]);
       await handleQueueAction("move_to_agents_waiting", email);
-
-      const { error: logError } = await supabase.from("logs").insert([
-  { 
-    email, 
-    action_type: "SALE_CLOSED", 
-    table_name: "sales", 
-    details: `Contract: ${contractNumber}, Amount: $${saleAmount}`, 
-    created_at: new Date().toISOString() // Ensure timestamp is included
-  }
-]);
-
-if (logError) {
-  console.error("❌ Error logging sale:", logError);
-} else {
-  console.log("✅ Sale logged successfully!");
-}
+      alert("✅ Sale recorded successfully!");
     } else {
       console.error("❌ Error closing sale:", error);
+    }
+  }
+
+  async function handleNoSale(email) {
+    if (email !== user.email) {
+      alert("You can only log your own no-sale reason!");
+      return;
+    }
+
+    const selectedReason = prompt("Select a reason:\n" + reasons.map(r => `${r.id}: ${r.reason_text}`).join("\n"));
+
+    if (!selectedReason || !reasons.find(r => r.id == selectedReason)) {
+      alert("Invalid reason selected.");
+      return;
+    }
+
+    const reasonText = reasons.find(r => r.id == selectedReason).reason_text;
+    const upsCount = reasons.find(r => r.id == selectedReason).ups_count;
+
+    const { error } = await supabase.rpc("no_sale", { p_email: email, p_reason: reasonText });
+
+    if (!error) {
+      await supabase.from("logs").insert([
+        { email, action_type: "QUEUE_NO_SALE", table_name: "queue", details: `Reason: ${reasonText}` }
+      ]);
+      if (upsCount) {
+        await supabase.rpc("increment_ups_count", { p_email: email });
+      }
+      fetchQueueData(storeNumber);
+      fetchStats();
+      alert("✅ No Sale logged successfully!");
+    } else {
+      console.error("❌ Error logging No Sale:", error);
     }
   }
 
@@ -166,9 +187,7 @@ if (logError) {
                 <td>{agent.store_number}</td>
                 <td>
                   {agent.email === user.email && (
-                    <button className="btn-primary" onClick={() => handleQueueAction("join_queue", agent.email)}>
-                      Join Queue
-                    </button>
+                    <button onClick={() => handleQueueAction("join_queue", agent.email)}>Join Queue</button>
                   )}
                 </td>
               </tr>
@@ -196,12 +215,8 @@ if (logError) {
                 <td>
                   {agent.email === user.email && (
                     <>
-                      <button className="btn-green" onClick={() => handleQueueAction("move_to_with_customer", agent.email)}>
-                        With Customer
-                      </button>
-                      <button className="btn-red" onClick={() => handleQueueAction("move_to_agents_waiting", agent.email)}>
-                        Move to Agents Waiting
-                      </button>
+                      <button onClick={() => handleQueueAction("move_to_with_customer", agent.email)}>With Customer</button>
+                      <button onClick={() => handleQueueAction("move_to_agents_waiting", agent.email)}>Move to Agents Waiting</button>
                     </>
                   )}
                 </td>
@@ -215,32 +230,14 @@ if (logError) {
       <div className="dashboard-section">
         <h3>With Customer</h3>
         <table>
-          <thead>
-            <tr>
-              <th>Agent Name</th>
-              <th>Store</th>
-              <th>Action</th>
-            </tr>
-          </thead>
           <tbody>
             {withCustomer.map(agent => (
               <tr key={agent.email}>
                 <td>{agent.email}</td>
-                <td>{agent.store_number}</td>
                 <td>
-                  {agent.email === user.email && (
-                    <>
-                      <button className="btn-primary" onClick={() => handleQueueAction("move_to_in_queue", agent.email)}>
-                        Back to Queue
-                      </button>
-                      <button className="btn-green" onClick={() => handleSaleClosure(agent.email)}>
-                        Close Sale
-                      </button>
-                      <button className="btn-yellow" onClick={() => handleQueueAction("move_to_agents_waiting", agent.email)}>
-                        No Sale
-                      </button>
-                    </>
-                  )}
+                  <button onClick={() => handleQueueAction("move_to_in_queue", agent.email)}>Back to Queue</button>
+                  <button onClick={() => handleSaleClosure(agent.email, prompt("Enter Contract #"), prompt("Enter Sale Amount"))}>Close Sale</button>
+                  <button onClick={() => handleNoSale(agent.email)}>No Sale</button>
                 </td>
               </tr>
             ))}
