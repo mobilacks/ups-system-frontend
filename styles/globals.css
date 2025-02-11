@@ -6,7 +6,7 @@
   margin: 0;
   padding: 0;
   box-sizing: border-box;
-  font-family: 'Roboto Flex', sans-serif;
+  font-family: "Roboto Flex", sans-serif;
 }
 
 /* ✅ Dark & Light Mode Support */
@@ -34,23 +34,157 @@ body {
   }
 }
 
+/* ✅ Center Forms */
+.auth-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  background-color: var(--bg-light);
+  transition: background-color 0.3s ease;
+}
+
+@media (prefers-color-scheme: dark) {
+  .auth-container {
+    background-color: var(--bg-dark);
+  }
+}
+
+/* ✅ Auth Box */
+.auth-box {
+  background: white;
+  padding: 20px;
+  border-radius: var(--border-radius);
+  box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+  width: 100%;
+  max-width: 400px;
+  text-align: center;
+  transition: background 0.3s ease, color 0.3s ease;
+}
+
+@media (prefers-color-scheme: dark) {
+  .auth-box {
+    background: #2a2a2a;
+    color: white;
+    box-shadow: 0px 4px 6px rgba(255, 255, 255, 0.1);
+  }
+}
+
+/* ✅ Buttons */
+button {
+  padding: 10px 15px;
+  font-size: 14px;
+  font-weight: 500;
+  background-color: var(--primary-color);
+  color: white;
+  border: none;
+  border-radius: var(--border-radius);
+  cursor: pointer;
+  transition: background 0.3s;
+  text-align: center;
+  width: auto;
+}
+
+button:hover {
+  background-color: #0056b3;
+}
+
+/* ✅ Table Styling */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  background: white;
+  color: #333;
+  border-radius: var(--border-radius);
+  overflow: hidden;
+}
+
+@media (prefers-color-scheme: dark) {
+  table {
+    background: #333;
+    color: white;
+  }
+}
+
+table th, table td {
+  padding: 12px;
+  border: 1px solid #ccc;
+  text-align: left;
+}
+
+@media (prefers-color-scheme: dark) {
+  table th, table td {
+    border: 1px solid #555;
+  }
+}
+
+table th {
+  background: var(--primary-color);
+  color: white;
+}
+
+table tbody tr:nth-child(even) {
+  background: #f9f9f9;
+}
+
+@media (prefers-color-scheme: dark) {
+  table tbody tr:nth-child(even) {
+    background: #444;
+  }
+}
+
+/* ✅ Navbar Styling */
+.navbar {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 10px;
+  background-color: var(--primary-color);
+  padding: 10px 20px;
+  border-radius: 8px;
+  height: 50px;
+}
+
+.navbar ul {
+  list-style: none;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0;
+  margin: 0;
+}
+
+.navbar li {
+  display: inline-block;
+}
+
+.navbar a,
+.navbar button {
+  background-color: white;
+  color: var(--primary-color);
+  border: none;
+  padding: 8px 15px;
+  border-radius: var(--border-radius);
+  cursor: pointer;
+  font-weight: bold;
+  text-decoration: none;
+  transition: background 0.3s ease;
+}
+
+.navbar a:hover,
+.navbar button:hover {
+  background-color: #ddd;
+}
+
 /* ✅ Dashboard Styling */
 .dashboard-container {
   padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
 }
 
-.dashboard-container h2 {
-  text-align: center;
-  background-color: var(--primary-color);
-  color: white;
-  padding: 15px;
-  border-radius: var(--border-radius);
-  margin-bottom: 20px;
-}
-
-/* ✅ Dashboard Sections */
 .dashboard-section {
-  margin-bottom: 20px;
   padding: 15px;
   background: var(--bg-light);
   border-radius: var(--border-radius);
@@ -60,114 +194,32 @@ body {
 @media (prefers-color-scheme: dark) {
   .dashboard-section {
     background: var(--bg-dark);
+    color: var(--text-dark);
   }
 }
 
-/* ✅ Dashboard Lists */
-.dashboard-list {
-  list-style: none;
-  padding: 0;
-  margin: 0;
+.dashboard-section h3 {
+  margin-bottom: 10px;
+  padding: 10px;
+  background: var(--primary-color);
+  color: white;
+  border-radius: var(--border-radius);
 }
 
-.dashboard-list-item {
+.queue-item {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 10px 15px;
+  padding: 8px 15px;
   border-bottom: 1px solid #ccc;
-  border-radius: var(--border-radius);
   background: white;
   margin: 5px 0;
 }
 
 @media (prefers-color-scheme: dark) {
-  .dashboard-list-item {
+  .queue-item {
     background: #2a2a2a;
     color: white;
     border-bottom: 1px solid #444;
   }
-}
-
-/* ✅ Button Groups */
-.dashboard-btn-group {
-  display: flex;
-  gap: 10px;
-}
-
-/* ✅ Individual Buttons */
-.dashboard-btn {
-  padding: 8px 12px;
-  font-size: 14px;
-  font-weight: 500;
-  border-radius: var(--border-radius);
-  color: white;
-  cursor: pointer;
-  transition: background 0.3s ease;
-}
-
-.dashboard-btn-primary {
-  background-color: var(--primary-color);
-}
-
-.dashboard-btn-primary:hover {
-  background-color: #0056b3;
-}
-
-/* ✅ Queue Blocks */
-.queue-block {
-  background-color: var(--primary-color);
-  color: white;
-  padding: 10px;
-  border-radius: var(--border-radius);
-  margin-bottom: 10px;
-  font-weight: bold;
-}
-
-.queue-block-content {
-  padding: 10px;
-  background: white;
-  border-radius: var(--border-radius);
-}
-
-@media (prefers-color-scheme: dark) {
-  .queue-block-content {
-    background: #2a2a2a;
-    color: white;
-  }
-}
-
-/* ✅ Table Standardization */
-.table-container {
-  width: 100%;
-  overflow-x: auto;
-}
-
-.table {
-  width: 100%;
-  border-collapse: collapse;
-  margin-bottom: 20px;
-}
-
-.table th,
-.table td {
-  padding: 10px;
-  border: 1px solid #ccc;
-  text-align: center;
-}
-
-.table th {
-  background-color: var(--primary-color);
-  color: white;
-  cursor: pointer;
-}
-
-.table th:hover {
-  background-color: #0056b3;
-}
-
-.table .no-data {
-  text-align: center;
-  font-style: italic;
-  padding: 15px;
 }
