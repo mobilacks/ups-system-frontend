@@ -211,9 +211,9 @@ export default function Dashboard() {
         </table>
       </div>
 
-      {/* With Customer Section */}
+      {/* In Queue Section */}
       <div className="dashboard-section">
-        <h3>With Customer</h3>
+        <h3>In Queue</h3>
         <table>
           <thead>
             <tr>
@@ -223,25 +223,51 @@ export default function Dashboard() {
             </tr>
           </thead>
           <tbody>
-            {withCustomer.map(agent => (
+            {inQueue.map(agent => (
               <tr key={agent.email}>
                 <td>{agent.email}</td>
                 <td>{agent.store_number}</td>
                 <td>
                   {agent.email === user.email && (
                     <>
-                      <button className="btn-primary" onClick={() => handleQueueAction("move_to_in_queue", agent.email)}>
-                        Back to Queue
+                      <button className="btn-green" onClick={() => handleQueueAction("move_to_with_customer", agent.email)}>
+                        With Customer
                       </button>
-                      <button className="btn-green" onClick={() => handleSaleClosure(agent.email)}>
-                        Close Sale
-                      </button>
-                      <button className="btn-yellow" onClick={() => handleNoSale(agent.email)}>
-                        No Sale
+                      <button className="btn-red" onClick={() => handleQueueAction("move_to_agents_waiting", agent.email)}>
+                        Move to Agents Waiting
                       </button>
                     </>
                   )}
                 </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      {/* Daily Stats Section */}
+      <div className="dashboard-section">
+        <h3>Daily Stats</h3>
+        <table>
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th># of UPS</th>
+              <th># of Sales</th>
+              <th>Total Sales</th>
+              <th>Close Rate</th>
+              <th>Avg Sale</th>
+            </tr>
+          </thead>
+          <tbody>
+            {stats.map(stat => (
+              <tr key={stat.email}>
+                <td>{stat.name}</td>
+                <td>{stat.ups_count}</td>
+                <td>{stat.sale_count}</td>
+                <td>${stat.total_sales}</td>
+                <td>{stat.close_rate}%</td>
+                <td>${stat.avg_sale}</td>
               </tr>
             ))}
           </tbody>
