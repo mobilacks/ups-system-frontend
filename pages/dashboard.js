@@ -124,21 +124,21 @@ export default function Dashboard() {
       console.log("✅ Sale recorded successfully!");
       await handleQueueAction("move_to_agents_waiting", email);
 
-      const logError = await supabase.from("logs").insert([
-        { 
-          email, 
-          action_type: "SALE_CLOSED", 
-          table_name: "sales", 
-          details: `Contract: ${contractNumber}, Amount: $${saleAmount}` 
-        }
-      ]);
+      const { error: logError } = await supabase.from("logs").insert([
+  { 
+    email, 
+    action_type: "SALE_CLOSED", 
+    table_name: "sales", 
+    details: `Contract: ${contractNumber}, Amount: $${saleAmount}`, 
+    created_at: new Date().toISOString() // Ensure timestamp is included
+  }
+]);
 
-      if (!logError) {
-        console.log("✅ Sale logged in logs!");
-      } else {
-        console.error("❌ Error logging sale:", logError);
-      }
-
+if (logError) {
+  console.error("❌ Error logging sale:", logError);
+} else {
+  console.log("✅ Sale logged successfully!");
+}
     } else {
       console.error("❌ Error closing sale:", error);
     }
