@@ -10,7 +10,7 @@ export default function Dashboard() {
   const [withCustomer, setWithCustomer] = useState([]);
   const [stats, setStats] = useState([]);
   const [reasons, setReasons] = useState([]);
-  const [selectedStore, setSelectedStore] = useState(""); // Store filter
+  const [selectedStore, setSelectedStore] = useState("");
   const router = useRouter();
 
   useEffect(() => {
@@ -129,6 +129,8 @@ export default function Dashboard() {
 
     if (!error) {
       console.log("✅ Sale recorded successfully!");
+      
+      // ✅ Log the sale in logs
       await supabase.from("logs").insert([
         {
           email,
@@ -137,6 +139,7 @@ export default function Dashboard() {
           details: `Contract: ${contractNumber}, Amount: ${saleAmount}`
         }
       ]);
+
       await handleQueueAction("move_to_agents_waiting", email);
     } else {
       console.error("❌ Error closing sale:", error);
@@ -165,6 +168,8 @@ export default function Dashboard() {
     });
 
     if (!error) {
+      console.log("✅ No Sale logged successfully!");
+
       await supabase.from("logs").insert([
         {
           email,
@@ -190,45 +195,15 @@ export default function Dashboard() {
       <div className="dashboard-section">
         <h3>Agents Waiting</h3>
         <table>
-          <thead>
-            <tr>
-              <th>Agent Name</th>
-              <th>Store</th>
-              <th>Action</th>
-            </tr>
-          </thead>
           <tbody>
             {agentsWaiting.map(agent => (
               <tr key={agent.email}>
                 <td>{agent.email}</td>
-                <td>{agent.store_number}</td>
                 <td>
                   {agent.email === user.email && (
                     <button onClick={() => handleQueueAction("join_queue", agent.email)}>
                       Join Queue
                     </button>
-                  )}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-
-      <div className="dashboard-section">
-        <h3>In Queue</h3>
-        <table>
-          <tbody>
-            {inQueue.map(agent => (
-              <tr key={agent.email}>
-                <td>{agent.email}</td>
-                <td>{agent.store_number}</td>
-                <td>
-                  {agent.email === user.email && (
-                    <>
-                      <button onClick={() => handleQueueAction("move_to_with_customer", agent.email)}>With Customer</button>
-                      <button onClick={() => handleQueueAction("move_to_agents_waiting", agent.email)}>Move to Agents Waiting</button>
-                    </>
                   )}
                 </td>
               </tr>
@@ -244,7 +219,6 @@ export default function Dashboard() {
             {withCustomer.map(agent => (
               <tr key={agent.email}>
                 <td>{agent.email}</td>
-                <td>{agent.store_number}</td>
                 <td>
                   {agent.email === user.email && (
                     <>
