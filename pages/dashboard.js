@@ -139,6 +139,7 @@ if (logError) {
 } else {
   console.log("✅ Sale logged successfully!");
 }
+
     } else {
       console.error("❌ Error closing sale:", error);
     }
