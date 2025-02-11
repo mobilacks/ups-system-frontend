@@ -69,7 +69,7 @@ export default function Dashboard() {
   async function fetchReasons() {
     const { data, error } = await supabase
       .from("reasons")
-      .select("id, reasons_text, ups_count");
+      .select("id, reason_text, ups_count");
 
     if (!error) {
       setReasons(data);
@@ -153,7 +153,7 @@ export default function Dashboard() {
       return;
     }
 
-    const reasonText = reasons.map((r) => `${r.id}: ${r.reasons_text}`).join("\n");
+    const reasonText = reasons.map((r) => `${r.id}: ${r.reason_text}`).join("\n");
 
     const selectedReasonId = parseInt(prompt(`Select a reason ID:\n${reasonText}`));
     const selectedReason = reasons.find((r) => r.id === selectedReasonId);
@@ -168,7 +168,7 @@ export default function Dashboard() {
         email,
         action_type: "NO_SALE",
         table_name: "queue",
-        details: `Reason: ${selectedReason.reasons_text}`,
+        details: `Reason: ${selectedReason.reason_text}`,
       }
     ]);
 
