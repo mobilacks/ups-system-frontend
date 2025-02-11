@@ -9,8 +9,8 @@ export default function Dashboard() {
   const [inQueue, setInQueue] = useState([]);
   const [withCustomer, setWithCustomer] = useState([]);
   const [stats, setStats] = useState([]);
-  const [reasons, setReasons] = useState([]); // Store reasons for "No Sale"
-  const [selectedStore, setSelectedStore] = useState(""); // Store filter
+  const [reasons, setReasons] = useState([]);
+  const [selectedStore, setSelectedStore] = useState("");
   const router = useRouter();
 
   useEffect(() => {
@@ -19,12 +19,12 @@ export default function Dashboard() {
       if (user) {
         setUser(user);
         fetchUserStore(user.email);
+        fetchReasons();
       } else {
         router.push("/login");
       }
     }
     fetchUser();
-    fetchReasons();
   }, []);
 
   async function fetchUserStore(email) {
@@ -73,6 +73,8 @@ export default function Dashboard() {
 
     if (!error) {
       setReasons(data);
+    } else {
+      console.error("❌ Error fetching reasons:", error);
     }
   }
 
@@ -128,7 +130,6 @@ export default function Dashboard() {
     if (!error) {
       console.log("✅ Sale recorded successfully!");
 
-      // ✅ Log sale closure
       await supabase.from("logs").insert([
         {
           email,
@@ -152,12 +153,11 @@ export default function Dashboard() {
       return;
     }
 
-    const selectedReasonId = prompt(
-      "Select a reason ID from the list below: \n" +
-      reasons.map((r) => `${r.id}: ${r.reasons_text}`).join("\n")
-    );
+    const reasonText = reasons.map((r) => `${r.id}: ${r.reasons_text}`).join("\n");
 
-    const selectedReason = reasons.find((r) => r.id === parseInt(selectedReasonId));
+    const selectedReasonId = parseInt(prompt(`Select a reason ID:\n${reasonText}`));
+    const selectedReason = reasons.find((r) => r.id === selectedReasonId);
+
     if (!selectedReason) {
       alert("Invalid selection.");
       return;
@@ -175,7 +175,6 @@ export default function Dashboard() {
     if (!error) {
       console.log("✅ No Sale logged successfully!");
 
-      // ✅ Check if UPS should be incremented
       if (selectedReason.ups_count) {
         await supabase.rpc("increment_ups", { p_email: email });
       }
@@ -190,26 +189,45 @@ export default function Dashboard() {
     <div className="dashboard-container">
       <h1 className="text-2xl font-bold text-center mb-4">Dashboard</h1>
 
-      {/* With Customer Section */}
+      {/* Agents Waiting Section */}
       <div className="dashboard-section">
-        <h3>With Customer</h3>
+        <h3>Agents Waiting</h3>
         <table>
           <tbody>
-            {withCustomer.map(agent => (
+            {agentsWaiting.map(agent => (
+              <tr key={agent.email}>
+                <td>{agent.email}</td>
+                <td>{agent.store_number}</td>
+                <td>
+                  {agent.email === user.email && (
+                    <button className="btn-primary" onClick={() => handleQueueAction("join_queue", agent.email)}>
+                      Join Queue
+                    </button>
+                  )}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      {/* In Queue Section */}
+      <div className="dashboard-section">
+        <h3>In Queue</h3>
+        <table>
+          <tbody>
+            {inQueue.map(agent => (
               <tr key={agent.email}>
                 <td>{agent.email}</td>
                 <td>{agent.store_number}</td>
                 <td>
                   {agent.email === user.email && (
                     <>
-                      <button className="btn-primary" onClick={() => handleQueueAction("move_to_in_queue", agent.email)}>
-                        Back to Queue
+                      <button className="btn-green" onClick={() => handleQueueAction("move_to_with_customer", agent.email)}>
+                        With Customer
                       </button>
-                      <button className="btn-green" onClick={() => handleSaleClosure(agent.email, prompt("Enter Contract #"), prompt("Enter Sale Amount"))}>
-                        Close Sale
-                      </button>
-                      <button className="btn-yellow" onClick={() => handleNoSale(agent.email)}>
-                        No Sale
+                      <button className="btn-red" onClick={() => handleQueueAction("move_to_agents_waiting", agent.email)}>
+                        Move to Agents Waiting
                       </button>
                     </>
                   )}
@@ -218,6 +236,12 @@ export default function Dashboard() {
             ))}
           </tbody>
         </table>
+      </div>
+
+      {/* With Customer Section */}
+      <div className="dashboard-section">
+        <h3>With Customer</h3>
+        <button onClick={fetchReasons}>Reload Reasons</button>
       </div>
     </div>
   );
