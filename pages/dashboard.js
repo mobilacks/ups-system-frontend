@@ -130,7 +130,7 @@ export default function Dashboard() {
     action_type: "SALE_CLOSED", 
     table_name: "sales", 
     details: `Contract: ${contractNumber}, Amount: $${saleAmount}`, 
-    created_at: new Date().toISOString() // Ensure timestamp is included
+    created_at: new Date().toLocaleString("en-US", { timeZone: "America/Chicago" }), // ✅ CST conversion
   }
 ]);
 
