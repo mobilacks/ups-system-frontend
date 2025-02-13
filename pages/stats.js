@@ -8,22 +8,60 @@ function StatsPage() {
   const [filteredStats, setFilteredStats] = useState([]);
   const [agentFilter, setAgentFilter] = useState("");
   const [storeFilter, setStoreFilter] = useState("");
-  const [startDate, setStartDate] = useState(new Date().toISOString().split("T")[0]); // Default: Today
-  const [endDate, setEndDate] = useState(new Date().toISOString().split("T")[0]); // Default: Today
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
   const [sortColumn, setSortColumn] = useState("total_sales");
   const [sortOrder, setSortOrder] = useState("desc");
 
+  const [selectedDateRange, setSelectedDateRange] = useState("last_30_days"); // Default to last 30 days
+
   useEffect(() => {
-    fetchStats(startDate, endDate);
+    fetchStats();
   }, [startDate, endDate]);
 
-  // ✅ Fetch Stats from Supabase with Date Parameters
-  const fetchStats = async (start, end) => {
-    console.log(`📅 Fetching stats from ${start} to ${end}...`);
+  // ✅ Function to Set Date Range Based on Dropdown Selection
+  const handleDateRangeChange = (value) => {
+    setSelectedDateRange(value);
+
+    const today = new Date();
+    let newStartDate, newEndDate;
+
+    switch (value) {
+      case "today":
+        newStartDate = today;
+        newEndDate = today;
+        break;
+      case "yesterday":
+        newStartDate = new Date(today);
+        newStartDate.setDate(today.getDate() - 1);
+        newEndDate = newStartDate;
+        break;
+      case "last_7_days":
+        newStartDate = new Date(today);
+        newStartDate.setDate(today.getDate() - 7);
+        newEndDate = today;
+        break;
+      case "last_30_days":
+        newStartDate = new Date(today);
+        newStartDate.setDate(today.getDate() - 30);
+        newEndDate = today;
+        break;
+      default:
+        newStartDate = "";
+        newEndDate = "";
+    }
+
+    setStartDate(newStartDate ? newStartDate.toISOString().split("T")[0] : "");
+    setEndDate(newEndDate ? newEndDate.toISOString().split("T")[0] : "");
+  };
+
+  // ✅ Fetch Stats from Supabase
+  const fetchStats = async () => {
+    if (!startDate || !endDate) return;
 
     const { data, error } = await supabase.rpc("get_sales_stats", {
-      p_start_date: start,
-      p_end_date: end
+      p_start_date: startDate,
+      p_end_date: endDate,
     });
 
     if (error) {
@@ -37,9 +75,6 @@ function StatsPage() {
 
   // ✅ Handle Filters & Sorting
   useEffect(() => {
-    console.log("📅 Selected Start Date:", startDate);
-    console.log("📅 Selected End Date:", endDate);
-
     let filtered = stats;
 
     if (searchQuery.trim()) {
@@ -68,7 +103,7 @@ function StatsPage() {
     });
 
     setFilteredStats(filtered);
-  }, [searchQuery, agentFilter, storeFilter, startDate, endDate, sortColumn, sortOrder, stats]);
+  }, [searchQuery, agentFilter, storeFilter, sortColumn, sortOrder, stats]);
 
   // ✅ Get unique values for dropdown filters
   const uniqueAgents = [...new Set(stats.map((stat) => stat.email))];
@@ -88,6 +123,13 @@ function StatsPage() {
           className="search-bar"
         />
 
+        <select value={selectedDateRange} onChange={(e) => handleDateRangeChange(e.target.value)}>
+          <option value="today">Today</option>
+          <option value="yesterday">Yesterday</option>
+          <option value="last_7_days">Last 7 Days</option>
+          <option value="last_30_days">Last 30 Days</option>
+        </select>
+
         <select value={agentFilter} onChange={(e) => setAgentFilter(e.target.value)}>
           <option value="">All Agents</option>
           {uniqueAgents.map((agent) => (
@@ -106,20 +148,8 @@ function StatsPage() {
           ))}
         </select>
 
-        {/* ✅ Date Range Selection */}
-        <input
-          type="date"
-          value={startDate}
-          onChange={(e) => setStartDate(e.target.value)}
-        />
-        <input
-          type="date"
-          value={endDate}
-          onChange={(e) => setEndDate(e.target.value)}
-        />
-        <button onClick={() => fetchStats(startDate, endDate)} className="btn-filter">
-          Apply Filter
-        </button>
+        <input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
+        <input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
       </div>
 
       {/* ✅ Stats Table */}
@@ -153,9 +183,9 @@ function StatsPage() {
                 <td>{stat.name}</td>
                 <td>{stat.ups_count}</td>
                 <td>{stat.sale_count}</td>
-                <td>${stat.total_sales.toFixed(2)}</td>
-                <td>{stat.close_rate.toFixed(2)}%</td>
-                <td>${stat.avg_sale.toFixed(2)}</td>
+                <td>${(stat.total_sales || 0).toFixed(2)}</td>
+                <td>{(stat.close_rate || 0).toFixed(2)}%</td>
+                <td>${(stat.avg_sale || 0).toFixed(2)}</td>
               </tr>
             ))
           ) : (
