@@ -19,21 +19,21 @@ function StatsPage() {
 
   // ✅ Fetch Stats from Supabase
   const fetchStats = async () => {
-    console.log("📢 Fetching stats...");
+  console.log("🚀 Fetching Sales Stats...");
+  
+  const { data, error } = await supabase.rpc("get_sales_stats", {
+    p_start_date: (new Date(new Date().setDate(new Date().getDate() - 30))).toISOString().split("T")[0], 
+    p_end_date: new Date().toISOString().split("T")[0]
+  });
 
-    const { data, error } = await supabase.rpc("get_sales_stats", {
-      p_start_date: startDate || (new Date().toISOString().split("T")[0]),
-      p_end_date: endDate || (new Date().toISOString().split("T")[0]),
-    });
-
-    if (error) {
-      console.error("❌ Error fetching stats:", error);
-    } else {
-      console.log("✅ Sales Stats Fetched:", data);
-      setStats(data);
-      setFilteredStats(data);
-    }
-  };
+  if (error) {
+    console.error("❌ Error fetching stats:", error);
+  } else {
+    console.log("✅ Sales Stats Fetched:", data);
+    setStats(data);
+    setFilteredStats(data);
+  }
+};
 
   // ✅ Handle Filters & Sorting
   useEffect(() => {
