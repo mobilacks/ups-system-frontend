@@ -8,18 +8,23 @@ function StatsPage() {
   const [filteredStats, setFilteredStats] = useState([]);
   const [agentFilter, setAgentFilter] = useState("");
   const [storeFilter, setStoreFilter] = useState("");
-  const [startDate, setStartDate] = useState("");
-  const [endDate, setEndDate] = useState("");
+  const [startDate, setStartDate] = useState(new Date().toISOString().split("T")[0]); // Default: Today
+  const [endDate, setEndDate] = useState(new Date().toISOString().split("T")[0]); // Default: Today
   const [sortColumn, setSortColumn] = useState("total_sales");
   const [sortOrder, setSortOrder] = useState("desc");
 
   useEffect(() => {
-    fetchStats();
-  }, []);
+    fetchStats(startDate, endDate);
+  }, [startDate, endDate]);
 
-  // ✅ Fetch Stats from Supabase
-  const fetchStats = async () => {
-    const { data, error } = await supabase.rpc("get_sales_stats");
+  // ✅ Fetch Stats from Supabase with Date Parameters
+  const fetchStats = async (start, end) => {
+    console.log(`📅 Fetching stats from ${start} to ${end}...`);
+
+    const { data, error } = await supabase.rpc("get_sales_stats", {
+      p_start_date: start,
+      p_end_date: end
+    });
 
     if (error) {
       console.error("❌ Error fetching stats:", error);
@@ -36,17 +41,6 @@ function StatsPage() {
     console.log("📅 Selected End Date:", endDate);
 
     let filtered = stats;
-
-    if (startDate && endDate) {
-      console.log("🛠 Filtering stats by date range...");
-
-      filtered = filtered.filter((stat) => {
-        const saleDate = new Date(stat.sale_date);
-        return saleDate >= new Date(startDate) && saleDate <= new Date(endDate);
-      });
-
-      console.log("✅ Filtered Data:", filtered);
-    }
 
     if (searchQuery.trim()) {
       const lowercasedQuery = searchQuery.toLowerCase();
@@ -74,7 +68,7 @@ function StatsPage() {
     });
 
     setFilteredStats(filtered);
-  }, [startDate, endDate, searchQuery, agentFilter, storeFilter, sortColumn, sortOrder, stats]);
+  }, [searchQuery, agentFilter, storeFilter, startDate, endDate, sortColumn, sortOrder, stats]);
 
   // ✅ Get unique values for dropdown filters
   const uniqueAgents = [...new Set(stats.map((stat) => stat.email))];
@@ -112,8 +106,20 @@ function StatsPage() {
           ))}
         </select>
 
-        <input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
-        <input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
+        {/* ✅ Date Range Selection */}
+        <input
+          type="date"
+          value={startDate}
+          onChange={(e) => setStartDate(e.target.value)}
+        />
+        <input
+          type="date"
+          value={endDate}
+          onChange={(e) => setEndDate(e.target.value)}
+        />
+        <button onClick={() => fetchStats(startDate, endDate)} className="btn-filter">
+          Apply Filter
+        </button>
       </div>
 
       {/* ✅ Stats Table */}
@@ -144,7 +150,7 @@ function StatsPage() {
           {filteredStats.length > 0 ? (
             filteredStats.map((stat) => (
               <tr key={stat.email}>
-                <td>{stat.name}</td> {/* ✅ Show agent's name instead of email */}
+                <td>{stat.name}</td>
                 <td>{stat.ups_count}</td>
                 <td>{stat.sale_count}</td>
                 <td>${stat.total_sales.toFixed(2)}</td>
