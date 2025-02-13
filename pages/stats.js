@@ -8,43 +8,22 @@ function StatsPage() {
   const [filteredStats, setFilteredStats] = useState([]);
   const [agentFilter, setAgentFilter] = useState("");
   const [storeFilter, setStoreFilter] = useState("");
-  const [dateRange, setDateRange] = useState("today"); // Default to Today
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
   const [sortColumn, setSortColumn] = useState("total_sales");
   const [sortOrder, setSortOrder] = useState("desc");
 
   useEffect(() => {
     fetchStats();
-  }, [dateRange]);
-
-  // ✅ Helper Function to Get Date Range
-  const getDateRange = () => {
-    const today = new Date();
-    const startOfToday = new Date(today.setHours(0, 0, 0, 0)).toISOString().split("T")[0];
-
-    if (dateRange === "today") return { startDate: startOfToday, endDate: startOfToday };
-    if (dateRange === "yesterday") {
-      const yesterday = new Date(today);
-      yesterday.setDate(yesterday.getDate() - 1);
-      const startOfYesterday = yesterday.toISOString().split("T")[0];
-      return { startDate: startOfYesterday, endDate: startOfYesterday };
-    }
-    if (dateRange === "last30") {
-      const last30Days = new Date(today);
-      last30Days.setDate(today.getDate() - 30);
-      const startOfLast30 = last30Days.toISOString().split("T")[0];
-      return { startDate: startOfLast30, endDate: startOfToday };
-    }
-    return { startDate: "2000-01-01", endDate: startOfToday }; // Historical (All-time)
-  };
+  }, []);
 
   // ✅ Fetch Stats from Supabase
   const fetchStats = async () => {
-    const { startDate, endDate } = getDateRange();
-    console.log(`🔍 Fetching stats for range: ${startDate} to ${endDate}`);
+    console.log("📢 Fetching stats...");
 
     const { data, error } = await supabase.rpc("get_sales_stats", {
-      p_start_date: startDate,
-      p_end_date: endDate,
+      p_start_date: startDate || (new Date().toISOString().split("T")[0]),
+      p_end_date: endDate || (new Date().toISOString().split("T")[0]),
     });
 
     if (error) {
@@ -73,7 +52,15 @@ function StatsPage() {
     }
 
     if (storeFilter) {
-      filtered = filtered.filter((stat) => stat.store_number.toString() === storeFilter);
+      filtered = filtered.filter((stat) => stat.store_number?.toString() === storeFilter);
+    }
+
+    if (startDate) {
+      filtered = filtered.filter((stat) => new Date(stat.sale_date) >= new Date(startDate));
+    }
+
+    if (endDate) {
+      filtered = filtered.filter((stat) => new Date(stat.sale_date) <= new Date(endDate));
     }
 
     // ✅ Sorting
@@ -86,7 +73,7 @@ function StatsPage() {
     });
 
     setFilteredStats(filtered);
-  }, [searchQuery, agentFilter, storeFilter, sortColumn, sortOrder, stats]);
+  }, [searchQuery, agentFilter, storeFilter, startDate, endDate, sortColumn, sortOrder, stats]);
 
   // ✅ Get unique values for dropdown filters
   const uniqueAgents = [...new Set(stats.map((stat) => stat.email))];
@@ -124,12 +111,8 @@ function StatsPage() {
           ))}
         </select>
 
-        <select value={dateRange} onChange={(e) => setDateRange(e.target.value)}>
-          <option value="today">Today</option>
-          <option value="yesterday">Yesterday</option>
-          <option value="last30">Last 30 Days</option>
-          <option value="historical">All-Time</option>
-        </select>
+        <input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
+        <input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
       </div>
 
       {/* ✅ Stats Table */}
@@ -160,12 +143,12 @@ function StatsPage() {
           {filteredStats.length > 0 ? (
             filteredStats.map((stat) => (
               <tr key={stat.email}>
-                <td>{stat.name}</td>
-                <td>{stat.ups_count}</td>
-                <td>{stat.sale_count}</td>
-                <td>${stat.total_sales.toFixed(2)}</td>
-                <td>{stat.close_rate.toFixed(2)}%</td>
-                <td>${stat.avg_sale.toFixed(2)}</td>
+                <td>{stat.name || "N/A"}</td> {/* ✅ Show agent's name instead of email */}
+                <td>{stat.ups_count ?? 0}</td>
+                <td>{stat.sale_count ?? 0}</td>
+                <td>${stat.total_sales ? stat.total_sales.toFixed(2) : "0.00"}</td>
+                <td>{stat.close_rate ? `${stat.close_rate.toFixed(2)}%` : "0%"}</td>
+                <td>${stat.avg_sale ? stat.avg_sale.toFixed(2) : "0.00"}</td>
               </tr>
             ))
           ) : (
