@@ -8,48 +8,40 @@ function StatsPage() {
   const [filteredStats, setFilteredStats] = useState([]);
   const [agentFilter, setAgentFilter] = useState("");
   const [storeFilter, setStoreFilter] = useState("");
-  const [selectedDateRange, setSelectedDateRange] = useState("today"); // Default: Today
+  const [dateRange, setDateRange] = useState("today"); // Default to Today
   const [sortColumn, setSortColumn] = useState("total_sales");
   const [sortOrder, setSortOrder] = useState("desc");
 
   useEffect(() => {
     fetchStats();
-  }, [selectedDateRange]);
+  }, [dateRange]);
 
-  // ✅ Determine Date Range for Filtering
+  // ✅ Helper Function to Get Date Range
   const getDateRange = () => {
     const today = new Date();
-    let startDate, endDate;
+    const startOfToday = new Date(today.setHours(0, 0, 0, 0)).toISOString().split("T")[0];
 
-    switch (selectedDateRange) {
-      case "yesterday":
-        startDate = new Date(today);
-        startDate.setDate(today.getDate() - 1);
-        endDate = new Date(today);
-        endDate.setDate(today.getDate() - 1);
-        break;
-      case "last30":
-        startDate = new Date(today);
-        startDate.setDate(today.getDate() - 30);
-        endDate = today;
-        break;
-      case "historical":
-        startDate = new Date("2000-01-01"); // Arbitrary early date
-        endDate = today;
-        break;
-      case "today":
-      default:
-        startDate = today;
-        endDate = today;
-        break;
+    if (dateRange === "today") return { startDate: startOfToday, endDate: startOfToday };
+    if (dateRange === "yesterday") {
+      const yesterday = new Date(today);
+      yesterday.setDate(yesterday.getDate() - 1);
+      const startOfYesterday = yesterday.toISOString().split("T")[0];
+      return { startDate: startOfYesterday, endDate: startOfYesterday };
     }
-
-    return { startDate: startDate.toISOString().split("T")[0], endDate: endDate.toISOString().split("T")[0] };
+    if (dateRange === "last30") {
+      const last30Days = new Date(today);
+      last30Days.setDate(today.getDate() - 30);
+      const startOfLast30 = last30Days.toISOString().split("T")[0];
+      return { startDate: startOfLast30, endDate: startOfToday };
+    }
+    return { startDate: "2000-01-01", endDate: startOfToday }; // Historical (All-time)
   };
 
   // ✅ Fetch Stats from Supabase
   const fetchStats = async () => {
     const { startDate, endDate } = getDateRange();
+    console.log(`🔍 Fetching stats for range: ${startDate} to ${endDate}`);
+
     const { data, error } = await supabase.rpc("get_sales_stats", {
       p_start_date: startDate,
       p_end_date: endDate,
@@ -71,7 +63,8 @@ function StatsPage() {
     if (searchQuery.trim()) {
       const lowercasedQuery = searchQuery.toLowerCase();
       filtered = filtered.filter((stat) =>
-        stat.name.toLowerCase().includes(lowercasedQuery) || stat.email.toLowerCase().includes(lowercasedQuery)
+        stat.name?.toLowerCase().includes(lowercasedQuery) ||
+        stat.email.toLowerCase().includes(lowercasedQuery)
       );
     }
 
@@ -131,11 +124,11 @@ function StatsPage() {
           ))}
         </select>
 
-        <select value={selectedDateRange} onChange={(e) => setSelectedDateRange(e.target.value)}>
+        <select value={dateRange} onChange={(e) => setDateRange(e.target.value)}>
           <option value="today">Today</option>
           <option value="yesterday">Yesterday</option>
           <option value="last30">Last 30 Days</option>
-          <option value="historical">Historical</option>
+          <option value="historical">All-Time</option>
         </select>
       </div>
 
