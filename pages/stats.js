@@ -19,30 +19,39 @@ function StatsPage() {
 
   // ✅ Fetch Stats from Supabase
   const fetchStats = async () => {
-  console.log("🚀 Fetching Sales Stats...");
-  
-  const { data, error } = await supabase.rpc("get_sales_stats", {
-    p_start_date: (new Date(new Date().setDate(new Date().getDate() - 30))).toISOString().split("T")[0], 
-    p_end_date: new Date().toISOString().split("T")[0]
-  });
+    const { data, error } = await supabase.rpc("get_sales_stats");
 
-  if (error) {
-    console.error("❌ Error fetching stats:", error);
-  } else {
-    console.log("✅ Sales Stats Fetched:", data);
-    setStats(data);
-    setFilteredStats(data);
-  }
-};
+    if (error) {
+      console.error("❌ Error fetching stats:", error);
+    } else {
+      console.log("✅ Sales Stats Fetched:", data);
+      setStats(data);
+      setFilteredStats(data);
+    }
+  };
 
   // ✅ Handle Filters & Sorting
   useEffect(() => {
+    console.log("📅 Selected Start Date:", startDate);
+    console.log("📅 Selected End Date:", endDate);
+
     let filtered = stats;
+
+    if (startDate && endDate) {
+      console.log("🛠 Filtering stats by date range...");
+
+      filtered = filtered.filter((stat) => {
+        const saleDate = new Date(stat.sale_date);
+        return saleDate >= new Date(startDate) && saleDate <= new Date(endDate);
+      });
+
+      console.log("✅ Filtered Data:", filtered);
+    }
 
     if (searchQuery.trim()) {
       const lowercasedQuery = searchQuery.toLowerCase();
       filtered = filtered.filter((stat) =>
-        stat.name?.toLowerCase().includes(lowercasedQuery) ||
+        stat.name.toLowerCase().includes(lowercasedQuery) ||
         stat.email.toLowerCase().includes(lowercasedQuery)
       );
     }
@@ -52,15 +61,7 @@ function StatsPage() {
     }
 
     if (storeFilter) {
-      filtered = filtered.filter((stat) => stat.store_number?.toString() === storeFilter);
-    }
-
-    if (startDate) {
-      filtered = filtered.filter((stat) => new Date(stat.sale_date) >= new Date(startDate));
-    }
-
-    if (endDate) {
-      filtered = filtered.filter((stat) => new Date(stat.sale_date) <= new Date(endDate));
+      filtered = filtered.filter((stat) => stat.store_number.toString() === storeFilter);
     }
 
     // ✅ Sorting
@@ -73,7 +74,7 @@ function StatsPage() {
     });
 
     setFilteredStats(filtered);
-  }, [searchQuery, agentFilter, storeFilter, startDate, endDate, sortColumn, sortOrder, stats]);
+  }, [startDate, endDate, searchQuery, agentFilter, storeFilter, sortColumn, sortOrder, stats]);
 
   // ✅ Get unique values for dropdown filters
   const uniqueAgents = [...new Set(stats.map((stat) => stat.email))];
@@ -143,12 +144,12 @@ function StatsPage() {
           {filteredStats.length > 0 ? (
             filteredStats.map((stat) => (
               <tr key={stat.email}>
-                <td>{stat.name || "N/A"}</td> {/* ✅ Show agent's name instead of email */}
-                <td>{stat.ups_count ?? 0}</td>
-                <td>{stat.sale_count ?? 0}</td>
-                <td>${stat.total_sales ? stat.total_sales.toFixed(2) : "0.00"}</td>
-                <td>{stat.close_rate ? `${stat.close_rate.toFixed(2)}%` : "0%"}</td>
-                <td>${stat.avg_sale ? stat.avg_sale.toFixed(2) : "0.00"}</td>
+                <td>{stat.name}</td> {/* ✅ Show agent's name instead of email */}
+                <td>{stat.ups_count}</td>
+                <td>{stat.sale_count}</td>
+                <td>${stat.total_sales.toFixed(2)}</td>
+                <td>{stat.close_rate.toFixed(2)}%</td>
+                <td>${stat.avg_sale.toFixed(2)}</td>
               </tr>
             ))
           ) : (
