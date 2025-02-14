@@ -8,17 +8,16 @@ function StatsPage() {
   const [filteredStats, setFilteredStats] = useState([]);
   const [agentFilter, setAgentFilter] = useState("");
   const [storeFilter, setStoreFilter] = useState("");
-  const [roleFilter, setRoleFilter] = useState(""); // ✅ New Role Filter
+  const [roleFilter, setRoleFilter] = useState(""); // ✅ Role filter added
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [sortColumn, setSortColumn] = useState("total_sales");
   const [sortOrder, setSortOrder] = useState("desc");
-
   const [selectedDateRange, setSelectedDateRange] = useState("today"); // ✅ Default to Today
 
   useEffect(() => {
-    fetchStats();
-  }, [startDate, endDate]);
+    handleDateRangeChange("today"); // ✅ Load Today's Data on First Load
+  }, []);
 
   // ✅ Function to Set Date Range Based on Dropdown Selection
   const handleDateRangeChange = (value) => {
@@ -54,10 +53,14 @@ function StatsPage() {
 
     setStartDate(newStartDate ? newStartDate.toISOString().split("T")[0] : "");
     setEndDate(newEndDate ? newEndDate.toISOString().split("T")[0] : "");
+
+    if (newStartDate && newEndDate) {
+      fetchStats(newStartDate.toISOString().split("T")[0], newEndDate.toISOString().split("T")[0]);
+    }
   };
 
   // ✅ Fetch Stats from Supabase
-  const fetchStats = async () => {
+  const fetchStats = async (startDate, endDate) => {
     if (!startDate || !endDate) return;
 
     const { data, error } = await supabase.rpc("get_sales_stats", {
@@ -95,7 +98,7 @@ function StatsPage() {
     }
 
     if (roleFilter) {
-      filtered = filtered.filter((stat) => stat.role === roleFilter); // ✅ Correctly Filters Role
+      filtered = filtered.filter((stat) => stat.role === roleFilter); // ✅ Role filtering
     }
 
     // ✅ Sorting
@@ -135,6 +138,13 @@ function StatsPage() {
           <option value="last_30_days">Last 30 Days</option>
         </select>
 
+        <select value={roleFilter} onChange={(e) => setRoleFilter(e.target.value)}>
+          <option value="">All Roles</option>
+          <option value="agent">Agent</option>
+          <option value="store_manager">Store Manager</option>
+          <option value="admin">Admin</option>
+        </select>
+
         <select value={agentFilter} onChange={(e) => setAgentFilter(e.target.value)}>
           <option value="">All Agents</option>
           {uniqueAgents.map((agent) => (
@@ -153,13 +163,6 @@ function StatsPage() {
           ))}
         </select>
 
-        <select value={roleFilter} onChange={(e) => setRoleFilter(e.target.value)}>
-          <option value="">All Roles</option>
-          <option value="agent">Agent</option>
-          <option value="store_manager">Store Manager</option>
-          <option value="admin">Admin</option>
-        </select>
-
         <input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
         <input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
       </div>
@@ -170,6 +173,9 @@ function StatsPage() {
           <tr>
             <th onClick={() => setSortColumn("name")}>
               Name {sortColumn === "name" ? (sortOrder === "asc" ? "⬆" : "⬇") : ""}
+            </th>
+            <th onClick={() => setSortColumn("role")}>
+              Role {sortColumn === "role" ? (sortOrder === "asc" ? "⬆" : "⬇") : ""}
             </th>
             <th onClick={() => setSortColumn("ups_count")}>
               # of UPS {sortColumn === "ups_count" ? (sortOrder === "asc" ? "⬆" : "⬇") : ""}
@@ -193,16 +199,17 @@ function StatsPage() {
             filteredStats.map((stat) => (
               <tr key={stat.email}>
                 <td>{stat.name}</td>
+                <td>{stat.role}</td>
                 <td>{stat.ups_count}</td>
                 <td>{stat.sale_count}</td>
-                <td>${(stat.total_sales || 0).toFixed(2)}</td>
-                <td>{(stat.close_rate || 0).toFixed(2)}%</td>
-                <td>${(stat.avg_sale || 0).toFixed(2)}</td>
+                <td>${stat.total_sales.toFixed(2)}</td>
+                <td>{stat.close_rate.toFixed(2)}%</td>
+                <td>${stat.avg_sale.toFixed(2)}</td>
               </tr>
             ))
           ) : (
             <tr>
-              <td colSpan="6" className="no-stats">No stats available.</td>
+              <td colSpan="7" className="no-stats">No stats available.</td>
             </tr>
           )}
         </tbody>
@@ -211,4 +218,4 @@ function StatsPage() {
   );
 }
 
-export default ProtectedRoute(StatsPage); // ✅ Protect the Stats Page
+export default ProtectedRoute(StatsPage);
