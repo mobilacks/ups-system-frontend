@@ -8,13 +8,13 @@ function StatsPage() {
   const [filteredStats, setFilteredStats] = useState([]);
   const [agentFilter, setAgentFilter] = useState("");
   const [storeFilter, setStoreFilter] = useState("");
-  const [roleFilter, setRoleFilter] = useState("");
+  const [roleFilter, setRoleFilter] = useState(""); // ✅ New Role Filter
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [sortColumn, setSortColumn] = useState("total_sales");
   const [sortOrder, setSortOrder] = useState("desc");
 
-  const [selectedDateRange, setSelectedDateRange] = useState("today"); // Default to Today
+  const [selectedDateRange, setSelectedDateRange] = useState("today"); // ✅ Default to Today
 
   useEffect(() => {
     fetchStats();
@@ -95,7 +95,7 @@ function StatsPage() {
     }
 
     if (roleFilter) {
-      filtered = filtered.filter((stat) => stat.role === roleFilter);
+      filtered = filtered.filter((stat) => stat.role === roleFilter); // ✅ Correctly Filters Role
     }
 
     // ✅ Sorting
@@ -135,13 +135,6 @@ function StatsPage() {
           <option value="last_30_days">Last 30 Days</option>
         </select>
 
-        <select value={roleFilter} onChange={(e) => setRoleFilter(e.target.value)}>
-          <option value="">All Roles</option>
-          <option value="agent">Agent</option>
-          <option value="store_manager">Store Manager</option>
-          <option value="admin">Admin</option>
-        </select>
-
         <select value={agentFilter} onChange={(e) => setAgentFilter(e.target.value)}>
           <option value="">All Agents</option>
           {uniqueAgents.map((agent) => (
@@ -160,6 +153,13 @@ function StatsPage() {
           ))}
         </select>
 
+        <select value={roleFilter} onChange={(e) => setRoleFilter(e.target.value)}>
+          <option value="">All Roles</option>
+          <option value="agent">Agent</option>
+          <option value="store_manager">Store Manager</option>
+          <option value="admin">Admin</option>
+        </select>
+
         <input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
         <input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
       </div>
@@ -168,12 +168,24 @@ function StatsPage() {
       <table className="stats-table">
         <thead>
           <tr>
-            <th>Name</th>
-            <th># of UPS</th>
-            <th># of Sales</th>
-            <th>Total Sales</th>
-            <th>Close Rate</th>
-            <th>Average Sales</th>
+            <th onClick={() => setSortColumn("name")}>
+              Name {sortColumn === "name" ? (sortOrder === "asc" ? "⬆" : "⬇") : ""}
+            </th>
+            <th onClick={() => setSortColumn("ups_count")}>
+              # of UPS {sortColumn === "ups_count" ? (sortOrder === "asc" ? "⬆" : "⬇") : ""}
+            </th>
+            <th onClick={() => setSortColumn("sale_count")}>
+              # of Sales {sortColumn === "sale_count" ? (sortOrder === "asc" ? "⬆" : "⬇") : ""}
+            </th>
+            <th onClick={() => setSortColumn("total_sales")}>
+              Total Sales {sortColumn === "total_sales" ? (sortOrder === "asc" ? "⬆" : "⬇") : ""}
+            </th>
+            <th onClick={() => setSortColumn("close_rate")}>
+              Close Rate {sortColumn === "close_rate" ? (sortOrder === "asc" ? "⬆" : "⬇") : ""}
+            </th>
+            <th onClick={() => setSortColumn("avg_sale")}>
+              Average Sales {sortColumn === "avg_sale" ? (sortOrder === "asc" ? "⬆" : "⬇") : ""}
+            </th>
           </tr>
         </thead>
         <tbody>
