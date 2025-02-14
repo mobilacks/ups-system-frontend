@@ -8,15 +8,15 @@ function StatsPage() {
   const [filteredStats, setFilteredStats] = useState([]);
   const [agentFilter, setAgentFilter] = useState("");
   const [storeFilter, setStoreFilter] = useState("");
-  const [roleFilter, setRoleFilter] = useState(""); // ✅ Role filter added
+  const [roleFilter, setRoleFilter] = useState(""); // ✅ Role Filter Added
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [sortColumn, setSortColumn] = useState("total_sales");
   const [sortOrder, setSortOrder] = useState("desc");
-  const [selectedDateRange, setSelectedDateRange] = useState("today"); // ✅ Default to Today
+  const [selectedDateRange, setSelectedDateRange] = useState("today"); // ✅ Default to TODAY
 
   useEffect(() => {
-    handleDateRangeChange("today"); // ✅ Set default to today's date on load
+    handleDateRangeChange("today"); // ✅ Default to today's stats on load
   }, []);
 
   useEffect(() => {
@@ -98,7 +98,7 @@ function StatsPage() {
     }
 
     if (roleFilter) {
-      filtered = filtered.filter((stat) => stat.role === roleFilter);
+      filtered = filtered.filter((stat) => stat.role === roleFilter); // ✅ Filter by role
     }
 
     // ✅ Sorting
@@ -116,7 +116,6 @@ function StatsPage() {
   // ✅ Get unique values for dropdown filters
   const uniqueAgents = [...new Set(stats.map((stat) => stat.email))];
   const uniqueStores = [...new Set(stats.map((stat) => stat.store_number))];
-  const uniqueRoles = ["agent", "store_manager", "admin"]; // ✅ Added role filter options
 
   return (
     <div className="stats-container">
@@ -157,13 +156,12 @@ function StatsPage() {
           ))}
         </select>
 
+        {/* ✅ Role Filter Dropdown */}
         <select value={roleFilter} onChange={(e) => setRoleFilter(e.target.value)}>
           <option value="">All Roles</option>
-          {uniqueRoles.map((role) => (
-            <option key={role} value={role}>
-              {role.charAt(0).toUpperCase() + role.slice(1)}
-            </option>
-          ))}
+          <option value="agent">Agent</option>
+          <option value="store_manager">Store Manager</option>
+          <option value="admin">Admin</option>
         </select>
 
         <input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
@@ -208,13 +206,4 @@ function StatsPage() {
             ))
           ) : (
             <tr>
-              <td colSpan="6" className="no-stats">No stats available.</td>
-            </tr>
-          )}
-        </tbody>
-      </table>
-    </div>
-  );
-}
-
-export default ProtectedRoute(StatsPage); // ✅ Protect the Stats Page
+              <td colSpan="6" className="no-st
