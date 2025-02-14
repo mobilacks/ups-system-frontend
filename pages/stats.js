@@ -8,12 +8,16 @@ function StatsPage() {
   const [filteredStats, setFilteredStats] = useState([]);
   const [agentFilter, setAgentFilter] = useState("");
   const [storeFilter, setStoreFilter] = useState("");
+  const [roleFilter, setRoleFilter] = useState(""); // ✅ Role filter added
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [sortColumn, setSortColumn] = useState("total_sales");
   const [sortOrder, setSortOrder] = useState("desc");
+  const [selectedDateRange, setSelectedDateRange] = useState("today"); // ✅ Default to Today
 
-  const [selectedDateRange, setSelectedDateRange] = useState("last_30_days"); // Default to last 30 days
+  useEffect(() => {
+    handleDateRangeChange("today"); // ✅ Set default to today's date on load
+  }, []);
 
   useEffect(() => {
     fetchStats();
@@ -93,6 +97,10 @@ function StatsPage() {
       filtered = filtered.filter((stat) => stat.store_number.toString() === storeFilter);
     }
 
+    if (roleFilter) {
+      filtered = filtered.filter((stat) => stat.role === roleFilter);
+    }
+
     // ✅ Sorting
     filtered.sort((a, b) => {
       if (sortOrder === "asc") {
@@ -103,11 +111,12 @@ function StatsPage() {
     });
 
     setFilteredStats(filtered);
-  }, [searchQuery, agentFilter, storeFilter, sortColumn, sortOrder, stats]);
+  }, [searchQuery, agentFilter, storeFilter, roleFilter, sortColumn, sortOrder, stats]);
 
   // ✅ Get unique values for dropdown filters
   const uniqueAgents = [...new Set(stats.map((stat) => stat.email))];
   const uniqueStores = [...new Set(stats.map((stat) => stat.store_number))];
+  const uniqueRoles = ["agent", "store_manager", "admin"]; // ✅ Added role filter options
 
   return (
     <div className="stats-container">
@@ -144,6 +153,15 @@ function StatsPage() {
           {uniqueStores.map((store) => (
             <option key={store} value={store}>
               Store {store}
+            </option>
+          ))}
+        </select>
+
+        <select value={roleFilter} onChange={(e) => setRoleFilter(e.target.value)}>
+          <option value="">All Roles</option>
+          {uniqueRoles.map((role) => (
+            <option key={role} value={role}>
+              {role.charAt(0).toUpperCase() + role.slice(1)}
             </option>
           ))}
         </select>
