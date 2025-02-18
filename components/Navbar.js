@@ -33,20 +33,37 @@ export default function Navbar() {
     fetchUserRole();
   }, []);
 
-  // ✅ Logout Function - Updates Status Before Logging Out
+  // ✅ Logout Function - Updates Status and Queue Before Logging Out
   const handleLogout = async () => {
     if (userEmail) {
-      console.log(`🔄 Setting ${userEmail} status to offline...`);
+      console.log(`🔄 Setting ${userEmail} status to offline and resetting queue status...`);
 
-      const { error } = await supabase
+      // ✅ Update agent's status to offline
+      const { error: statusError } = await supabase
         .from("agents")
         .update({ status: "offline" })
         .eq("email", userEmail);
 
-      if (error) {
-        console.error("❌ Error updating agent status:", error);
+      if (statusError) {
+        console.error("❌ Error updating agent status:", statusError);
       } else {
         console.log("✅ Agent status updated to offline.");
+      }
+
+      // ✅ Reset queue status for the agent
+      const { error: queueError } = await supabase
+        .from("queue")
+        .update({
+          agents_waiting: false,
+          in_queue: false,
+          with_customer: false
+        })
+        .eq("email", userEmail);
+
+      if (queueError) {
+        console.error("❌ Error resetting queue status:", queueError);
+      } else {
+        console.log("✅ Agent queue status reset successfully.");
       }
     }
 
