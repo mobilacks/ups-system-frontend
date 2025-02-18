@@ -84,6 +84,16 @@ export default function AuthForm({ isSignUp = false }) {
         if (updateError) console.error("❌ Error updating agent status:", updateError);
         else console.log("✅ Agent status updated to online");
 
+        // ✅ Move agent to "Agents Waiting" in Queue
+        console.log("🔄 Moving agent to Agents Waiting in queue...");
+        const { error: queueError } = await supabase
+          .from("queue")
+          .update({ agents_waiting: true })
+          .eq("email", email);
+
+        if (queueError) console.error("❌ Error updating queue status:", queueError);
+        else console.log("✅ Agent moved to Agents Waiting in queue.");
+
         router.push("/dashboard"); // Redirect to dashboard
       }
     } catch (err) {
@@ -174,7 +184,7 @@ export default function AuthForm({ isSignUp = false }) {
           </button>
         </form>
 
-        {/* ✅ Show Logout Button ONLY if user is logged in */}
+        {/* ✅ Show Logout Button ONLY if user is logged in */}  
         {isLoggedIn && router.pathname !== "/login" && (
           <button onClick={handleLogout} className="logout-button">
             Logout
