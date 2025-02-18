@@ -5,6 +5,7 @@ import { supabase } from "../lib/supabase";
 export default function Navbar() {
   const [role, setRole] = useState(null);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [userEmail, setUserEmail] = useState(null); // Store logged-in user's email
   const router = useRouter();
 
   useEffect(() => {
@@ -12,7 +13,8 @@ export default function Navbar() {
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
         setIsLoggedIn(true);
-        
+        setUserEmail(user.email);
+
         // ✅ Fetch role from Supabase agents table
         const { data, error } = await supabase
           .from("agents")
@@ -31,8 +33,23 @@ export default function Navbar() {
     fetchUserRole();
   }, []);
 
-  // ✅ Logout Function
+  // ✅ Logout Function - Updates Status Before Logging Out
   const handleLogout = async () => {
+    if (userEmail) {
+      console.log(`🔄 Setting ${userEmail} status to offline...`);
+
+      const { error } = await supabase
+        .from("agents")
+        .update({ status: "offline" })
+        .eq("email", userEmail);
+
+      if (error) {
+        console.error("❌ Error updating agent status:", error);
+      } else {
+        console.log("✅ Agent status updated to offline.");
+      }
+    }
+
     await supabase.auth.signOut();
     router.push("/login"); // Redirect to login page
   };
@@ -42,18 +59,18 @@ export default function Navbar() {
 
   return (
     <nav className="navbar">
-  <ul>
-    <li><a href="/dashboard">Dashboard</a></li>
-    <li><a href="/stats">Stats</a></li>
-    {role === "store_manager" && <li><a href="/logs">Logs</a></li>}
-    {role === "admin" && (
-      <>
-        <li><a href="/admin">Admin</a></li>
-        <li><a href="/logs">Logs</a></li>
-      </>
-    )}
-    <li><button className="logout-btn" onClick={handleLogout}>Logout</button></li>
-  </ul>
-</nav>
+      <ul>
+        <li><a href="/dashboard">Dashboard</a></li>
+        <li><a href="/stats">Stats</a></li>
+        {role === "store_manager" && <li><a href="/logs">Logs</a></li>}
+        {role === "admin" && (
+          <>
+            <li><a href="/admin">Admin</a></li>
+            <li><a href="/logs">Logs</a></li>
+          </>
+        )}
+        <li><button className="logout-btn" onClick={handleLogout}>Logout</button></li>
+      </ul>
+    </nav>
   );
 }
