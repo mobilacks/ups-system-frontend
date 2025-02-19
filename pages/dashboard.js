@@ -89,35 +89,113 @@ export default function Dashboard() {
     }
   }
 
+  async function handleSaleClosure(email) {
+    if (email !== user.email) {
+      alert("You can only log your own sales!");
+      return;
+    }
+
+    let contractNumber;
+    while (!contractNumber) {
+      contractNumber = prompt("Enter Contract # (Required)");
+      if (contractNumber === null) return;
+    }
+
+    let saleAmount;
+    while (!saleAmount || isNaN(saleAmount) || parseFloat(saleAmount) <= 0) {
+      saleAmount = prompt("Enter Sale Amount (Required, must be a number)");
+      if (saleAmount === null) return;
+    }
+
+    saleAmount = parseFloat(saleAmount);
+
+    const { data: agentData, error: agentError } = await supabase
+      .from("agents")
+      .select("store_number")
+      .eq("email", email)
+      .single();
+
+    if (agentError || !agentData) {
+      console.error("❌ Error fetching agent's store number:", agentError);
+      return;
+    }
+
+    // ✅ Insert Sale Entry
+    const { error: saleError } = await supabase.from("sales").insert([
+      {
+        email,
+        contract_number: contractNumber,
+        sale_amount: saleAmount,
+        store_number: agentData.store_number,
+      }
+    ]);
+
+    if (!saleError) {
+      console.log("✅ Sale recorded successfully!");
+      await handleQueueAction("move_to_agents_waiting", email);
+
+      // ✅ Log sale in logs table
+      const { error: logError } = await supabase.from("logs").insert([
+        { 
+          email, 
+          action_type: "SALE_CLOSED", 
+          table_name: "sales", 
+          details: `Contract: ${contractNumber}, Amount: $${saleAmount}`, 
+          created_at: new Date().toLocaleString("en-US", { timeZone: "America/Chicago" }), // ✅ CST conversion
+        }
+      ]);
+
+      if (logError) {
+        console.error("❌ Error logging sale:", logError);
+      } else {
+        console.log("✅ Sale logged successfully!");
+      }
+
+      // ✅ Insert UPS Tracking Entry (Fix: Ensure it properly updates)
+      const { error: upsError } = await supabase.from("ups_tracking").insert([
+        {
+          email,
+          store_number: agentData.store_number,
+          timestamp: new Date().toISOString(),
+          ups_sale: "Sale", // ✅ Marked as Sale
+          ups_count: 1, // ✅ Adds +1 UPS for Sale
+        }
+      ]);
+
+      if (upsError) {
+        console.error("❌ Error updating UPS tracking:", upsError);
+      } else {
+        console.log("✅ UPS tracking updated successfully!");
+      }
+      
+    } else {
+      console.error("❌ Error closing sale:", saleError);
+    }
+  }
   async function handleNoSale(email) {
     if (email !== user.email) {
       alert("You can only log your own no-sale reasons!");
       return;
     }
 
-    let reasonId;
-    let reasonText;
-    let upsCount;
-
-    while (!reasonId) {
-      const reasonSelection = prompt(
+    let reason;
+    while (!reason) {
+      reason = prompt(
         "Select a reason:\n" +
         reasons.map((r, index) => `${index + 1}. ${r.reason_text}`).join("\n")
       );
 
-      if (reasonSelection === null) return;
-      const selectedReason = reasons[parseInt(reasonSelection) - 1];
+      if (reason === null) return;
+      const selectedReason = reasons[parseInt(reason) - 1];
 
       if (selectedReason) {
-        reasonId = selectedReason.id;
-        reasonText = selectedReason.reason_text;
-        upsCount = selectedReason.ups_count;
+        reason = selectedReason;
       } else {
         alert("Invalid selection. Please choose again.");
       }
     }
 
-    const moveFunction = reasonText === "Not A Customer" ? "move_to_in_queue" : "move_to_agents_waiting";
+    const moveFunction = reason.reason_text === "Not A Customer" ? "move_to_in_queue" : "move_to_agents_waiting";
     await handleQueueAction(moveFunction, email);
 
     const { error: logError } = await supabase.from("logs").insert([
@@ -125,100 +203,29 @@ export default function Dashboard() {
         email,
         action_type: "NO_SALE",
         table_name: "queue",
-        details: `No Sale Reason: ${reasonText}`,
+        details: `No Sale Reason: ${reason.reason_text}`,
         created_at: new Date().toLocaleString("en-US", { timeZone: "America/Chicago" }),
       }
     ]);
 
-    if (logError) {
-      console.error("❌ Error logging no sale:", logError);
-    } else {
-      console.log("✅ No Sale logged successfully!");
-    }
+    if (logError) console.error("❌ Error logging no sale:", logError);
 
     const { error: upsError } = await supabase.from("ups_tracking").insert([
       {
         email,
         store_number: storeNumber,
         timestamp: new Date().toISOString(),
-        ups_sale: reasonText,
-        ups_count: upsCount ? 1 : 0
+        ups_sale: reason.reason_text,
+        ups_count: reason.ups_count ? 1 : 0
       }
     ]);
 
-    if (upsError) {
-      console.error("❌ Error updating UPS tracking:", upsError);
-    } else {
-      console.log("✅ UPS tracking updated successfully!");
-    }
+    if (upsError) console.error("❌ Error updating UPS tracking:", upsError);
   }
 
   return (
     <div className="dashboard-container">
       <h1 className="text-2xl font-bold text-center mb-4">Dashboard</h1>
-
-      {/* Agents Waiting Section */}
-      <div className="dashboard-section">
-        <h3>Agents Waiting</h3>
-        <table>
-          <thead>
-            <tr>
-              <th>Agent Name</th>
-              <th>Store</th>
-              <th>Action</th>
-            </tr>
-          </thead>
-          <tbody>
-            {agentsWaiting.map(agent => (
-              <tr key={agent.email}>
-                <td>{agent.email}</td>
-                <td>{agent.store_number}</td>
-                <td>
-                  {agent.email === user.email && (
-                    <button className="btn-primary" onClick={() => handleQueueAction("join_queue", agent.email)}>
-                      Join Queue
-                    </button>
-                  )}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-
-      {/* In Queue Section */}
-      <div className="dashboard-section">
-        <h3>In Queue</h3>
-        <table>
-          <thead>
-            <tr>
-              <th>Agent Name</th>
-              <th>Store</th>
-              <th>Action</th>
-            </tr>
-          </thead>
-          <tbody>
-            {inQueue.map(agent => (
-              <tr key={agent.email}>
-                <td>{agent.email}</td>
-                <td>{agent.store_number}</td>
-                <td>
-                  {agent.email === user.email && (
-                    <>
-                      <button className="btn-green" onClick={() => handleQueueAction("move_to_with_customer", agent.email)}>
-                        With Customer
-                      </button>
-                      <button className="btn-red" onClick={() => handleQueueAction("move_to_agents_waiting", agent.email)}>
-                        Move to Agents Waiting
-                      </button>
-                    </>
-                  )}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
 
       {/* With Customer Section */}
       <div className="dashboard-section">
