@@ -111,7 +111,8 @@ export default function Dashboard() {
       return;
     }
 
-    const { error } = await supabase.from("sales").insert([
+    // ✅ Insert Sale Entry
+    const { error: saleError } = await supabase.from("sales").insert([
       {
         email,
         contract_number: contractNumber,
@@ -120,7 +121,7 @@ export default function Dashboard() {
       }
     ]);
 
-    if (!error) {
+    if (!saleError) {
       console.log("✅ Sale recorded successfully!");
       await handleQueueAction("move_to_agents_waiting", email);
 
@@ -141,13 +142,13 @@ export default function Dashboard() {
         console.log("✅ Sale logged successfully!");
       }
 
-      // ✅ Insert UPS Tracking Entry
+      // ✅ Insert UPS Tracking Entry (Fix: Ensure it properly updates)
       const { error: upsError } = await supabase.from("ups_tracking").insert([
         {
           email,
           store_number: agentData.store_number,
           timestamp: new Date().toISOString(),
-          reason_text: "Sale", // ✅ Marked as Sale
+          ups_sale: "Sale", // ✅ Marked as Sale
           ups_count: 1, // ✅ Adds +1 UPS for Sale
         }
       ]);
@@ -155,11 +156,11 @@ export default function Dashboard() {
       if (upsError) {
         console.error("❌ Error updating UPS tracking:", upsError);
       } else {
-        console.log("✅ UPS tracking updated!");
+        console.log("✅ UPS tracking updated successfully!");
       }
       
     } else {
-      console.error("❌ Error closing sale:", error);
+      console.error("❌ Error closing sale:", saleError);
     }
   }
 
