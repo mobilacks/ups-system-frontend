@@ -124,22 +124,40 @@ export default function Dashboard() {
       console.log("✅ Sale recorded successfully!");
       await handleQueueAction("move_to_agents_waiting", email);
 
+      // ✅ Log sale in logs table
       const { error: logError } = await supabase.from("logs").insert([
-  { 
-    email, 
-    action_type: "SALE_CLOSED", 
-    table_name: "sales", 
-    details: `Contract: ${contractNumber}, Amount: $${saleAmount}`, 
-    created_at: new Date().toLocaleString("en-US", { timeZone: "America/Chicago" }), // ✅ CST conversion
-  }
-]);
+        { 
+          email, 
+          action_type: "SALE_CLOSED", 
+          table_name: "sales", 
+          details: `Contract: ${contractNumber}, Amount: $${saleAmount}`, 
+          created_at: new Date().toLocaleString("en-US", { timeZone: "America/Chicago" }), // ✅ CST conversion
+        }
+      ]);
 
-if (logError) {
-  console.error("❌ Error logging sale:", logError);
-} else {
-  console.log("✅ Sale logged successfully!");
-}
+      if (logError) {
+        console.error("❌ Error logging sale:", logError);
+      } else {
+        console.log("✅ Sale logged successfully!");
+      }
 
+      // ✅ Insert UPS Tracking Entry
+      const { error: upsError } = await supabase.from("ups_tracking").insert([
+        {
+          email,
+          store_number: agentData.store_number,
+          timestamp: new Date().toISOString(),
+          reason_text: "Sale", // ✅ Marked as Sale
+          ups_count: 1, // ✅ Adds +1 UPS for Sale
+        }
+      ]);
+
+      if (upsError) {
+        console.error("❌ Error updating UPS tracking:", upsError);
+      } else {
+        console.log("✅ UPS tracking updated!");
+      }
+      
     } else {
       console.error("❌ Error closing sale:", error);
     }
