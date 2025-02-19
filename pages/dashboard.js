@@ -136,22 +136,20 @@ export default function Dashboard() {
       console.log("✅ No Sale logged successfully!");
     }
 
-    if (upsCount) {
-      const { error: upsError } = await supabase.from("ups_tracking").insert([
-        {
-          email,
-          store_number: storeNumber,
-          timestamp: new Date().toISOString(),
-          ups_sale: reasonText,
-          ups_count: 1
-        }
-      ]);
-
-      if (upsError) {
-        console.error("❌ Error updating UPS tracking:", upsError);
-      } else {
-        console.log("✅ UPS tracking updated successfully!");
+    const { error: upsError } = await supabase.from("ups_tracking").insert([
+      {
+        email,
+        store_number: storeNumber,
+        timestamp: new Date().toISOString(),
+        ups_sale: reasonText,
+        ups_count: upsCount ? 1 : 0
       }
+    ]);
+
+    if (upsError) {
+      console.error("❌ Error updating UPS tracking:", upsError);
+    } else {
+      console.log("✅ UPS tracking updated successfully!");
     }
   }
 
@@ -241,6 +239,12 @@ export default function Dashboard() {
                 <td>
                   {agent.email === user.email && (
                     <>
+                      <button className="btn-primary" onClick={() => handleQueueAction("move_to_in_queue", agent.email)}>
+                        Back to Queue
+                      </button>
+                      <button className="btn-green" onClick={() => handleSaleClosure(agent.email)}>
+                        Close Sale
+                      </button>
                       <button className="btn-yellow" onClick={() => handleNoSale(agent.email)}>
                         No Sale
                       </button>
