@@ -9,6 +9,7 @@ export default function Dashboard() {
   const [inQueue, setInQueue] = useState([]);
   const [withCustomer, setWithCustomer] = useState([]);
   const [stats, setStats] = useState([]);
+  const [reasons, setReasons] = useState([]);
   const router = useRouter();
 
   useEffect(() => {
@@ -17,6 +18,7 @@ export default function Dashboard() {
       if (user) {
         setUser(user);
         fetchUserStore(user.email);
+        fetchReasons();
       } else {
         router.push("/login");
       }
@@ -58,6 +60,13 @@ export default function Dashboard() {
     }
   }
 
+  async function fetchReasons() {
+    const { data, error } = await supabase.from("reasons").select("*");
+    if (!error) {
+      setReasons(data);
+    }
+  }
+
   async function handleQueueAction(action, email) {
     if (email !== user.email) {
       alert("You can only manage your own queue status!");
@@ -80,76 +89,61 @@ export default function Dashboard() {
     }
   }
 
-  async function handleSaleClosure(email) {
+  async function handleNoSale(email) {
     if (email !== user.email) {
-      alert("You can only log your own sales!");
+      alert("You can only log your own no-sale reasons!");
       return;
     }
 
-    let contractNumber;
-    while (!contractNumber) {
-      contractNumber = prompt("Enter Contract # (Required)");
-      if (contractNumber === null) return;
+    let reasonId;
+    let reasonText;
+    let upsCount;
+
+    while (!reasonId) {
+      const reasonSelection = prompt(
+        "Select a reason:\n" +
+        reasons.map((r, index) => `${index + 1}. ${r.reason_text}`).join("\n")
+      );
+
+      if (reasonSelection === null) return;
+      const selectedReason = reasons[parseInt(reasonSelection) - 1];
+
+      if (selectedReason) {
+        reasonId = selectedReason.id;
+        reasonText = selectedReason.reason_text;
+        upsCount = selectedReason.ups_count;
+      } else {
+        alert("Invalid selection. Please choose again.");
+      }
     }
 
-    let saleAmount;
-    while (!saleAmount || isNaN(saleAmount) || parseFloat(saleAmount) <= 0) {
-      saleAmount = prompt("Enter Sale Amount (Required, must be a number)");
-      if (saleAmount === null) return;
-    }
+    const moveFunction = reasonText === "Not A Customer" ? "move_to_in_queue" : "move_to_agents_waiting";
+    await handleQueueAction(moveFunction, email);
 
-    saleAmount = parseFloat(saleAmount);
-
-    const { data: agentData, error: agentError } = await supabase
-      .from("agents")
-      .select("store_number")
-      .eq("email", email)
-      .single();
-
-    if (agentError || !agentData) {
-      console.error("❌ Error fetching agent's store number:", agentError);
-      return;
-    }
-
-    // ✅ Insert Sale Entry
-    const { error: saleError } = await supabase.from("sales").insert([
+    const { error: logError } = await supabase.from("logs").insert([
       {
         email,
-        contract_number: contractNumber,
-        sale_amount: saleAmount,
-        store_number: agentData.store_number,
+        action_type: "NO_SALE",
+        table_name: "queue",
+        details: `No Sale Reason: ${reasonText}`,
+        created_at: new Date().toLocaleString("en-US", { timeZone: "America/Chicago" }),
       }
     ]);
 
-    if (!saleError) {
-      console.log("✅ Sale recorded successfully!");
-      await handleQueueAction("move_to_agents_waiting", email);
+    if (logError) {
+      console.error("❌ Error logging no sale:", logError);
+    } else {
+      console.log("✅ No Sale logged successfully!");
+    }
 
-      // ✅ Log sale in logs table
-      const { error: logError } = await supabase.from("logs").insert([
-        { 
-          email, 
-          action_type: "SALE_CLOSED", 
-          table_name: "sales", 
-          details: `Contract: ${contractNumber}, Amount: $${saleAmount}`, 
-          created_at: new Date().toLocaleString("en-US", { timeZone: "America/Chicago" }), // ✅ CST conversion
-        }
-      ]);
-
-      if (logError) {
-        console.error("❌ Error logging sale:", logError);
-      } else {
-        console.log("✅ Sale logged successfully!");
-      }
-
-      // ✅ Insert UPS Tracking Entry (Fix: Ensure it properly updates)
+    if (upsCount) {
       const { error: upsError } = await supabase.from("ups_tracking").insert([
         {
           email,
-          store_number: agentData.store_number,
+          store_number: storeNumber,
           timestamp: new Date().toISOString(),
-          ups_sale: "Sale", // ✅ Marked as Sale
-          ups_count: 1, // ✅ Adds +1 UPS for Sale
+          ups_sale: reasonText,
+          ups_count: 1
         }
       ]);
 
@@ -158,9 +152,6 @@ export default function Dashboard() {
       } else {
         console.log("✅ UPS tracking updated successfully!");
       }
-      
-    } else {
-      console.error("❌ Error closing sale:", saleError);
     }
   }
 
@@ -250,13 +241,7 @@ export default function Dashboard() {
                 <td>
                   {agent.email === user.email && (
                     <>
-                      <button className="btn-primary" onClick={() => handleQueueAction("move_to_in_queue", agent.email)}>
-                        Back to Queue
-                      </button>
-                      <button className="btn-green" onClick={() => handleSaleClosure(agent.email)}>
-                        Close Sale
-                      </button>
-                      <button className="btn-yellow" onClick={() => handleQueueAction("move_to_agents_waiting", agent.email)}>
+                      <button className="btn-yellow" onClick={() => handleNoSale(agent.email)}>
                         No Sale
                       </button>
                     </>
