@@ -164,7 +164,68 @@ export default function Dashboard() {
   return (
     <div className="dashboard-container">
       <h1 className="text-2xl font-bold text-center mb-4">Dashboard</h1>
+      {/* Agents Waiting Section */}
+      <div className="dashboard-section">
+        <h3>Agents Waiting</h3>
+        <table>
+          <thead>
+            <tr>
+              <th>Agent Name</th>
+              <th>Store</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {agentsWaiting.map(agent => (
+              <tr key={agent.email}>
+                <td>{agent.email}</td>
+                <td>{agent.store_number}</td>
+                <td>
+                  {agent.email === user.email && (
+                    <button className="btn-primary" onClick={() => handleQueueAction("join_queue", agent.email)}>
+                      Join Queue
+                    </button>
+                  )}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
 
+      {/* In Queue Section */}
+      <div className="dashboard-section">
+        <h3>In Queue</h3>
+        <table>
+          <thead>
+            <tr>
+              <th>Agent Name</th>
+              <th>Store</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {inQueue.map(agent => (
+              <tr key={agent.email}>
+                <td>{agent.email}</td>
+                <td>{agent.store_number}</td>
+                <td>
+                  {agent.email === user.email && (
+                    <>
+                      <button className="btn-green" onClick={() => handleQueueAction("move_to_with_customer", agent.email)}>
+                        With Customer
+                      </button>
+                      <button className="btn-red" onClick={() => handleQueueAction("move_to_agents_waiting", agent.email)}>
+                        Move to Agents Waiting
+                      </button>
+                    </>
+                  )}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
       {/* With Customer Section */}
       <div className="dashboard-section">
         <h3>With Customer</h3>
