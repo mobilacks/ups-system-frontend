@@ -109,69 +109,21 @@ export default function Dashboard() {
 
     saleAmount = parseFloat(saleAmount);
 
-    const { data: agentData, error: agentError } = await supabase
-      .from("agents")
-      .select("store_number")
-      .eq("email", email)
-      .single();
+    const { error } = await supabase.rpc("close_sale", {
+      p_email: email,
+      p_contract_number: contractNumber,
+      p_sale_amount: saleAmount
+    });
 
-    if (agentError || !agentData) {
-      console.error("❌ Error fetching agent's store number:", agentError);
-      return;
-    }
-
-    // ✅ Insert Sale Entry
-    const { error: saleError } = await supabase.from("sales").insert([
-      {
-        email,
-        contract_number: contractNumber,
-        sale_amount: saleAmount,
-        store_number: agentData.store_number,
-      }
-    ]);
-
-    if (!saleError) {
+    if (!error) {
       console.log("✅ Sale recorded successfully!");
-      await handleQueueAction("move_to_agents_waiting", email);
-
-      // ✅ Log sale in logs table
-      const { error: logError } = await supabase.from("logs").insert([
-        { 
-          email, 
-          action_type: "SALE_CLOSED", 
-          table_name: "sales", 
-          details: `Contract: ${contractNumber}, Amount: $${saleAmount}`, 
-          created_at: new Date().toLocaleString("en-US", { timeZone: "America/Chicago" }), // ✅ CST conversion
-        }
-      ]);
-
-      if (logError) {
-        console.error("❌ Error logging sale:", logError);
-      } else {
-        console.log("✅ Sale logged successfully!");
-      }
-
-      // ✅ Insert UPS Tracking Entry (Fix: Ensure it properly updates)
-      const { error: upsError } = await supabase.from("ups_tracking").insert([
-        {
-          email,
-          store_number: agentData.store_number,
-          timestamp: new Date().toISOString(),
-          ups_sale: "Sale", // ✅ Marked as Sale
-          ups_count: 1, // ✅ Adds +1 UPS for Sale
-        }
-      ]);
-
-      if (upsError) {
-        console.error("❌ Error updating UPS tracking:", upsError);
-      } else {
-        console.log("✅ UPS tracking updated successfully!");
-      }
-      
+      fetchQueueData(storeNumber);
+      fetchStats();
     } else {
-      console.error("❌ Error closing sale:", saleError);
+      console.error("❌ Error closing sale:", error);
     }
   }
+
   async function handleNoSale(email) {
     if (email !== user.email) {
       alert("You can only log your own no-sale reasons!");
@@ -195,32 +147,18 @@ export default function Dashboard() {
       }
     }
 
-    const moveFunction = reason.reason_text === "Not A Customer" ? "move_to_in_queue" : "move_to_agents_waiting";
-    await handleQueueAction(moveFunction, email);
+    const { error } = await supabase.rpc("no_sale", {
+      p_email: email,
+      p_reason: reason.reason_text
+    });
 
-    const { error: logError } = await supabase.from("logs").insert([
-      {
-        email,
-        action_type: "NO_SALE",
-        table_name: "queue",
-        details: `No Sale Reason: ${reason.reason_text}`,
-        created_at: new Date().toLocaleString("en-US", { timeZone: "America/Chicago" }),
-      }
-    ]);
-
-    if (logError) console.error("❌ Error logging no sale:", logError);
-
-    const { error: upsError } = await supabase.from("ups_tracking").insert([
-      {
-        email,
-        store_number: storeNumber,
-        timestamp: new Date().toISOString(),
-        ups_sale: reason.reason_text,
-        ups_count: reason.ups_count ? 1 : 0
-      }
-    ]);
-
-    if (upsError) console.error("❌ Error updating UPS tracking:", upsError);
+    if (!error) {
+      console.log("✅ No Sale recorded successfully!");
+      fetchQueueData(storeNumber);
+      fetchStats();
+    } else {
+      console.error("❌ Error logging no sale:", error);
+    }
   }
 
   return (
