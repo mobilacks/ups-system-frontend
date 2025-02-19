@@ -171,27 +171,13 @@ function StatsPage() {
       <table className="stats-table">
         <thead>
           <tr>
-            <th onClick={() => setSortColumn("name")}>
-              Name {sortColumn === "name" ? (sortOrder === "asc" ? "⬆" : "⬇") : ""}
-            </th>
-            <th onClick={() => setSortColumn("role")}>
-              Role {sortColumn === "role" ? (sortOrder === "asc" ? "⬆" : "⬇") : ""}
-            </th>
-            <th onClick={() => setSortColumn("ups_count")}>
-              # of UPS {sortColumn === "ups_count" ? (sortOrder === "asc" ? "⬆" : "⬇") : ""}
-            </th>
-            <th onClick={() => setSortColumn("sale_count")}>
-              # of Sales {sortColumn === "sale_count" ? (sortOrder === "asc" ? "⬆" : "⬇") : ""}
-            </th>
-            <th onClick={() => setSortColumn("total_sales")}>
-              Total Sales {sortColumn === "total_sales" ? (sortOrder === "asc" ? "⬆" : "⬇") : ""}
-            </th>
-            <th onClick={() => setSortColumn("close_rate")}>
-              Close Rate {sortColumn === "close_rate" ? (sortOrder === "asc" ? "⬆" : "⬇") : ""}
-            </th>
-            <th onClick={() => setSortColumn("avg_sale")}>
-              Average Sales {sortColumn === "avg_sale" ? (sortOrder === "asc" ? "⬆" : "⬇") : ""}
-            </th>
+            <th onClick={() => setSortColumn("name")}>Name</th>
+            <th onClick={() => setSortColumn("role")}>Role</th>
+            <th onClick={() => setSortColumn("ups_count")}># of UPS</th>
+            <th onClick={() => setSortColumn("sale_count")}># of Sales</th>
+            <th onClick={() => setSortColumn("total_sales")}>Total Sales</th>
+            <th onClick={() => setSortColumn("close_rate")}>Close Rate</th>
+            <th onClick={() => setSortColumn("avg_sale")}>Average Sales</th>
           </tr>
         </thead>
         <tbody>
@@ -202,9 +188,9 @@ function StatsPage() {
                 <td>{stat.role}</td>
                 <td>{stat.ups_count}</td>
                 <td>{stat.sale_count}</td>
-                <td>${stat.total_sales.toFixed(2)}</td>
-                <td>{stat.close_rate.toFixed(2)}%</td>
-                <td>${stat.avg_sale.toFixed(2)}</td>
+                <td>${(stat.total_sales || 0).toFixed(2)}</td>
+                <td>{(stat.close_rate || 0).toFixed(2)}%</td>
+                <td>${(stat.avg_sale || 0).toFixed(2)}</td>
               </tr>
             ))
           ) : (
