@@ -67,27 +67,27 @@ export default function Dashboard() {
     }
   }
 
-  async function handleQueueAction(action, email) {
-    if (email !== user.email) {
-      alert("You can only manage your own queue status!");
-      return;
-    }
-
-    const functionMap = {
-      "join_queue": "join_queue",
-      "move_to_agents_waiting": "move_to_agents_waiting",
-      "move_to_with_customer": "move_to_with_customer",
-      "move_to_in_queue": "move_to_in_queue"
-    };
-
-    const { error } = await supabase.rpc(functionMap[action], { p_email: email });
-    if (!error) {
-      fetchQueueData(storeNumber);
-      fetchStats();
-    } else {
-      console.error("Error updating queue:", error);
-    }
+const handleQueueAction = async (action, email) => {
+  if (email !== user.email) {
+    alert("You can only manage your own queue status!");
+    return;
   }
+
+  const functionMap = {
+    "join_queue": "join_queue",
+    "move_to_agents_waiting": "move_to_agents_waiting",
+    "move_to_with_customer": "move_to_with_customer",
+    "move_to_in_queue": "move_to_in_queue" // ✅ Now calling the Supabase function
+  };
+
+  const { error } = await supabase.rpc(functionMap[action], { p_email: email });
+  if (!error) {
+    fetchQueueData(storeNumber);
+    fetchStats();
+  } else {
+    console.error("Error updating queue:", error);
+  }
+};
 
   async function handleSaleClosure(email) {
     if (email !== user.email) {
