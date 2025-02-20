@@ -40,11 +40,19 @@ export default function Dashboard() {
     }
   }
 
-  async function fetchQueueData(storeNum) {
-    const { data, error } = await supabase
-      .from("queue")
-      .select("*")
-      .eq("store_number", storeNum);
+async function fetchQueueData(storeNum) {
+  const { data, error } = await supabase
+    .from("queue")
+    .select("*")
+    .eq("store_number", storeNum)
+    .order("queue_joined_at", { ascending: true }); // ✅ Ensure sorting by queue_joined_at
+
+  if (!error) {
+    setAgentsWaiting(data.filter(a => a.agents_waiting));
+    setInQueue(data.filter(a => a.in_queue));
+    setWithCustomer(data.filter(a => a.with_customer));
+  }
+}
 
     if (!error) {
       setAgentsWaiting(data.filter(a => a.agents_waiting));
