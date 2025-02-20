@@ -166,11 +166,16 @@ table tbody tr:nth-child(even) {
   color: var(--primary-color);
   border: 2px solid var(--primary-color);
   font-weight: bold;
-  padding: 8px 15px;
+  padding: 6px 12px;  /* 🔹 Reduce padding */
+  border-radius: 8px;  /* 🔹 Ensure rounded corners */
+  cursor: pointer;
+  text-decoration: none;
   transition: all 0.3s ease;
   box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+  margin: 2px;  /* 🔹 Add space between buttons */
 }
 
+/* ✅ Restore Hover Effect */
 .navbar a:hover,
 .navbar button:hover {
   background-color: #ddd;
