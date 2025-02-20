@@ -194,34 +194,35 @@ table tbody tr:nth-child(even) {
   display: inline-block;
 }
 
-/* ✅ Navbar Buttons with Animation */
+/* ✅ Fix Navbar Buttons - Add Animation */
 .navbar a,
 .navbar button {
   background-color: white;
   color: var(--primary-color);
   border: 2px solid var(--primary-color);
   font-weight: bold;
-  padding: 6px 12px;  /* 🔹 Balanced padding */
-  border-radius: 8px;  /* 🔹 Rounded corners */
+  padding: 6px 12px;
+  border-radius: 8px;
   cursor: pointer;
   text-decoration: none;
-  transition: all 0.3s ease, transform 0.2s ease-in-out;  /* 🔹 Smooth transitions */
+  transition: all 0.3s ease, transform 0.2s ease-in-out;  /* 🔹 Add animation */
   box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
-  margin: 2px;  /* 🔹 Space between buttons */
+  margin: 2px;
+  display: inline-block;  /* 🔹 Ensures consistency */
 }
 
 /* ✅ Hover Effect - Lift with Scaling */
 .navbar a:hover,
 .navbar button:hover {
   background-color: #ddd;
-  box-shadow: 0px 8px 12px rgba(0, 0, 0, 0.2);  /* 🔹 Stronger shadow on hover */
-  transform: scale(1.05);  /* 🔹 Slightly enlarge button */
+  box-shadow: 0px 8px 12px rgba(0, 0, 0, 0.2);
+  transform: scale(1.05);
 }
 
 /* ✅ Click Effect - Shrink Slightly */
 .navbar a:active,
 .navbar button:active {
-  transform: scale(0.95);  /* 🔹 Shrink effect when clicked */
+  transform: scale(0.95);
 }
 
 /* ✅ Dashboard Styling (Updated for Consistency) */
