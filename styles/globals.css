@@ -80,15 +80,50 @@ button {
   border: 2px solid var(--primary-color);
   border-radius: var(--border-radius);
   cursor: pointer;
-  transition: all 0.3s ease;
-  box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1); /* ✅ Added shadow */
+  text-align: center;
+  width: auto;
+  transition: all 0.3s ease, transform 0.2s ease-in-out;  /* 🔹 Smooth hover + click animation */
+  box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1); /* 🔹 Soft shadow */
 }
 
-/* ✅ Hover Effect */
+/* ✅ Hover Effect - Lift with Scaling */
 button:hover {
   background-color: #ddd;
-  box-shadow: 0px 6px 10px rgba(0, 0, 0, 0.15); /* ✅ Stronger shadow */
+  box-shadow: 0px 8px 12px rgba(0, 0, 0, 0.2);  /* 🔹 Stronger shadow on hover */
+  transform: scale(1.05);  /* 🔹 Slightly enlarge button */
 }
+
+/* ✅ Click Effect - Shrink Slightly */
+button:active {
+  transform: scale(0.95);  /* 🔹 Shrink effect when clicked */
+}
+
+/* ✅ Apply Same Animation to Queue Buttons */
+.queue-item button {
+  font-size: 14px;
+  font-weight: 600;
+  padding: 8px 12px;
+  background-color: white;
+  color: var(--primary-color);
+  border: 2px solid var(--primary-color);
+  border-radius: var(--border-radius);
+  cursor: pointer;
+  transition: all 0.3s ease, transform 0.2s ease-in-out;  /* 🔹 Smooth hover + click animation */
+  box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+/* ✅ Queue Buttons Hover Effect */
+.queue-item button:hover {
+  background-color: #ddd;
+  box-shadow: 0px 8px 12px rgba(0, 0, 0, 0.2);
+  transform: scale(1.05);
+}
+
+/* ✅ Queue Buttons Click Effect */
+.queue-item button:active {
+  transform: scale(0.95);
+}
+
 
 /* ✅ Table Styling */
 table {
