@@ -54,13 +54,6 @@ async function fetchQueueData(storeNum) {
   }
 }
 
-    if (!error) {
-      setAgentsWaiting(data.filter(a => a.agents_waiting));
-      setInQueue(data.filter(a => a.in_queue));
-      setWithCustomer(data.filter(a => a.with_customer));
-    }
-  }
-
   async function fetchStats() {
     const { data, error } = await supabase.rpc("get_sales_stats");
     if (!error) {
