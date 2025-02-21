@@ -195,7 +195,6 @@ export default function AuthForm({ isSignUp = false }) {
             {isSignUp ? "Login" : "Sign Up"}
           </a>
         </p>
-      </div>
     </div>
   );
 }
