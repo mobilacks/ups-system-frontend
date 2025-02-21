@@ -142,9 +142,7 @@ export default function AuthForm({ isSignUp = false }) {
   };
 
   return (
-    <div className="auth-container">
       <div className="auth-box">
-        <h2>{isSignUp ? "Create Your Account" : "Login to Your Account"}</h2>
         {error && <p className="error-message">{error}</p>}
         <form onSubmit={handleAuth}>
           {isSignUp && (
