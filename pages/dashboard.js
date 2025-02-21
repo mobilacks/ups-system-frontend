@@ -2,6 +2,10 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/router";
 import { supabase } from "../lib/supabase";
 
+import { createClient } from "@supabase/supabase-js";
+console.log("✅ Supabase Version:", createClient.VERSION);
+
+
 export default function Dashboard() {
   const [user, setUser] = useState(null);
   const [storeNumber, setStoreNumber] = useState(null);
