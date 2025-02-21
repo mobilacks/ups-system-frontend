@@ -16,13 +16,16 @@ function StatsPage() {
   const [selectedDateRange, setSelectedDateRange] = useState("today"); // ✅ Default to Today
 
 useEffect(() => {
-  const today = new Date().toISOString().split("T")[0];
+  const today = new Date();
+  today.setHours(0, 0, 0, 0); // ✅ Reset time to avoid timezone shifts
+  const formattedToday = today.toISOString().split("T")[0]; // ✅ Ensure proper format
 
-  setStartDate(today);
-  setEndDate(today);
-  setSelectedDateRange("today"); // ✅ Default to "Today"
-  setRoleFilter("agent"); // ✅ Default to "Agents"
+  setStartDate(formattedToday);
+  setEndDate(formattedToday);
+  setSelectedDateRange("today");
+  setRoleFilter("agent");
 }, []);
+
 
 useEffect(() => {
   if (startDate && endDate) {
