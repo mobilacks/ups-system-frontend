@@ -132,19 +132,24 @@ const handleLogout = async () => {
   if (updateError) console.error("❌ Error updating agent status:", updateError);
   else console.log("✅ Agent status updated to offline");
 
-  // ✅ Remove agent from the queue
-  console.log("🔄 Removing agent from queue...");
-  const { error: queueError } = await supabase
-    .from("queue")
-    .update({
-      agents_waiting: false,
-      in_queue: false,
-      with_customer: false,
-    })
-    .eq("email", user.email);
+// ✅ Remove agent from the queue
+console.log("🔄 Removing agent from queue for:", user.email);
+const { data, error: queueError } = await supabase
+  .from("queue")
+  .update({
+    agents_waiting: false,
+    in_queue: false,
+    with_customer: false,
+  })
+  .eq("email", user.email)
+  .select(); // ✅ Get the updated row
 
-  if (queueError) console.error("❌ Error updating queue status:", queueError);
-  else console.log("✅ Agent removed from queue.");
+if (queueError) {
+  console.error("❌ Error updating queue status:", queueError);
+} else {
+  console.log("✅ Queue update successful. Updated row:", data);
+}
+
 
   // ✅ Sign out user
   console.log("🚪 Signing out from Supabase...");
