@@ -4,6 +4,8 @@ import ProtectedRoute from "../lib/protectedRoute";
 
 function AdminPage() {
   const [agents, setAgents] = useState([]);
+  const [userRole, setUserRole] = useState(null);
+  const [loading, setLoading] = useState(true);
   const [reasons, setReasons] = useState([]);
   const [newReason, setNewReason] = useState("");
   const [upsCount, setUpsCount] = useState(false);
@@ -87,8 +89,18 @@ function AdminPage() {
     agent.store_number.toString().includes(searchQuery)
   );
 
+if (loading) return <p>Loading...</p>;
+
+if (userRole !== "admin") {
   return (
-    <div className="admin-container">
+    <div className="not-authorized">
+      <h2>You are not authorized to view this page.</h2>
+    </div>
+  );
+}
+
+return (
+  <div className="admin-container">
       
       {/* ✅ Manage Users Section */}
       <div className="admin-section">
