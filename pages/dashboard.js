@@ -15,11 +15,8 @@ export default function Dashboard() {
   // ✅ Insert Auto-Refresh Code Immediately After This
 useEffect(() => {
   if (!storeNumber) return;
-
   fetchQueueData(storeNumber);
-
   console.log("✅ Subscribing to Supabase Realtime...");
-
   const queueSubscription = supabase
     .channel("realtime_queue")
     .on(
@@ -52,18 +49,19 @@ useEffect(() => {
     fetchUser();
   }, []);
 
-  async function fetchUserStore(email) {
-    const { data, error } = await supabase
-      .from("agents")
-      .select("store_number")
-      .eq("email", email)
-      .single();
+async function fetchUserStore(email) {
+  const { data, error } = await supabase
+    .from("agents")
+    .select("store_number, role") // ✅ Fetch both store number and role
+    .eq("email", email)
+    .single();
 
-    if (!error) {
-      setStoreNumber(data.store_number);
-      fetchQueueData(data.store_number);
-    }
+  if (!error && data) {
+    setStoreNumber(data.store_number);
+    fetchQueueData(data.store_number, data.role); // ✅ Pass user role to function
   }
+}
+
 
 async function fetchQueueData(storeNum, userRole) {
   let query = supabase.from("queue").select("*").order("queue_joined_at", { ascending: true });
