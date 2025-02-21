@@ -4,7 +4,8 @@ import { supabase } from "../lib/supabase";
 
 import { createClient } from "@supabase/supabase-js";
 console.log("✅ Supabase Version:", createClient.VERSION);
-
+import { createClient } from "@supabase/supabase-js";
+console.log("✅ Supabase Imported:", createClient);
 
 export default function Dashboard() {
   const [user, setUser] = useState(null);
