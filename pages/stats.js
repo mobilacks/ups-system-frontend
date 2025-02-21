@@ -63,8 +63,10 @@ function StatsPage() {
 const fetchStats = async (startDate, endDate) => {
   if (!startDate || !endDate) return;
 
-  const formattedStartDate = new Date(startDate).toISOString().split("T")[0];  // ✅ Ensure format
-  const formattedEndDate = new Date(endDate).toISOString().split("T")[0];      // ✅ Ensure format
+  const formattedStartDate = new Date(startDate).toISOString().split("T")[0];
+  const formattedEndDate = new Date(endDate).toISOString().split("T")[0];
+
+  console.log("📅 Fetching stats for:", formattedStartDate, "to", formattedEndDate); // ✅ Log sent dates
 
   const { data, error } = await supabase.rpc("get_sales_stats", {
     p_start_date: formattedStartDate,
@@ -79,6 +81,7 @@ const fetchStats = async (startDate, endDate) => {
     setFilteredStats(data);
   }
 };
+
 
 
   // ✅ Handle Filters & Sorting
