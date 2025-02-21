@@ -107,42 +107,57 @@ export default function AuthForm({ isSignUp = false }) {
     }
   };
 
-  // ✅ Handle Logout (Only for Logged-in Users)
-  const handleLogout = async () => {
-    if (!isLoggedIn) return; // ❌ Prevents logout from showing when not logged in
+  // ✅ Handle Logout (Now Resets Queue Status)
+const handleLogout = async () => {
+  if (!isLoggedIn) return; // ❌ Prevents logout from showing when not logged in
 
-    console.log("🚀 Logging out...");
+  console.log("🚀 Logging out...");
 
-    const { data: { user }, error: userError } = await supabase.auth.getUser();
+  const { data: { user }, error: userError } = await supabase.auth.getUser();
 
-    if (userError || !user) {
-      console.error("❌ Error fetching user data:", userError);
-      return;
-    }
+  if (userError || !user) {
+    console.error("❌ Error fetching user data:", userError);
+    return;
+  }
 
-    console.log(`🔍 Checking agent before logout: ${user.email}`);
+  console.log(`🔍 Checking agent before logout: ${user.email}`);
 
-    // ✅ Update agent status to "offline" before logging out
-    console.log("🔄 Setting agent status to offline...");
-    const { error: updateError } = await supabase
-      .from("agents")
-      .update({ status: "offline" })
-      .eq("email", user.email);
+  // ✅ Update agent status to "offline"
+  console.log("🔄 Setting agent status to offline...");
+  const { error: updateError } = await supabase
+    .from("agents")
+    .update({ status: "offline" })
+    .eq("email", user.email);
 
-    if (updateError) console.error("❌ Error updating agent status:", updateError);
-    else console.log("✅ Agent status updated to offline");
+  if (updateError) console.error("❌ Error updating agent status:", updateError);
+  else console.log("✅ Agent status updated to offline");
 
-    // ✅ Sign out user
-    console.log("🚪 Signing out from Supabase...");
-    const { error: signOutError } = await supabase.auth.signOut();
+  // ✅ Remove agent from the queue
+  console.log("🔄 Removing agent from queue...");
+  const { error: queueError } = await supabase
+    .from("queue")
+    .update({
+      agents_waiting: false,
+      in_queue: false,
+      with_customer: false,
+    })
+    .eq("email", user.email);
 
-    if (signOutError) console.error("❌ Error signing out:", signOutError);
-    else {
-      console.log("✅ Successfully logged out!");
-      setIsLoggedIn(false);
-      router.push("/login"); // Redirect to login page
-    }
-  };
+  if (queueError) console.error("❌ Error updating queue status:", queueError);
+  else console.log("✅ Agent removed from queue.");
+
+  // ✅ Sign out user
+  console.log("🚪 Signing out from Supabase...");
+  const { error: signOutError } = await supabase.auth.signOut();
+
+  if (signOutError) console.error("❌ Error signing out:", signOutError);
+  else {
+    console.log("✅ Successfully logged out!");
+    setIsLoggedIn(false);
+    router.push("/login"); // Redirect to login page
+  }
+};
+
 
   return (
       <div className="auth-box">
