@@ -32,44 +32,44 @@ useEffect(() => {
 
 
   // ✅ Function to Set Date Range Based on Dropdown Selection
-  const handleDateRangeChange = (value) => {
-    setSelectedDateRange(value);
+const handleDateRangeChange = (value) => {
+  setSelectedDateRange(value);
 
-    const today = new Date();
-    let newStartDate, newEndDate;
+  const today = new Date();
+  let newStartDate, newEndDate;
 
-    switch (value) {
-      case "today":
-        newStartDate = today;
-        newEndDate = today;
-        break;
-      case "yesterday":
-        newStartDate = new Date(today);
-        newStartDate.setDate(today.getDate() - 1);
-        newEndDate = newStartDate;
-        break;
-      case "last_7_days":
-        newStartDate = new Date(today);
-        newStartDate.setDate(today.getDate() - 7);
-        newEndDate = today;
-        break;
-      case "last_30_days":
-        newStartDate = new Date(today);
-        newStartDate.setDate(today.getDate() - 30);
-        newEndDate = today;
-        break;
-      default:
-        newStartDate = "";
-        newEndDate = "";
-    }
+  switch (value) {
+    case "today":
+      newStartDate = today;
+      newEndDate = today;
+      break;
+    case "yesterday":
+      newStartDate = new Date(today);
+      newStartDate.setDate(today.getDate() - 1); // ✅ Subtract 1 day
+      newEndDate = newStartDate;
+      break;
+    case "last_7_days":
+      newStartDate = new Date(today);
+      newStartDate.setDate(today.getDate() - 7);
+      newEndDate = today;
+      break;
+    case "last_30_days":
+      newStartDate = new Date(today);
+      newStartDate.setDate(today.getDate() - 30);
+      newEndDate = today;
+      break;
+    default:
+      newStartDate = "";
+      newEndDate = "";
+  }
 
-    setStartDate(newStartDate ? newStartDate.toISOString().split("T")[0] : "");
-    setEndDate(newEndDate ? newEndDate.toISOString().split("T")[0] : "");
+  setStartDate(newStartDate ? newStartDate.toISOString().split("T")[0] : "");
+  setEndDate(newEndDate ? newEndDate.toISOString().split("T")[0] : "");
 
-    if (newStartDate && newEndDate) {
-      fetchStats(newStartDate.toISOString().split("T")[0], newEndDate.toISOString().split("T")[0]);
-    }
-  };
+  if (newStartDate && newEndDate) {
+    fetchStats(newStartDate.toISOString().split("T")[0], newEndDate.toISOString().split("T")[0]);
+  }
+};
 
 // ✅ Fetch Stats from Supabase
 const fetchStats = async (startDate, endDate) => {
