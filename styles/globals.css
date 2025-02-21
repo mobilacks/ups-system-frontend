@@ -50,15 +50,14 @@ body {
   }
 }
 
-/* ✅ Auth Box (Wider & Centered) */
 .auth-box {
   background: white;
   padding: 25px;
   border-radius: var(--border-radius);
   box-shadow: 0px 6px 12px rgba(0, 0, 0, 0.2);
-  width: 100%;
+  width: 90%; /* ✅ Allows it to scale on smaller screens */
   max-width: 700px; /* ✅ Increased width */
-  min-width: 400px; /* ✅ Prevents it from being too small */
+  min-width: 350px; /* ✅ Prevents it from getting too small */
   text-align: center;
   transition: background 0.3s ease, color 0.3s ease;
   display: flex;
@@ -69,11 +68,20 @@ body {
 /* ✅ Keep Dark Theme in Dark Mode */
 @media (prefers-color-scheme: dark) {
   .auth-box {
-    background: #1e1e1e; /* ✅ Darker background */
+    background: #1e1e1e;
     color: white;
     box-shadow: 0px 6px 12px rgba(255, 255, 255, 0.1);
   }
 }
+
+/* ✅ Mobile Optimization */
+@media (max-width: 480px) {
+  .auth-box {
+    width: 95%; /* ✅ Ensure it fits smaller screens */
+    min-width: unset; /* ✅ Let it scale naturally */
+  }
+}
+
 
 
 /* ✅ Standard Button Styling (White Background, Blue Text) */
