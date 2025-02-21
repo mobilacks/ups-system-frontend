@@ -15,9 +15,17 @@ function StatsPage() {
   const [sortOrder, setSortOrder] = useState("desc");
   const [selectedDateRange, setSelectedDateRange] = useState("today"); // ✅ Default to Today
 
-  useEffect(() => {
-    handleDateRangeChange("today"); // ✅ Load Today's Data on First Load
-  }, []);
+useEffect(() => {
+  const today = new Date();
+  const formattedToday = today.toISOString().split("T")[0]; // ✅ Format to YYYY-MM-DD
+
+  setStartDate(formattedToday);
+  setEndDate(formattedToday);
+  setSelectedDateRange("today"); // ✅ Default selection
+
+  fetchStats(formattedToday, formattedToday); // ✅ Fetch Today's stats immediately
+}, []);
+
 
   // ✅ Function to Set Date Range Based on Dropdown Selection
   const handleDateRangeChange = (value) => {
