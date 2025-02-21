@@ -85,10 +85,13 @@ export default function AuthForm({ isSignUp = false }) {
         else console.log("✅ Agent status updated to online");
 
         // ✅ Move agent to "Agents Waiting" in Queue
-        console.log("🔄 Moving agent to Agents Waiting in queue...");
         const { error: queueError } = await supabase
           .from("queue")
-          .update({ agents_waiting: true })
+          .update({
+            agents_waiting: true,   
+            in_queue: false,  // ✅ Ensure they are NOT still in queue
+            with_customer: false // ✅ Ensure they are NOT with a customer
+          })
           .eq("email", email);
 
         if (queueError) console.error("❌ Error updating queue status:", queueError);
