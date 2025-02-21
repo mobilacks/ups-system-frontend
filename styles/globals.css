@@ -318,43 +318,45 @@ table tbody tr:nth-child(even) {
     text-align: center;
   }
 }
-/* ✅ Center the Login Box Properly */
+/* ✅ Center the entire login box in the viewport */
 .login-container {
   display: flex;
   justify-content: center;
   align-items: center;
-  height: 100vh;
-  width: 100vw; /* Ensure full width */
+  height: 100vh; /* ✅ This ensures full height without overflow */
+  width: 100vw; /* ✅ Ensures full width */
   background-color: var(--bg-dark);
-  flex-direction: column; /* ✅ Ensure elements stack vertically */
+  flex-direction: column; /* ✅ Stack elements vertically */
 }
 
-/* ✅ Fix Login Box Sizing */
+/* ✅ Ensure the login box is properly sized */
 .login-box {
   background: white;
   padding: 30px;
   border-radius: var(--border-radius);
   box-shadow: 0px 6px 12px rgba(0, 0, 0, 0.2);
   text-align: center;
-  width: 90%;
-  max-width: 450px;
+  width: 100%;
+  max-width: 400px; /* ✅ Prevents it from being too wide */
   min-width: 350px;
-  margin-top: 20px; /* ✅ Add space below logo */
+  position: relative;
 }
 
-
-/* ✅ Fix Logo Placement */
+/* ✅ Fix the logo positioning */
 .login-logo {
-  width: 100px;
+  width: 100px; /* ✅ Adjust size */
   height: auto;
-  margin-bottom: 15px;
+  margin-bottom: 10px;
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
 }
 
-/* ✅ Header Styling */
+/* ✅ Adjust the header */
 .login-title {
   font-size: 22px;
   font-weight: bold;
   color: var(--primary-color);
+  text-align: center;
   margin-bottom: 15px;
 }
-
