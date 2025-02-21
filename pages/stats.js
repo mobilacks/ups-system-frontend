@@ -16,15 +16,14 @@ function StatsPage() {
   const [selectedDateRange, setSelectedDateRange] = useState("today"); // ✅ Default to Today
 
 useEffect(() => {
-  const today = new Date();
-  const formattedToday = today.toISOString().split("T")[0]; // ✅ Format to YYYY-MM-DD
+  const today = new Date().toISOString().split("T")[0];
 
-  setStartDate(formattedToday);
-  setEndDate(formattedToday);
-  setSelectedDateRange("today"); // ✅ Default selection
-
-  fetchStats(formattedToday, formattedToday); // ✅ Fetch Today's stats immediately
+  setStartDate(today);
+  setEndDate(today);
+  setSelectedDateRange("today"); // ✅ Default to "Today"
+  setRoleFilter("agent"); // ✅ Default to "Agents"
 }, []);
+
 
 
   // ✅ Function to Set Date Range Based on Dropdown Selection
