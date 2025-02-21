@@ -57,7 +57,7 @@ body {
   border-radius: var(--border-radius);
   box-shadow: 0px 6px 12px rgba(0, 0, 0, 0.2);
   width: 100%;
-  max-width: 500px; /* ✅ Increased width */
+  max-width: 700px; /* ✅ Increased width */
   min-width: 400px; /* ✅ Prevents it from being too small */
   text-align: center;
   transition: background 0.3s ease, color 0.3s ease;
