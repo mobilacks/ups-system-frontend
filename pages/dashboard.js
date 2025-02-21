@@ -57,13 +57,14 @@ async function fetchQueueData(storeNum) {
 useEffect(() => {
   const queueSubscription = supabase
     .from("queue")
-    .on("INSERT", () => fetchQueueData(storeNumber))  // ✅ If an agent joins
-    .on("UPDATE", () => fetchQueueData(storeNumber))  // ✅ If an agent moves
-    .on("DELETE", () => fetchQueueData(storeNumber))  // ✅ If an agent leaves
+    .channel("realtime_queue") // ✅ Define a named channel
+    .on("postgres_changes", { event: "INSERT", schema: "public", table: "queue" }, () => fetchQueueData(storeNumber))
+    .on("postgres_changes", { event: "UPDATE", schema: "public", table: "queue" }, () => fetchQueueData(storeNumber))
+    .on("postgres_changes", { event: "DELETE", schema: "public", table: "queue" }, () => fetchQueueData(storeNumber))
     .subscribe();
 
   return () => {
-    supabase.removeSubscription(queueSubscription);  // ✅ Cleanup on unmount
+    supabase.removeChannel(queueSubscription); // ✅ Correct way to unsubscribe
   };
 }, [storeNumber]);
 
