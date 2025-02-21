@@ -24,6 +24,11 @@ useEffect(() => {
   setRoleFilter("agent"); // ✅ Default to "Agents"
 }, []);
 
+useEffect(() => {
+  if (startDate && endDate) {
+    fetchStats(startDate, endDate); // ✅ Fetch stats AFTER setting the state
+  }
+}, [startDate, endDate]);
 
 
   // ✅ Function to Set Date Range Based on Dropdown Selection
