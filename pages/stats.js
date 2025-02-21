@@ -59,23 +59,27 @@ function StatsPage() {
     }
   };
 
-  // ✅ Fetch Stats from Supabase
-  const fetchStats = async (startDate, endDate) => {
-    if (!startDate || !endDate) return;
+// ✅ Fetch Stats from Supabase
+const fetchStats = async (startDate, endDate) => {
+  if (!startDate || !endDate) return;
 
-    const { data, error } = await supabase.rpc("get_sales_stats", {
-      p_start_date: startDate,
-      p_end_date: endDate,
-    });
+  const formattedStartDate = new Date(startDate).toISOString().split("T")[0];  // ✅ Ensure format
+  const formattedEndDate = new Date(endDate).toISOString().split("T")[0];      // ✅ Ensure format
 
-    if (error) {
-      console.error("❌ Error fetching stats:", error);
-    } else {
-      console.log("✅ Sales Stats Fetched:", data);
-      setStats(data);
-      setFilteredStats(data);
-    }
-  };
+  const { data, error } = await supabase.rpc("get_sales_stats", {
+    p_start_date: formattedStartDate,
+    p_end_date: formattedEndDate,
+  });
+
+  if (error) {
+    console.error("❌ Error fetching stats:", error);
+  } else {
+    console.log("✅ Sales Stats Fetched:", data);
+    setStats(data);
+    setFilteredStats(data);
+  }
+};
+
 
   // ✅ Handle Filters & Sorting
   useEffect(() => {
