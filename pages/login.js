@@ -4,13 +4,13 @@ export default function Login() {
   return (
     <div className="login-container">
       <div className="login-box">
-        {/* ✅ Logo Fix */}
+        {/* ✅ Logo Now Inside the Box */}
         <img src="/logo.png" alt="Lacks UPS System" className="login-logo" />
 
-        {/* ✅ Header */}
+        {/* ✅ Title Now Inside the Box */}
         <h1 className="login-title">Lacks UPS System</h1>
 
-        {/* ✅ AuthForm (No Changes) */}
+        {/* ✅ Login Form (No Changes) */}
         <AuthForm isSignUp={false} />
       </div>
     </div>
