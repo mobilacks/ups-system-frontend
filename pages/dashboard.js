@@ -65,12 +65,14 @@ useEffect(() => {
     }
   }
 
-async function fetchQueueData(storeNum) {
-  const { data, error } = await supabase
-    .from("queue")
-    .select("*")
-    .eq("store_number", storeNum)
-    .order("queue_joined_at", { ascending: true }); // ✅ Ensure sorting by queue_joined_at
+async function fetchQueueData(storeNum, userRole) {
+  let query = supabase.from("queue").select("*").order("queue_joined_at", { ascending: true });
+
+  if (userRole !== "admin") {
+    query = query.eq("store_number", storeNum); // ✅ Only limit to store for non-admins
+  }
+
+  const { data, error } = await query;
 
   if (!error) {
     setAgentsWaiting(data.filter(a => a.agents_waiting));
@@ -78,7 +80,6 @@ async function fetchQueueData(storeNum) {
     setWithCustomer(data.filter(a => a.with_customer));
   }
 }
-
 
   async function fetchReasons() {
     const { data, error } = await supabase.from("reasons").select("*");
