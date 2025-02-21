@@ -335,9 +335,11 @@ table tbody tr:nth-child(even) {
   border-radius: var(--border-radius);
   box-shadow: 0px 6px 12px rgba(0, 0, 0, 0.2);
   text-align: center;
-  width: 100%;
-  max-width: 420px; /* ✅ Increase width */
+  width: 90%; /* ✅ Make it take more width */
+  max-width: 450px; /* ✅ Increase max width */
+  min-width: 350px; /* ✅ Ensure it doesn’t get too small */
 }
+
 
 /* ✅ Logo Styling */
 .login-logo {
