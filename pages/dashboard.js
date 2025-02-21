@@ -14,24 +14,29 @@ export default function Dashboard() {
 
   // ✅ Insert Auto-Refresh Code Immediately After This
 useEffect(() => {
-  if (!storeNumber) return; // ✅ Prevents running if storeNumber isn't set
+  if (!storeNumber) return;
 
-  fetchQueueData(storeNumber); // ✅ Initial fetch when page loads
+  fetchQueueData(storeNumber);
 
-  // ✅ Subscribe to Supabase Realtime updates
+  console.log("✅ Subscribing to Supabase Realtime...");
+
   const queueSubscription = supabase
-    .channel("realtime_queue") // ✅ Create a Supabase channel for updates
+    .channel("realtime_queue")
     .on(
       "postgres_changes",
-      { event: "*", schema: "public", table: "queue" }, // ✅ Listen for all changes
-      () => fetchQueueData(storeNumber) // ✅ Refresh queue data when changes occur
+      { event: "*", schema: "public", table: "queue" },
+      (payload) => {
+        console.log("🔄 Queue update detected:", payload); // ✅ Log changes
+        fetchQueueData(storeNumber); // ✅ Refresh queue data when changes occur
+      }
     )
     .subscribe();
 
   return () => {
-    supabase.removeChannel(queueSubscription); // ✅ Unsubscribe when leaving the page
+    console.log("❌ Unsubscribing from Supabase Realtime...");
+    supabase.removeChannel(queueSubscription);
   };
-}, [storeNumber]); // ✅ Runs when storeNumber is set
+}, [storeNumber]);
 
   useEffect(() => {
     async function fetchUser() {
