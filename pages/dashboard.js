@@ -36,7 +36,6 @@ export default function Dashboard() {
     if (!error) {
       setStoreNumber(data.store_number);
       fetchQueueData(data.store_number);
-      fetchStats();
     }
   }
 
@@ -54,12 +53,6 @@ async function fetchQueueData(storeNum) {
   }
 }
 
-  async function fetchStats() {
-    const { data, error } = await supabase.rpc("get_sales_stats");
-    if (!error) {
-      setStats(data);
-    }
-  }
 
   async function fetchReasons() {
     const { data, error } = await supabase.from("reasons").select("*");
@@ -84,7 +77,6 @@ const handleQueueAction = async (action, email) => {
   const { error } = await supabase.rpc(functionMap[action], { p_email: email });
   if (!error) {
     fetchQueueData(storeNumber);
-    fetchStats();
   } else {
     console.error("Error updating queue:", error);
   }
@@ -119,7 +111,6 @@ const handleQueueAction = async (action, email) => {
     if (!error) {
       console.log("✅ Sale recorded successfully!");
       fetchQueueData(storeNumber);
-      fetchStats();
     } else {
       console.error("❌ Error closing sale:", error);
     }
@@ -156,7 +147,6 @@ const handleQueueAction = async (action, email) => {
     if (!error) {
       console.log("✅ No Sale recorded successfully!");
       fetchQueueData(storeNumber);
-      fetchStats();
     } else {
       console.error("❌ Error logging no sale:", error);
     }
