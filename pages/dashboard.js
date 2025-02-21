@@ -2,9 +2,6 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/router";
 import { supabase } from "../lib/supabase";
 
-import { createClient } from "@supabase/supabase-js";
-console.log("✅ Supabase Version:", createClient.VERSION);
-
 export default function Dashboard() {
   const [user, setUser] = useState(null);
   const [storeNumber, setStoreNumber] = useState(null);
@@ -47,7 +44,7 @@ async function fetchQueueData(storeNum) {
     .from("queue")
     .select("*")
     .eq("store_number", storeNum)
-    .order("queue_joined_at", { ascending: true });
+    .order("queue_joined_at", { ascending: true }); // ✅ Ensure sorting by queue_joined_at
 
   if (!error) {
     setAgentsWaiting(data.filter(a => a.agents_waiting));
@@ -56,20 +53,6 @@ async function fetchQueueData(storeNum) {
   }
 }
 
-// ✅ Subscribe to real-time changes in queue
-useEffect(() => {
-  const queueSubscription = supabase
-    .from("queue")
-    .channel("realtime_queue") // ✅ Define a named channel
-    .on("postgres_changes", { event: "INSERT", schema: "public", table: "queue" }, () => fetchQueueData(storeNumber))
-    .on("postgres_changes", { event: "UPDATE", schema: "public", table: "queue" }, () => fetchQueueData(storeNumber))
-    .on("postgres_changes", { event: "DELETE", schema: "public", table: "queue" }, () => fetchQueueData(storeNumber))
-    .subscribe();
-
-  return () => {
-    supabase.removeChannel(queueSubscription); // ✅ Correct way to unsubscribe
-  };
-}, [storeNumber]);
 
   async function fetchReasons() {
     const { data, error } = await supabase.from("reasons").select("*");
