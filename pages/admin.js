@@ -15,10 +15,31 @@ function AdminPage() {
   const [updatedRole, setUpdatedRole] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
 
-  useEffect(() => {
-    fetchAgents();
-    fetchReasons();
-  }, []);
+useEffect(() => {
+  async function fetchUserRole() {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      setLoading(false);
+      return;
+    }
+
+    const { data, error } = await supabase
+      .from("agents")  // ✅ Query the "agents" table
+      .select("role")
+      .eq("email", user.email)
+      .single();  // ✅ Since email is unique, fetch only one row
+
+    if (!error && data) {
+      setUserRole(data.role);
+    }
+    setLoading(false);
+  }
+
+  fetchUserRole();  // ✅ Get user role
+  fetchAgents();  // ✅ Load agents (only if user is authorized)
+  fetchReasons();  // ✅ Load reasons (only if user is authorized)
+}, []);
+
 
   // ✅ Fetch Agents
   const fetchAgents = async () => {
