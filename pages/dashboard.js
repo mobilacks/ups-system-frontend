@@ -44,7 +44,7 @@ async function fetchQueueData(storeNum) {
     .from("queue")
     .select("*")
     .eq("store_number", storeNum)
-    .order("queue_joined_at", { ascending: true }); // ✅ Ensure sorting by queue_joined_at
+    .order("queue_joined_at", { ascending: true });
 
   if (!error) {
     setAgentsWaiting(data.filter(a => a.agents_waiting));
@@ -53,6 +53,19 @@ async function fetchQueueData(storeNum) {
   }
 }
 
+// ✅ Subscribe to real-time changes in queue
+useEffect(() => {
+  const queueSubscription = supabase
+    .from("queue")
+    .on("INSERT", () => fetchQueueData(storeNumber))  // ✅ If an agent joins
+    .on("UPDATE", () => fetchQueueData(storeNumber))  // ✅ If an agent moves
+    .on("DELETE", () => fetchQueueData(storeNumber))  // ✅ If an agent leaves
+    .subscribe();
+
+  return () => {
+    supabase.removeSubscription(queueSubscription);  // ✅ Cleanup on unmount
+  };
+}, [storeNumber]);
 
   async function fetchReasons() {
     const { data, error } = await supabase.from("reasons").select("*");
