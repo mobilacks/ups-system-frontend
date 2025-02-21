@@ -4,8 +4,8 @@ export default function Login() {
   return (
     <div className="login-container">
       <div className="login-box">
-        {/* ✅ Logo */}
-        <img src="https://raw.githubusercontent.com/mobilacks/ups-system-frontend/refs/heads/main/pages/logo.png" alt="Lacks UPS System" className="login-logo" />
+        {/* ✅ Logo Fix */}
+        <img src="/logo.png" alt="Lacks UPS System" className="login-logo" />
 
         {/* ✅ Header */}
         <h1 className="login-title">Lacks UPS System</h1>
