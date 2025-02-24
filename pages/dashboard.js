@@ -89,7 +89,7 @@ async function fetchQueueData(storeNum, userRole) {
   }
 
 const handleQueueAction = async (action, email) => {
-  if (email !== user.email) {
+  if (userRole !== "admin" && email !== user.email) {
     alert("You can only manage your own queue status!");
     return;
   }
