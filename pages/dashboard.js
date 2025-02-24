@@ -110,7 +110,7 @@ const handleQueueAction = async (action, email) => {
 };
 
   async function handleSaleClosure(email) {
-    if (email !== user.email) {
+    if (userRole !== "admin" && email !== user.email) {
       alert("You can only log your own sales!");
       return;
     }
@@ -144,7 +144,7 @@ const handleQueueAction = async (action, email) => {
   }
 
   async function handleNoSale(email) {
-    if (email !== user.email) {
+    if (userRole !== "admin" && email !== user.email) {
       alert("You can only log your own no-sale reasons!");
       return;
     }
