@@ -262,13 +262,17 @@ table tbody tr:nth-child(even) {
   }
 }
 
+/* ✅ Queue Section Headers (Agents Waiting, In Queue, With Customer) */
 .dashboard-section h3 {
-  padding: 12px;
-  background: var(--primary-color);
+  background: #004085; /* Darker Blue */
   color: white;
-  border-radius: var(--border-radius);
+  font-size: 20px; /* Larger font */
+  font-weight: bold;
   text-align: center;
+  padding: 12px;
+  border-radius: var(--border-radius);
   margin-bottom: 10px;
+  text-transform: uppercase; /* Optional: Makes it ALL CAPS */
 }
 
 .queue-list {
