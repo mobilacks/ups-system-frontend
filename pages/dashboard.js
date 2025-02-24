@@ -4,6 +4,7 @@ import { supabase } from "../lib/supabase";
 
 export default function Dashboard() {
   const [user, setUser] = useState(null);
+  const [userRole, setUserRole] = useState(null); // ✅ Add userRole state
   const [storeNumber, setStoreNumber] = useState(null);
   const [agentsWaiting, setAgentsWaiting] = useState([]);
   const [inQueue, setInQueue] = useState([]);
