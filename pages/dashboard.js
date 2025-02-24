@@ -58,6 +58,7 @@ async function fetchUserStore(email) {
 
   if (!error && data) {
     setStoreNumber(data.store_number);
+    setUserRole(data.role); // ✅ Ensure userRole is stored
     fetchQueueData(data.store_number, data.role); // ✅ Pass user role to function
   }
 }
@@ -197,7 +198,7 @@ const handleQueueAction = async (action, email) => {
                 <td>{agent.email}</td>
                 <td>{agent.store_number}</td>
                 <td>
-                  {agent.email === user.email && (
+                  {(agent.email === user.email || userRole === "admin") && (
                     <button className="btn-primary" onClick={() => handleQueueAction("join_queue", agent.email)}>
                       Join Queue
                     </button>
@@ -226,7 +227,7 @@ const handleQueueAction = async (action, email) => {
                 <td>{agent.email}</td>
                 <td>{agent.store_number}</td>
                 <td>
-                  {agent.email === user.email && (
+                  {(agent.email === user.email || userRole === "admin") && (
                     <>
                       <button className="btn-green" onClick={() => handleQueueAction("move_to_with_customer", agent.email)}>
                         With Customer
@@ -259,7 +260,7 @@ const handleQueueAction = async (action, email) => {
                 <td>{agent.email}</td>
                 <td>{agent.store_number}</td>
                 <td>
-                  {agent.email === user.email && (
+                  {(agent.email === user.email || userRole === "admin") && (
                     <>
                       <button className="btn-primary" onClick={() => handleQueueAction("move_to_in_queue", agent.email)}>
                         Back to Queue
