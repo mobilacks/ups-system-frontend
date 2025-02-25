@@ -113,8 +113,6 @@ const fetchStats = async (startDate, endDate) => {
 const fetchNoSaleStats = async (startDate, endDate) => {
   if (!startDate || !endDate) return;
 
-  console.log("📅 Fetching No Sale stats for:", startDate, "to", endDate); // Debugging
-
   const { data, error } = await supabase.rpc("get_no_sale_stats", {
     p_start_date: startDate,
     p_end_date: endDate,
@@ -267,38 +265,39 @@ const fetchReasons = async () => {
           )}
         </tbody>
       </table>
-           {/* ✅ No Sale Reason Analysis */}
-      <h2>No Sale Reason Analysis</h2>
-      <table className="stats-table">
-        <thead>
-          <tr>
-            <th>Name</th>
-            <th>Store</th>
-            {reasons.map((reason) => (
-              <th key={reason}>{reason}</th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          {noSaleStats.length > 0 ? (
-            noSaleStats.map((stat) => (
-              <tr key={stat.agent_name}>
-                <td>{stat.agent_name}</td>
-                <td>{stat.store_number}</td>
-                {reasons.map((reason) => (
-                  <td key={reason}>{stat[reason] || 0}</td>
-                ))}
-              </tr>
-            ))
-          ) : (
-            <tr>
-              <td colSpan={2 + reasons.length} className="no-stats">
-                No No-Sale stats available.
-              </td>
-            </tr>
-          )}
-        </tbody>
-      </table>       
+     {/* ✅ No Sale Reason Analysis Section */}
+<h2>No Sale Reason Analysis</h2>
+
+<table className="stats-table">
+  <thead>
+    <tr>
+      <th>Name</th>
+      <th>Store</th>
+      {reasons.map((reason) => (
+        <th key={reason}>{reason}</th>
+      ))}
+    </tr>
+  </thead>
+  <tbody>
+    {noSaleStats.length > 0 ? (
+      noSaleStats.map((stat) => (
+        <tr key={stat.agent_name}>
+          <td>{stat.agent_name}</td>
+          <td>{stat.store_number}</td>
+          {reasons.map((reason) => (
+            <td key={reason}>{stat.reason_counts?.[reason] || 0}</td> 
+          ))}
+        </tr>
+      ))
+    ) : (
+      <tr>
+        <td colSpan={2 + reasons.length} className="no-stats">
+          No No-Sale stats available.
+        </td>
+      </tr>
+    )}
+  </tbody>
+</table>    
     </div>
   );
 }
