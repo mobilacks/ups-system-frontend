@@ -52,38 +52,58 @@ body {
 
 .auth-box { 
   background: white;
-  padding: 30px; /* ✅ More spacing for better alignment */
+  padding: 40px; /* ✅ More spacing inside the box */
   border-radius: var(--border-radius);
-  box-shadow: 0px 6px 12px rgba(0, 0, 0, 0.2);
-  width: 90%; /* ✅ Scales properly on smaller screens */
-  max-width: 700px; /* ✅ Matches login page */
-  min-width: 400px; /* ✅ Prevents it from shrinking too much */
+  box-shadow: 0px 8px 16px rgba(0, 0, 0, 0.3); /* ✅ Slightly stronger shadow for better visibility */
+  width: 90%;
+  max-width: 750px; /* ✅ Slightly wider */
+  min-width: 400px;
   text-align: center;
   transition: background 0.3s ease, color 0.3s ease;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 15px; /* ✅ Adds spacing between elements */
+  gap: 20px; /* ✅ Increased spacing between elements */
 }
 
 @media (prefers-color-scheme: dark) {
   .auth-box {
     background: #2a2a2a;
     color: white;
-    box-shadow: 0px 6px 12px rgba(255, 255, 255, 0.1);
+    box-shadow: 0px 8px 16px rgba(255, 255, 255, 0.1);
   }
+}
+
+/* ✅ Input Fields Styling */
+.auth-box input {
+  width: 100%;
+  max-width: 500px;
+  padding: 12px; /* ✅ Added padding inside inputs */
+  font-size: 16px;
+  border-radius: 8px; /* ✅ Slightly rounded corners */
+  border: 1px solid #ccc;
+  transition: border 0.2s ease;
+}
+
+.auth-box input:focus {
+  border-color: var(--primary-color);
+  outline: none;
+}
+
+/* ✅ Button Styling */
+.auth-box button {
+  width: 100%;
+  max-width: 500px;
+  padding: 12px;
+  font-size: 16px;
+  font-weight: bold;
 }
 
 /* ✅ Ensures logo is spaced properly */
 .auth-box img {
-  margin-bottom: 10px;
+  margin-bottom: 15px;
 }
 
-/* ✅ Ensures text fields & buttons are evenly spaced */
-.auth-box input, .auth-box button {
-  width: 100%;
-  max-width: 500px; /* ✅ Ensures they don't stretch too wide */
-}
 
 
 /* ✅ Mobile Optimization */
