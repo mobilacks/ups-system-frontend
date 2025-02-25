@@ -39,13 +39,13 @@ useEffect(() => {
 
   useEffect(() => {
   const fetchReasons = async () => {
-    const { data, error } = await supabase.from("reasons").select("reason");
+    const { data, error } = await supabase.from("reasons").select("reason_text");
 
     if (error) {
       console.error("❌ Error fetching reasons:", error);
     } else {
       console.log("✅ Reasons Fetched:", data);
-      setReasons(data.map((r) => r.reason)); // Extract only reason names
+      setReasons(data.map((r) => r.reason_text)); // Extract only reason names
     }
   };
 
