@@ -119,8 +119,8 @@ const fetchStats = async (startDate, endDate) => {
 // ✅ Fetch No Sale Reason Data
 const fetchNoSaleStats = async () => {
   const { data, error } = await supabase.rpc("get_no_sale_stats", {
-    start_date: selectedDateRange.start, 
-    end_date: selectedDateRange.end
+    start_date: "2025-02-20",  // Test with a real date range
+    end_date: "2025-02-25"
   });
 
   if (error) {
