@@ -14,7 +14,10 @@ function StatsPage() {
   const [sortColumn, setSortColumn] = useState("total_sales");
   const [sortOrder, setSortOrder] = useState("desc");
   const [selectedDateRange, setSelectedDateRange] = useState("today"); // ✅ Default to Today
+  const [noSaleStats, setNoSaleStats] = useState([]);
+  const [reasons, setReasons] = useState([]);
 
+  
 useEffect(() => {
   const today = new Date();
   today.setHours(0, 0, 0, 0); // ✅ Reset time to avoid timezone shifts
@@ -29,9 +32,25 @@ useEffect(() => {
 
 useEffect(() => {
   if (startDate && endDate) {
-    fetchStats(startDate, endDate); // ✅ Fetch stats AFTER setting the state
+    fetchStats(startDate, endDate);
+    fetchNoSaleStats(startDate, endDate); // ✅ Fetch No Sale stats as well
   }
 }, [startDate, endDate]);
+
+  useEffect(() => {
+  const fetchReasons = async () => {
+    const { data, error } = await supabase.from("reasons").select("reason");
+
+    if (error) {
+      console.error("❌ Error fetching reasons:", error);
+    } else {
+      console.log("✅ Reasons Fetched:", data);
+      setReasons(data.map((r) => r.reason)); // Extract only reason names
+    }
+  };
+
+  fetchReasons();
+}, []);
 
 
   // ✅ Function to Set Date Range Based on Dropdown Selection
@@ -97,7 +116,7 @@ const fetchStats = async (startDate, endDate) => {
   }
 };
 
-  // ✅ Fetch No Sale Reason Data
+// ✅ Fetch No Sale Reason Data
 const fetchNoSaleStats = async (startDate, endDate) => {
   if (!startDate || !endDate) return;
 
@@ -115,6 +134,7 @@ const fetchNoSaleStats = async (startDate, endDate) => {
     setNoSaleStats(data);
   }
 };
+
 
 
 
@@ -241,38 +261,39 @@ const fetchNoSaleStats = async (startDate, endDate) => {
           )}
         </tbody>
       </table>
-           {/* ✅ No Sale Reason Analysis */}
-      <h2>No Sale Reason Analysis</h2>
-      <table className="stats-table">
-        <thead>
-          <tr>
-            <th>Name</th>
-            <th>Store</th>
-            {reasons.map((reason) => (
-              <th key={reason}>{reason}</th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          {noSaleStats.length > 0 ? (
-            noSaleStats.map((stat) => (
-              <tr key={stat.agent_name}>
-                <td>{stat.agent_name}</td>
-                <td>{stat.store_number}</td>
-                {reasons.map((reason) => (
-                  <td key={reason}>{stat[reason] || 0}</td>
-                ))}
-              </tr>
-            ))
-          ) : (
-            <tr>
-              <td colSpan={2 + reasons.length} className="no-stats">
-                No No-Sale stats available.
-              </td>
-            </tr>
-          )}
-        </tbody>
-      </table>       
+{/* ✅ No Sale Reason Analysis */}
+<h2>No Sale Reason Analysis</h2>
+<table className="stats-table">
+  <thead>
+    <tr>
+      <th>Name</th>
+      <th>Store</th>
+      {reasons.map((reason) => (
+        <th key={reason}>{reason}</th>
+      ))}
+    </tr>
+  </thead>
+  <tbody>
+    {noSaleStats.length > 0 ? (
+      noSaleStats.map((stat) => (
+        <tr key={stat.agent_name}>
+          <td>{stat.agent_name}</td>
+          <td>{stat.store_number}</td>
+          {reasons.map((reason) => (
+            <td key={reason}>{stat.reason_counts[reason] || 0}</td>
+          ))}
+        </tr>
+      ))
+    ) : (
+      <tr>
+        <td colSpan={2 + reasons.length} className="no-stats">
+          No No-Sale stats available.
+        </td>
+      </tr>
+    )}
+  </tbody>
+</table>
+
     </div>
   );
 }
