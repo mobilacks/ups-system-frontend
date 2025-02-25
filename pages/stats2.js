@@ -4,8 +4,6 @@ import ProtectedRoute from "../lib/protectedRoute";
 
 function StatsPage() {
   const [stats, setStats] = useState([]);
-  const [noSaleStats, setNoSaleStats] = useState([]);
-  const [reasons, setReasons] = useState([]); // ✅ Define reasons state
   const [searchQuery, setSearchQuery] = useState("");
   const [filteredStats, setFilteredStats] = useState([]);
   const [agentFilter, setAgentFilter] = useState("");
@@ -27,16 +25,6 @@ useEffect(() => {
   setSelectedDateRange("today");
   setRoleFilter("agent");
 }, []);
-
-  useEffect(() => {
-  const today = new Date().toISOString().split("T")[0]; // Get today's date
-  setStartDate(today);
-  setEndDate(today);
-  fetchStats(today, today);
-  fetchNoSaleStats(today, today);
-  fetchReasons(); // ✅ Fetch reasons on page load
-}, []);
-
 
 
 useEffect(() => {
@@ -113,6 +101,8 @@ const fetchStats = async (startDate, endDate) => {
 const fetchNoSaleStats = async (startDate, endDate) => {
   if (!startDate || !endDate) return;
 
+  console.log("📅 Fetching No Sale stats for:", startDate, "to", endDate); // Debugging
+
   const { data, error } = await supabase.rpc("get_no_sale_stats", {
     p_start_date: startDate,
     p_end_date: endDate,
@@ -126,21 +116,7 @@ const fetchNoSaleStats = async (startDate, endDate) => {
   }
 };
 
-const fetchReasons = async () => {
-  const { data, error } = await supabase
-    .from("reasons")
-    .select("reason_text")
-    .order("id", { ascending: true });
 
-  if (error) {
-    console.error("❌ Error fetching reasons:", error);
-  } else {
-    console.log("✅ Reasons Fetched:", data);
-    setReasons(data.map((r) => r.reason_text)); // ✅ Store reason names
-  }
-};
-
-  
 
   // ✅ Handle Filters & Sorting
   useEffect(() => {
@@ -265,39 +241,38 @@ const fetchReasons = async () => {
           )}
         </tbody>
       </table>
-   {/* ✅ No-Sale Stats Section */}
-<div className="stats-section">
-  <h3>No-Sale Reason Analysis</h3>
-  
-  {noSaleStats.length === 0 ? (
-    <p>No No-Sale stats available.</p>
-  ) : (
-    <table>
-      <thead>
-        <tr>
-          <th>Agent Name</th>
-          <th>Store Number</th>
-          {/* ✅ Dynamically create table headers from reason_counts keys */}
-          {Object.keys(noSaleStats[0]?.reason_counts || {}).map((reason, index) => (
-            <th key={index}>{reason}</th>
-          ))}
-        </tr>
-      </thead>
-      <tbody>
-        {noSaleStats.map((agent, index) => (
-          <tr key={index}>
-            <td>{agent.agent_name}</td>
-            <td>{agent.store_number}</td>
-            {/* ✅ Dynamically fill in the data */}
-            {Object.keys(agent.reason_counts).map((reason, idx) => (
-              <td key={idx}>{agent.reason_counts[reason]}</td>
+           {/* ✅ No Sale Reason Analysis */}
+      <h2>No Sale Reason Analysis</h2>
+      <table className="stats-table">
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Store</th>
+            {reasons.map((reason) => (
+              <th key={reason}>{reason}</th>
             ))}
           </tr>
-        ))}
-      </tbody>
-    </table>
-  )}
-</div>
+        </thead>
+        <tbody>
+          {noSaleStats.length > 0 ? (
+            noSaleStats.map((stat) => (
+              <tr key={stat.agent_name}>
+                <td>{stat.agent_name}</td>
+                <td>{stat.store_number}</td>
+                {reasons.map((reason) => (
+                  <td key={reason}>{stat[reason] || 0}</td>
+                ))}
+              </tr>
+            ))
+          ) : (
+            <tr>
+              <td colSpan={2 + reasons.length} className="no-stats">
+                No No-Sale stats available.
+              </td>
+            </tr>
+          )}
+        </tbody>
+      </table>       
     </div>
   );
 }
