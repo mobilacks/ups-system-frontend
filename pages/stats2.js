@@ -4,6 +4,8 @@ import ProtectedRoute from "../lib/protectedRoute";
 
 function StatsPage() {
   const [stats, setStats] = useState([]);
+  const [noSaleStats, setNoSaleStats] = useState([]);
+  const [reasons, setReasons] = useState([]); // ✅ Define reasons state
   const [searchQuery, setSearchQuery] = useState("");
   const [filteredStats, setFilteredStats] = useState([]);
   const [agentFilter, setAgentFilter] = useState("");
@@ -25,6 +27,16 @@ useEffect(() => {
   setSelectedDateRange("today");
   setRoleFilter("agent");
 }, []);
+
+  useEffect(() => {
+  const today = new Date().toISOString().split("T")[0]; // Get today's date
+  setStartDate(today);
+  setEndDate(today);
+  fetchStats(today, today);
+  fetchNoSaleStats(today, today);
+  fetchReasons(); // ✅ Fetch reasons on page load
+}, []);
+
 
 
 useEffect(() => {
@@ -116,7 +128,21 @@ const fetchNoSaleStats = async (startDate, endDate) => {
   }
 };
 
+const fetchReasons = async () => {
+  const { data, error } = await supabase
+    .from("reasons")
+    .select("reason_text")
+    .order("id", { ascending: true });
 
+  if (error) {
+    console.error("❌ Error fetching reasons:", error);
+  } else {
+    console.log("✅ Reasons Fetched:", data);
+    setReasons(data.map((r) => r.reason_text)); // ✅ Store reason names
+  }
+};
+
+  
 
   // ✅ Handle Filters & Sorting
   useEffect(() => {
