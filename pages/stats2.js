@@ -117,16 +117,11 @@ const fetchStats = async (startDate, endDate) => {
 };
 
 // ✅ Fetch No Sale Reason Data
-const fetchNoSaleStats = async (startDate, endDate) => {
-  if (!startDate || !endDate) return;
-
-  console.log("📅 Fetching No Sale stats for:", startDate, "to", endDate); // Debugging
-
+const fetchNoSaleStats = async () => {
   const { data, error } = await supabase.rpc("get_no_sale_stats", {
-    p_start_date: startDate,
-    p_end_date: endDate,
+    start_date: selectedDateRange.start,
+    end_date: selectedDateRange.end,
   });
-
   if (error) {
     console.error("❌ Error fetching No Sale stats:", error);
   } else {
