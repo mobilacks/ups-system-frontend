@@ -265,39 +265,39 @@ const fetchReasons = async () => {
           )}
         </tbody>
       </table>
-     {/* ✅ No Sale Reason Analysis Section */}
-<h2>No Sale Reason Analysis</h2>
-
-<table className="stats-table">
-  <thead>
-    <tr>
-      <th>Name</th>
-      <th>Store</th>
-      {reasons.map((reason) => (
-        <th key={reason}>{reason}</th>
-      ))}
-    </tr>
-  </thead>
-  <tbody>
-    {noSaleStats.length > 0 ? (
-      noSaleStats.map((stat) => (
-        <tr key={stat.agent_name}>
-          <td>{stat.agent_name}</td>
-          <td>{stat.store_number}</td>
-          {reasons.map((reason) => (
-            <td key={reason}>{stat.reason_counts?.[reason] || 0}</td> 
+   {/* ✅ No-Sale Stats Section */}
+<div className="stats-section">
+  <h3>No-Sale Reason Analysis</h3>
+  
+  {noSaleStats.length === 0 ? (
+    <p>No No-Sale stats available.</p>
+  ) : (
+    <table>
+      <thead>
+        <tr>
+          <th>Agent Name</th>
+          <th>Store Number</th>
+          {/* ✅ Dynamically create table headers from reason_counts keys */}
+          {Object.keys(noSaleStats[0]?.reason_counts || {}).map((reason, index) => (
+            <th key={index}>{reason}</th>
           ))}
         </tr>
-      ))
-    ) : (
-      <tr>
-        <td colSpan={2 + reasons.length} className="no-stats">
-          No No-Sale stats available.
-        </td>
-      </tr>
-    )}
-  </tbody>
-</table>    
+      </thead>
+      <tbody>
+        {noSaleStats.map((agent, index) => (
+          <tr key={index}>
+            <td>{agent.agent_name}</td>
+            <td>{agent.store_number}</td>
+            {/* ✅ Dynamically fill in the data */}
+            {Object.keys(agent.reason_counts).map((reason, idx) => (
+              <td key={idx}>{agent.reason_counts[reason]}</td>
+            ))}
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  )}
+</div>
     </div>
   );
 }
