@@ -273,6 +273,7 @@ function StatsPage() {
             <thead>
               <tr>
                 <th onClick={() => setSortColumn("name")}>Name</th>
+                <th onClick={() => setSortColumn("store_number")}>Store #</th>
                 <th onClick={() => setSortColumn("role")}>Role</th>
                 <th onClick={() => setSortColumn("ups_count")}># of UPS</th>
                 <th onClick={() => setSortColumn("sale_count")}># of Sales</th>
@@ -286,6 +287,7 @@ function StatsPage() {
                 filteredStats.map((stat) => (
                   <tr key={stat.email}>
                     <td>{stat.name}</td>
+                    <td>{stat.store_number}</td>
                     <td>{stat.role}</td>
                     <td>{stat.ups_count}</td>
                     <td>{stat.sale_count}</td>
@@ -296,7 +298,7 @@ function StatsPage() {
                 ))
               ) : (
                 <tr>
-                  <td colSpan="7" className="no-stats">No stats available.</td>
+                  <td colSpan="8" className="no-stats">No stats available.</td>
                 </tr>
               )}
             </tbody>
