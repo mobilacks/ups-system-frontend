@@ -318,6 +318,5 @@ useEffect(() => {
         </tr>
       )}
     </tbody>
-  </table>
 
 export default ProtectedRoute(StatsPage);
