@@ -317,6 +317,12 @@ useEffect(() => {
           <td colSpan={2 + reasons.length} className="no-stats">No No-Sale stats available.</td>
         </tr>
       )}
-    </tbody>
+        </tbody>
+  </table>  {/* ✅ Closing the No Sale table */}
+</div>  {/* ✅ Closing the No Sale Analysis Section */}
+</div>  {/* ✅ Closing the main stats-container */}
+
+export default ProtectedRoute(StatsPage);
+
 
 export default ProtectedRoute(StatsPage);
