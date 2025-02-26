@@ -321,5 +321,5 @@ useEffect(() => {
   </table>  {/* ✅ Closing the No Sale table */}
 </div>  {/* ✅ Closing the No Sale Analysis Section */}
 </div>  {/* ✅ Closing the main stats-container */}
-
+);
 export default ProtectedRoute(StatsPage);
