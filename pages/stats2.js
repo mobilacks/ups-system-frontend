@@ -324,9 +324,7 @@ const fetchStats = async (startDate, endDate) => {
           )}
         </tbody>
       </table>
-    </div>
-    <div className="stats-container">
-      <h2>No Sale Reason Analysis</h2>
+	  <h2>No Sale Reason Analysis</h2>
 
       {/* ✅ Filters Section */}
       <div className="filters">
