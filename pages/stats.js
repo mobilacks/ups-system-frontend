@@ -314,7 +314,7 @@ function StatsPage() {
             <thead>
               <tr>
                 <th>Agent Name</th>
-                <th>Store Number</th>
+                <th>Store #</th>
                 {reasons.map((reason) => <th key={reason}>{reason}</th>)}
               </tr>
             </thead>
