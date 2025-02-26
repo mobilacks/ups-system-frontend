@@ -164,10 +164,6 @@ useEffect(() => {
   setFilteredNoSaleStats(filteredNoSales);
 }, [searchQuery, agentFilter, storeFilter, roleFilter, sortColumn, sortOrder, stats, noSaleStats]);
 
-
-  setFilteredStats(filtered);
-  }, [searchQuery, agentFilter, storeFilter, roleFilter, sortColumn, sortOrder, stats]);
-
   // ✅ Get unique values for dropdown filters
   const uniqueAgents = [...new Set(stats.map((stat) => stat.email))];
   const uniqueStores = [...new Set(stats.map((stat) => stat.store_number))];
