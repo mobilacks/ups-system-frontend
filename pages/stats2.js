@@ -323,6 +323,3 @@ useEffect(() => {
 </div>  {/* ✅ Closing the main stats-container */}
 
 export default ProtectedRoute(StatsPage);
-
-
-export default ProtectedRoute(StatsPage);
