@@ -384,8 +384,6 @@ const fetchStats = async (startDate, endDate) => {
       </table>
     </div>
   );
-
-  );
 }
 
 export default ProtectedRoute(StatsPage);
