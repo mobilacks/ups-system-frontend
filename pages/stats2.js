@@ -134,7 +134,7 @@ useEffect(() => {
 
 
 
-  // ✅ Handle Filters & Sorting
+// ✅ Sorting is already applied in useEffect, so remove duplicate sorting
 useEffect(() => {
   let filtered = stats;
   let filteredNoSales = noSaleStats;
@@ -160,9 +160,19 @@ useEffect(() => {
     filteredNoSales = filteredNoSales.filter((stat) => stat.store_number.toString() === storeFilter);
   }
 
+  // ✅ Sorting applied correctly in useEffect
+  filtered.sort((a, b) => {
+    if (sortOrder === "asc") {
+      return a[sortColumn] > b[sortColumn] ? 1 : -1;
+    } else {
+      return a[sortColumn] < b[sortColumn] ? 1 : -1;
+    }
+  });
+
   setFilteredStats(filtered);
   setFilteredNoSaleStats(filteredNoSales);
 }, [searchQuery, agentFilter, storeFilter, roleFilter, sortColumn, sortOrder, stats, noSaleStats]);
+
 
   // ✅ Get unique values for dropdown filters
   const uniqueAgents = [...new Set(stats.map((stat) => stat.email))];
@@ -311,6 +321,5 @@ useEffect(() => {
     </tbody>
   </table>
 </div>
-  );
 
 export default ProtectedRoute(StatsPage);
