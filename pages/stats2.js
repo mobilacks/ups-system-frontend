@@ -4,9 +4,11 @@ import ProtectedRoute from "../lib/protectedRoute";
 
 function NoSaleReasonAnalysis() {
   const [noSaleStats, setNoSaleStats] = useState([]);
+  const [filteredNoSaleStats, setFilteredNoSaleStats] = useState([]); // ✅ Filtered Data
   const [reasons, setReasons] = useState([]);
   const [agentFilter, setAgentFilter] = useState("");
   const [storeFilter, setStoreFilter] = useState("");
+  const [dateRange, setDateRange] = useState("today");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
 
@@ -36,8 +38,8 @@ function NoSaleReasonAnalysis() {
     if (error) {
       console.error("❌ Error fetching No Sale stats:", error);
     } else {
-      console.log("✅ No Sale Stats Fetched:", data);
       setNoSaleStats(data);
+      setFilteredNoSaleStats(data); // ✅ Apply initial filter
     }
   };
 
@@ -52,12 +54,74 @@ function NoSaleReasonAnalysis() {
     }
   };
 
+  // ✅ Handle Filters
+  useEffect(() => {
+    let filtered = noSaleStats;
+
+    if (agentFilter) {
+      filtered = filtered.filter((stat) => stat.agent_name === agentFilter);
+    }
+
+    if (storeFilter) {
+      filtered = filtered.filter((stat) => stat.store_number.toString() === storeFilter);
+    }
+
+    setFilteredNoSaleStats(filtered);
+  }, [agentFilter, storeFilter, noSaleStats]);
+
+  // ✅ Handle Date Range Selection
+  const handleDateRangeChange = (value) => {
+    setDateRange(value);
+
+    const today = new Date();
+    let newStartDate, newEndDate;
+
+    switch (value) {
+      case "today":
+        newStartDate = today;
+        newEndDate = today;
+        break;
+      case "yesterday":
+        newStartDate = new Date(today);
+        newStartDate.setDate(today.getDate() - 1);
+        newEndDate = newStartDate;
+        break;
+      case "last_7_days":
+        newStartDate = new Date(today);
+        newStartDate.setDate(today.getDate() - 7);
+        newEndDate = today;
+        break;
+      case "last_30_days":
+        newStartDate = new Date(today);
+        newStartDate.setDate(today.getDate() - 30);
+        newEndDate = today;
+        break;
+      default:
+        newStartDate = "";
+        newEndDate = "";
+    }
+
+    setStartDate(newStartDate ? newStartDate.toISOString().split("T")[0] : "");
+    setEndDate(newEndDate ? newEndDate.toISOString().split("T")[0] : "");
+
+    if (newStartDate && newEndDate) {
+      fetchNoSaleStats(newStartDate.toISOString().split("T")[0], newEndDate.toISOString().split("T")[0]);
+    }
+  };
+
   return (
     <div className="stats-container">
       <h2>No Sale Reason Analysis</h2>
 
       {/* ✅ Filters Section */}
       <div className="filters">
+        <select value={dateRange} onChange={(e) => handleDateRangeChange(e.target.value)}>
+          <option value="today">Today</option>
+          <option value="yesterday">Yesterday</option>
+          <option value="last_7_days">Last 7 Days</option>
+          <option value="last_30_days">Last 30 Days</option>
+        </select>
+
         <select value={agentFilter} onChange={(e) => setAgentFilter(e.target.value)}>
           <option value="">All Agents</option>
           {[...new Set(noSaleStats.map((stat) => stat.agent_name))].map((agent) => (
@@ -86,8 +150,8 @@ function NoSaleReasonAnalysis() {
           </tr>
         </thead>
         <tbody>
-          {noSaleStats.length > 0 ? (
-            noSaleStats.map((stat) => (
+          {filteredNoSaleStats.length > 0 ? (
+            filteredNoSaleStats.map((stat) => (
               <tr key={stat.agent_name}>
                 <td>{stat.agent_name}</td>
                 <td>{stat.store_number}</td>
