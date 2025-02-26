@@ -165,16 +165,7 @@ useEffect(() => {
 }, [searchQuery, agentFilter, storeFilter, roleFilter, sortColumn, sortOrder, stats, noSaleStats]);
 
 
-    // ✅ Sorting
-    filtered.sort((a, b) => {
-      if (sortOrder === "asc") {
-        return a[sortColumn] > b[sortColumn] ? 1 : -1;
-      } else {
-        return a[sortColumn] < b[sortColumn] ? 1 : -1;
-      }
-    });
-
-    setFilteredStats(filtered);
+  setFilteredStats(filtered);
   }, [searchQuery, agentFilter, storeFilter, roleFilter, sortColumn, sortOrder, stats]);
 
   // ✅ Get unique values for dropdown filters
@@ -325,6 +316,5 @@ useEffect(() => {
   </table>
 </div>
   );
-}
 
 export default ProtectedRoute(StatsPage);
