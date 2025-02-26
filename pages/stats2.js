@@ -229,7 +229,9 @@ useEffect(() => {
       </div>
 
       {/* ✅ Stats Table */}
-      <table className="stats-table">
+   <div className="stats-container">
+     <h2>No Sale Reason Analysis</h2>
+     <table className="stats-table">
         <thead>
           <tr>
             <th onClick={() => setSortColumn("name")}>Name</th>
@@ -261,6 +263,7 @@ useEffect(() => {
           )}
         </tbody>
       </table>
+  </div>
 	{/* ✅ No Sale Reason Analysis Section */}
    <div className="stats-container">
      <h2>No Sale Reason Analysis</h2>
