@@ -261,7 +261,6 @@ useEffect(() => {
           )}
         </tbody>
       </table>
-    </div>
 	{/* ✅ No Sale Reason Analysis Section */}
    <div className="stats-container">
      <h2>No Sale Reason Analysis</h2>
