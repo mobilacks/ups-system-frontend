@@ -6,6 +6,7 @@ export default function MyApp({ Component, pageProps }) {
   return (
     <>
       <Head>
+        <title>Lacks UPS System</title> {/* ✅ Update title */}
         <link rel="icon" href="/favicon.ico" /> {/* ✅ Favicon added */}
       </Head>
       <Navbar /> {/* ✅ Navbar Included */}
