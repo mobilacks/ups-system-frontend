@@ -19,7 +19,7 @@ function StatsPage() {
   // No Sale Stats State
   const [noSaleStats, setNoSaleStats] = useState([]);
   const [filteredNoSaleStats, setFilteredNoSaleStats] = useState([]);
-  const [reasons, setReasons] = useState([]);
+  const [reasonColumns, setReasonColumns] = useState([]);
   
   // UI State
   const [activeTab, setActiveTab] = useState("sales"); // Control which section is visible
@@ -33,9 +33,6 @@ function StatsPage() {
     setEndDate(formattedToday);
     setSelectedDateRange("today");
     setRoleFilter("agent");
-    
-    // Fetch reasons for No Sale Analysis
-    fetchReasons();
   }, []);
 
   useEffect(() => {
@@ -121,19 +118,20 @@ function StatsPage() {
     if (error) {
       console.error("❌ Error fetching No Sale stats:", error);
     } else {
+      console.log("✅ No Sale Stats Fetched:", data);
+      
+      // Extract column names (excluding agent_name and store_number)
+      if (data && data.length > 0) {
+        const firstRecord = data[0];
+        const columns = Object.keys(firstRecord).filter(
+          key => key !== 'agent_name' && key !== 'store_number'
+        );
+        setReasonColumns(columns);
+        console.log("✅ Reason columns detected:", columns);
+      }
+      
       setNoSaleStats(data);
       setFilteredNoSaleStats(data);
-    }
-  };
-
-  // Fetch Reasons Dynamically
-  const fetchReasons = async () => {
-    const { data, error } = await supabase.from("reasons").select("reason_text");
-
-    if (error) {
-      console.error("❌ Error fetching reasons:", error);
-    } else {
-      setReasons(data.map((r) => r.reason_text));
     }
   };
 
@@ -315,7 +313,7 @@ function StatsPage() {
               <tr>
                 <th>Agent Name</th>
                 <th>Store #</th>
-                {reasons.map((reason) => <th key={reason}>{reason}</th>)}
+                {reasonColumns.map((reason) => <th key={reason}>{reason}</th>)}
               </tr>
             </thead>
             <tbody>
@@ -324,14 +322,14 @@ function StatsPage() {
                   <tr key={`${stat.agent_name || stat.email}-${index}`}>
                     <td>{stat.agent_name || stat.email}</td>
                     <td>{stat.store_number}</td>
-                    {reasons.map((reason) => (
+                    {reasonColumns.map((reason) => (
                       <td key={reason}>{stat[reason] || 0}</td>
                     ))}
                   </tr>
                 ))
               ) : (
                 <tr>
-                  <td colSpan={2 + reasons.length} className="no-stats">No No-Sale stats available.</td>
+                  <td colSpan={2 + reasonColumns.length} className="no-stats">No No-Sale stats available.</td>
                 </tr>
               )}
             </tbody>
