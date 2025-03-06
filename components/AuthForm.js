@@ -74,6 +74,52 @@ export default function AuthForm({ isSignUp = false }) {
         if (signInError) throw signInError;
         console.log("✅ Login successful");
 
+        // ✅ Fetch the user's role
+        const { data: agentData, error: agentError } = await supabase
+          .from("agents")
+          .select("role")
+          .eq("email", email)
+          .single();
+
+        if (agentError) {
+          console.error("❌ Error fetching user role:", agentError);
+          return;
+        }
+
+        const userRole = agentData?.role;
+
+        // ✅ If user is an Admin or Store Manager, do nothing
+        if (userRole === "admin" || userRole === "store_manager") {
+          console.log("✅ User is an Admin or Store Manager. No queue update needed.");
+        } else {
+          // ✅ If user is an Agent, check if they are already in the queue
+          const { data: queueData, error: queueError } = await supabase
+            .from("queue")
+            .select("email")
+            .eq("email", email)
+            .single();
+
+          if (!queueData) {
+            // ✅ If user is not in queue, add them
+            const { error: insertError } = await supabase.from("queue").insert([
+              {
+                email,
+                agents_waiting: true, // ✅ Automatically set as waiting
+                in_queue: false,
+                with_customer: false,
+              },
+            ]);
+
+            if (insertError) {
+              console.error("❌ Error adding user to queue:", insertError);
+            } else {
+              console.log("✅ User added to queue successfully!");
+            }
+          } else {
+            console.log("✅ User is already in the queue.");
+          }
+        }
+
         // ✅ Update agent status to "online"
         console.log("🔄 Updating agent status to online...");
         const { error: updateError } = await supabase
@@ -83,19 +129,6 @@ export default function AuthForm({ isSignUp = false }) {
 
         if (updateError) console.error("❌ Error updating agent status:", updateError);
         else console.log("✅ Agent status updated to online");
-
-        // ✅ Move agent to "Agents Waiting" in Queue
-        const { error: queueError } = await supabase
-          .from("queue")
-          .update({
-            agents_waiting: true,   
-            in_queue: false,  // ✅ Ensure they are NOT still in queue
-            with_customer: false // ✅ Ensure they are NOT with a customer
-          })
-          .eq("email", email);
-
-        if (queueError) console.error("❌ Error updating queue status:", queueError);
-        else console.log("✅ Agent moved to Agents Waiting in queue.");
 
         router.push("/dashboard"); // Redirect to dashboard
       }
@@ -107,117 +140,46 @@ export default function AuthForm({ isSignUp = false }) {
     }
   };
 
-  // ✅ Handle Logout (Now Resets Queue Status)
-const handleLogout = async () => {
-  if (!isLoggedIn) return; // ❌ Prevents logout from showing when not logged in
-
-  console.log("🚀 Logging out...");
-
-  const { data: { user }, error: userError } = await supabase.auth.getUser();
-
-  if (userError || !user) {
-    console.error("❌ Error fetching user data:", userError);
-    return;
-  }
-
-  console.log(`🔍 Checking agent before logout: ${user.email}`);
-
-  // ✅ Update agent status to "offline"
-  console.log("🔄 Setting agent status to offline...");
-  const { error: updateError } = await supabase
-    .from("agents")
-    .update({ status: "offline" })
-    .eq("email", user.email);
-
-  if (updateError) console.error("❌ Error updating agent status:", updateError);
-  else console.log("✅ Agent status updated to offline");
-
-// ✅ Remove agent from the queue
-console.log("🔄 Removing agent from queue for:", user.email);
-const { data, error: queueError } = await supabase
-  .from("queue")
-  .update({
-    agents_waiting: false,
-    in_queue: false,
-    with_customer: false,
-  })
-  .eq("email", user.email)
-  .select(); // ✅ Get the updated row
-
-if (queueError) {
-  console.error("❌ Error updating queue status:", queueError);
-} else {
-  console.log("✅ Queue update successful. Updated row:", data);
-}
-
-
-  // ✅ Sign out user
-  console.log("🚪 Signing out from Supabase...");
-  const { error: signOutError } = await supabase.auth.signOut();
-
-  if (signOutError) console.error("❌ Error signing out:", signOutError);
-  else {
-    console.log("✅ Successfully logged out!");
-    setIsLoggedIn(false);
-    router.push("/login"); // Redirect to login page
-  }
-};
-
-
   return (
-      <div className="auth-box">
-        {error && <p className="error-message">{error}</p>}
-        <form onSubmit={handleAuth}>
-          {isSignUp && (
-            <>
-              <input
-                type="text"
-                placeholder="Full Name"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                required
-              />
-              <input
-                type="number"
-                placeholder="Store Number"
-                value={storeNumber}
-                onChange={(e) => setStoreNumber(e.target.value)}
-                required
-              />
-            </>
-          )}
-          <input
-            type="email"
-            placeholder="Email Address"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-          />
-          <input
-            type="password"
-            placeholder="Password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-          />
-          <button type="submit" disabled={loading}>
-            {loading ? "Processing..." : isSignUp ? "Sign Up" : "Login"}
-          </button>
-        </form>
-
-        {/* ✅ Show Logout Button ONLY if user is logged in */}  
-        {isLoggedIn && router.pathname !== "/login" && (
-          <button onClick={handleLogout} className="logout-button">
-            Logout
-          </button>
+    <div className="auth-box">
+      {error && <p className="error-message">{error}</p>}
+      <form onSubmit={handleAuth}>
+        {isSignUp && (
+          <>
+            <input
+              type="text"
+              placeholder="Full Name"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              required
+            />
+            <input
+              type="number"
+              placeholder="Store Number"
+              value={storeNumber}
+              onChange={(e) => setStoreNumber(e.target.value)}
+              required
+            />
+          </>
         )}
-
-        <p>
-          {isSignUp ? "Already have an account?" : "Don't have an account?"}{" "}
-          <a href={isSignUp ? "/login" : "/signup"} className="text-blue-500 hover:underline">
-            {isSignUp ? "Login" : "Sign Up"}
-          </a>
-        </p>
+        <input
+          type="email"
+          placeholder="Email Address"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          required
+        />
+        <input
+          type="password"
+          placeholder="Password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          required
+        />
+        <button type="submit" disabled={loading}>
+          {loading ? "Processing..." : isSignUp ? "Sign Up" : "Login"}
+        </button>
+      </form>
     </div>
   );
 }
