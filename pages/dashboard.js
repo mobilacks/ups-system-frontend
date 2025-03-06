@@ -4,37 +4,37 @@ import { supabase } from "../lib/supabase";
 
 export default function Dashboard() {
   const [user, setUser] = useState(null);
-  const [userRole, setUserRole] = useState(null); // ✅ Add userRole state
+  const [userRole, setUserRole] = useState(null);
   const [storeNumber, setStoreNumber] = useState(null);
   const [agentsWaiting, setAgentsWaiting] = useState([]);
   const [inQueue, setInQueue] = useState([]);
   const [withCustomer, setWithCustomer] = useState([]);
   const [stats, setStats] = useState([]);
   const [reasons, setReasons] = useState([]);
+  const [agentNames, setAgentNames] = useState({}); // New state to store agent names
   const router = useRouter();
 
-  // ✅ Insert Auto-Refresh Code Immediately After This
-useEffect(() => {
-  if (!storeNumber) return;
-  fetchQueueData(storeNumber);
-  console.log("✅ Subscribing to Supabase Realtime...");
-  const queueSubscription = supabase
-    .channel("realtime_queue")
-    .on(
-      "postgres_changes",
-      { event: "*", schema: "public", table: "queue" },
-      (payload) => {
-        console.log("🔄 Queue update detected:", payload); // ✅ Log changes
-        fetchQueueData(storeNumber); // ✅ Refresh queue data when changes occur
-      }
-    )
-    .subscribe();
+  useEffect(() => {
+    if (!storeNumber) return;
+    fetchQueueData(storeNumber);
+    console.log("✅ Subscribing to Supabase Realtime...");
+    const queueSubscription = supabase
+      .channel("realtime_queue")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "queue" },
+        (payload) => {
+          console.log("🔄 Queue update detected:", payload);
+          fetchQueueData(storeNumber);
+        }
+      )
+      .subscribe();
 
-  return () => {
-    console.log("❌ Unsubscribing from Supabase Realtime...");
-    supabase.removeChannel(queueSubscription);
-  };
-}, [storeNumber]);
+    return () => {
+      console.log("❌ Unsubscribing from Supabase Realtime...");
+      supabase.removeChannel(queueSubscription);
+    };
+  }, [storeNumber]);
 
   useEffect(() => {
     async function fetchUser() {
@@ -43,6 +43,7 @@ useEffect(() => {
         setUser(user);
         fetchUserStore(user.email);
         fetchReasons();
+        fetchAllAgentNames(); // Fetch all agent names
       } else {
         router.push("/login");
       }
@@ -50,36 +51,53 @@ useEffect(() => {
     fetchUser();
   }, []);
 
-async function fetchUserStore(email) {
-  const { data, error } = await supabase
-    .from("agents")
-    .select("store_number, role") // ✅ Fetch both store number and role
-    .eq("email", email)
-    .single();
-
-  if (!error && data) {
-    setStoreNumber(data.store_number);
-    setUserRole(data.role); // ✅ Ensure userRole is stored
-    fetchQueueData(data.store_number, data.role); // ✅ Pass user role to function
-  }
-}
-
-
-async function fetchQueueData(storeNum, userRole) {
-  let query = supabase.from("queue").select("*").order("queue_joined_at", { ascending: true });
-
-  if (userRole !== "admin") {
-    query = query.eq("store_number", storeNum); // ✅ Only limit to store for non-admins
+  // New function to fetch all agent names
+  async function fetchAllAgentNames() {
+    const { data, error } = await supabase
+      .from("agents")
+      .select("email, name");
+    
+    if (!error && data) {
+      // Create a mapping of email -> name
+      const namesMap = {};
+      data.forEach(agent => {
+        namesMap[agent.email] = agent.name;
+      });
+      setAgentNames(namesMap);
+    } else {
+      console.error("Error fetching agent names:", error);
+    }
   }
 
-  const { data, error } = await query;
+  async function fetchUserStore(email) {
+    const { data, error } = await supabase
+      .from("agents")
+      .select("store_number, role")
+      .eq("email", email)
+      .single();
 
-  if (!error) {
-    setAgentsWaiting(data.filter(a => a.agents_waiting));
-    setInQueue(data.filter(a => a.in_queue));
-    setWithCustomer(data.filter(a => a.with_customer));
+    if (!error && data) {
+      setStoreNumber(data.store_number);
+      setUserRole(data.role);
+      fetchQueueData(data.store_number, data.role);
+    }
   }
-}
+
+  async function fetchQueueData(storeNum, userRole) {
+    let query = supabase.from("queue").select("*").order("queue_joined_at", { ascending: true });
+
+    if (userRole !== "admin") {
+      query = query.eq("store_number", storeNum);
+    }
+
+    const { data, error } = await query;
+
+    if (!error) {
+      setAgentsWaiting(data.filter(a => a.agents_waiting));
+      setInQueue(data.filter(a => a.in_queue));
+      setWithCustomer(data.filter(a => a.with_customer));
+    }
+  }
 
   async function fetchReasons() {
     const { data, error } = await supabase.from("reasons").select("*");
@@ -88,26 +106,26 @@ async function fetchQueueData(storeNum, userRole) {
     }
   }
 
-const handleQueueAction = async (action, email) => {
-  if (userRole !== "admin" && email !== user.email) {
-    alert("You can only manage your own queue status!");
-    return;
-  }
+  const handleQueueAction = async (action, email) => {
+    if (userRole !== "admin" && email !== user.email) {
+      alert("You can only manage your own queue status!");
+      return;
+    }
 
-  const functionMap = {
-    "join_queue": "join_queue",
-    "move_to_agents_waiting": "move_to_agents_waiting",
-    "move_to_with_customer": "move_to_with_customer",
-    "move_to_in_queue": "move_to_in_queue" // ✅ Now calling the Supabase function
+    const functionMap = {
+      "join_queue": "join_queue",
+      "move_to_agents_waiting": "move_to_agents_waiting",
+      "move_to_with_customer": "move_to_with_customer",
+      "move_to_in_queue": "move_to_in_queue"
+    };
+
+    const { error } = await supabase.rpc(functionMap[action], { p_email: email });
+    if (!error) {
+      fetchQueueData(storeNumber);
+    } else {
+      console.error("Error updating queue:", error);
+    }
   };
-
-  const { error } = await supabase.rpc(functionMap[action], { p_email: email });
-  if (!error) {
-    fetchQueueData(storeNumber);
-  } else {
-    console.error("Error updating queue:", error);
-  }
-};
 
   async function handleSaleClosure(email) {
     if (userRole !== "admin" && email !== user.email) {
@@ -179,6 +197,11 @@ const handleQueueAction = async (action, email) => {
     }
   }
 
+  // Helper function to get agent name or fallback to email
+  const getAgentName = (email) => {
+    return agentNames[email] || email;
+  };
+
   return (
     <div className="dashboard-container">
       <h1 className="text-2xl font-bold text-center mb-4">Dashboard</h1>
@@ -196,7 +219,7 @@ const handleQueueAction = async (action, email) => {
           <tbody>
             {agentsWaiting.map(agent => (
               <tr key={agent.email}>
-                <td>{agent.email}</td>
+                <td>{getAgentName(agent.email)}</td>
                 <td>{agent.store_number}</td>
                 <td>
                   {(agent.email === user.email || userRole === "admin") && (
@@ -225,7 +248,7 @@ const handleQueueAction = async (action, email) => {
           <tbody>
             {inQueue.map(agent => (
               <tr key={agent.email}>
-                <td>{agent.email}</td>
+                <td>{getAgentName(agent.email)}</td>
                 <td>{agent.store_number}</td>
                 <td>
                   {(agent.email === user.email || userRole === "admin") && (
@@ -258,7 +281,7 @@ const handleQueueAction = async (action, email) => {
           <tbody>
             {withCustomer.map(agent => (
               <tr key={agent.email}>
-                <td>{agent.email}</td>
+                <td>{getAgentName(agent.email)}</td>
                 <td>{agent.store_number}</td>
                 <td>
                   {(agent.email === user.email || userRole === "admin") && (
