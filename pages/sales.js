@@ -58,6 +58,7 @@ function SalesPage() {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     const formattedToday = today.toISOString().split("T")[0];
+    console.log("Setting initial date to today:", formattedToday);
 
     setStartDate(formattedToday);
     setEndDate(formattedToday);
@@ -67,6 +68,7 @@ function SalesPage() {
   // Fetch sales data when date range changes
   useEffect(() => {
     if (startDate && endDate && isAdmin) {
+      console.log("Date range changed, fetching sales:", startDate, "to", endDate);
       fetchSales();
     }
   }, [startDate, endDate, isAdmin]);
@@ -103,48 +105,49 @@ function SalesPage() {
         newEndDate = "";
     }
 
-    setStartDate(newStartDate ? newStartDate.toISOString().split("T")[0] : "");
-    setEndDate(newEndDate ? newEndDate.toISOString().split("T")[0] : "");
+    const formattedStartDate = newStartDate ? newStartDate.toISOString().split("T")[0] : "";
+    const formattedEndDate = newEndDate ? newEndDate.toISOString().split("T")[0] : "";
+    
+    console.log("Date range selected:", value);
+    console.log("New date range:", formattedStartDate, "to", formattedEndDate);
+
+    setStartDate(formattedStartDate);
+    setEndDate(formattedEndDate);
   };
 
-// Replace your current fetchSales function with this debug version
-const fetchSales = async () => {
-  setLoading(true);
-  
-  try {
-    console.log("Fetching sales with date range:", startDate, "to", endDate);
+  // Fetch sales data with agent names
+  const fetchSales = async () => {
+    setLoading(true);
     
-    // First, let's fetch without date filtering to see all data
-    const { data: allSalesData, error: allSalesError } = await supabase
-      .from("sales")
-      .select("*");
+    try {
+      console.log("Fetching sales with date range:", startDate, "to", endDate);
       
-    if (allSalesError) throw allSalesError;
-    console.log("All sales data:", allSalesData);
-    
-    // Then, fetch with date filtering
-    const { data: salesData, error: salesError } = await supabase
-      .from("sales")
-      .select("*")
-      .gte("sale_date", startDate)
-      .lte("sale_date", endDate);
+      // First, let's fetch without date filtering to see all data
+      const { data: allSalesData, error: allSalesError } = await supabase
+        .from("sales")
+        .select("*");
+        
+      if (allSalesError) throw allSalesError;
+      console.log("All sales data:", allSalesData);
       
-    if (salesError) throw salesError;
-    console.log("Filtered sales data:", salesData);
-    
-    // Log today's sales separately to check
-    const today = new Date().toISOString().split('T')[0];
-    console.log("Today's date for comparison:", today);
-    const todaySales = allSalesData.filter(sale => 
-      sale.sale_date.startsWith(today)
-    );
-    console.log("Today's sales found in raw data:", todaySales);
-    
-    // Continue with your existing code...
-    const { data: agentsData, error: agentsError } = await supabase
-      .from("agents")
-      .select("email, name, store_number");
-    // ...rest of your function
+      // Then, fetch with date filtering
+      const { data: salesData, error: salesError } = await supabase
+        .from("sales")
+        .select("*")
+        .gte("sale_date", startDate)
+        .lte("sale_date", endDate);
+        
+      if (salesError) throw salesError;
+      console.log("Filtered sales data:", salesData);
+      
+      // Log today's sales separately to check
+      const today = new Date().toISOString().split('T')[0];
+      console.log("Today's date for comparison:", today);
+      const todaySales = allSalesData.filter(sale => 
+        sale.sale_date && sale.sale_date.startsWith(today)
+      );
+      console.log("Today's sales found in raw data:", todaySales);
+      
       // Then fetch agent information to get names
       const { data: agentsData, error: agentsError } = await supabase
         .from("agents")
@@ -168,7 +171,7 @@ const fetchSales = async () => {
         store_number: agentMap[sale.email]?.store_number || 0
       }));
       
-      console.log("✅ Sales data fetched:", combinedData);
+      console.log("✅ Combined sales data:", combinedData);
       setSales(combinedData);
       setFilteredSales(combinedData);
     } catch (error) {
@@ -187,9 +190,9 @@ const fetchSales = async () => {
       const lowercasedQuery = searchQuery.toLowerCase();
       filtered = filtered.filter(
         (sale) =>
-          sale.name?.toLowerCase().includes(lowercasedQuery) ||
-          sale.email?.toLowerCase().includes(lowercasedQuery) ||
-          sale.contract_number?.toLowerCase().includes(lowercasedQuery)
+          (sale.name?.toLowerCase() || "").includes(lowercasedQuery) ||
+          (sale.email?.toLowerCase() || "").includes(lowercasedQuery) ||
+          (sale.contract_number?.toLowerCase() || "").includes(lowercasedQuery)
       );
     }
 
@@ -325,7 +328,15 @@ const fetchSales = async () => {
             value={endDate}
             onChange={(e) => setEndDate(e.target.value)}
           />
+          <button onClick={fetchSales} className="refresh-btn">
+            Refresh
+          </button>
         </div>
+      </div>
+
+      {/* Current Date Range Display for debugging */}
+      <div className="debug-info">
+        <p>Showing sales from {startDate} to {endDate}</p>
       </div>
 
       {/* Sales Table */}
@@ -389,8 +400,8 @@ const fetchSales = async () => {
                       <td>{sale.name}</td>
                       <td>{sale.store_number}</td>
                       <td>{sale.contract_number}</td>
-                      <td>${sale.sale_amount.toFixed(2)}</td>
-                      <td>{new Date(sale.sale_date).toLocaleDateString()}</td>
+                      <td>${sale.sale_amount?.toFixed(2) || "0.00"}</td>
+                      <td>{sale.sale_date ? new Date(sale.sale_date).toLocaleDateString() : "N/A"}</td>
                       <td className="action-buttons">
                         <button
                           onClick={() => handleEditClick(sale)}
