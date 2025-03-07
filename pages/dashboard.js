@@ -47,13 +47,17 @@ export default function Dashboard() {
         fetchUserStore(user.email);
         fetchReasons();
         fetchAllAgentNames(); // Fetch all agent names
-        fetchUniqueStores(); // Fetch all unique stores
+        
+        // Only fetch stores if user is admin
+        if (userRole === "admin") {
+          fetchUniqueStores();
+        }
       } else {
         router.push("/login");
       }
     }
     fetchUser();
-  }, []);
+  }, [userRole]);
 
   // New function to fetch all unique store numbers
   async function fetchUniqueStores() {
@@ -100,11 +104,13 @@ export default function Dashboard() {
       setStoreNumber(data.store_number);
       setUserRole(data.role);
       
-      // If admin, don't set a default store filter
+      // If admin, allow store filtering, but for others, always filter to their store
       if (data.role === "admin") {
         setStoreFilter("");
+        // Fetch stores for admins
+        fetchUniqueStores();
       } else {
-        // For non-admins, set their store as the default filter
+        // For non-admins, set their store as the filter and don't allow changing
         setStoreFilter(data.store_number.toString());
       }
       
@@ -115,10 +121,13 @@ export default function Dashboard() {
   async function fetchQueueData(storeNum, userRole) {
     let query = supabase.from("queue").select("*").order("queue_joined_at", { ascending: true });
 
-    // Only apply store filter if one is selected or if user is not admin
-    if (storeFilter) {
+    // For admins, apply store filter if selected
+    if (userRole === "admin" && storeFilter) {
       query = query.eq("store_number", storeFilter);
-    } else if (userRole !== "admin") {
+    } else if (userRole === "admin" && !storeFilter) {
+      // Admin with no filter - show all stores
+    } else {
+      // Non-admins always see only their store
       query = query.eq("store_number", storeNum);
     }
 
@@ -158,7 +167,7 @@ export default function Dashboard() {
       console.error(`Error with ${action}:`, error);
     } else {
       console.log(`✅ ${action} completed successfully!`);
-      fetchQueueData(storeFilter || storeNumber);
+      fetchQueueData(storeFilter || storeNumber, userRole);
     }
   };
 
@@ -190,7 +199,7 @@ export default function Dashboard() {
 
     if (!error) {
       console.log("✅ Sale recorded successfully!");
-      fetchQueueData(storeFilter || storeNumber);
+      fetchQueueData(storeFilter || storeNumber, userRole);
     } else {
       console.error("❌ Error closing sale:", error);
       alert("Error recording sale. Please try again.");
@@ -227,7 +236,7 @@ export default function Dashboard() {
 
     if (!error) {
       console.log("✅ No Sale recorded successfully!");
-      fetchQueueData(storeFilter || storeNumber);
+      fetchQueueData(storeFilter || storeNumber, userRole);
     } else {
       console.error("❌ Error logging no sale:", error);
       alert("Error recording no sale. Please try again.");
@@ -241,30 +250,42 @@ export default function Dashboard() {
 
   // Handle store filter change
   const handleStoreFilterChange = (e) => {
-    const newStoreFilter = e.target.value;
-    setStoreFilter(newStoreFilter);
-    fetchQueueData(newStoreFilter || storeNumber);
+    // Only admins can change the store filter
+    if (userRole === "admin") {
+      const newStoreFilter = e.target.value;
+      setStoreFilter(newStoreFilter);
+      fetchQueueData(newStoreFilter || storeNumber, userRole);
+    }
   };
 
   return (
     <div className="dashboard-container">
       <h1 className="text-2xl font-bold text-center mb-4">Dashboard</h1>
       
-      {/* Store Filter Dropdown - Show for all users, but especially useful for admins */}
-      <div className="store-filter-container">
-        <label htmlFor="storeFilter">Filter by Store: </label>
-        <select 
-          id="storeFilter" 
-          value={storeFilter} 
-          onChange={handleStoreFilterChange}
-          className="store-filter-dropdown"
-        >
-          {userRole === "admin" && <option value="">All Stores</option>}
-          {uniqueStores.map(store => (
-            <option key={store} value={store.toString()}>Store {store}</option>
-          ))}
-        </select>
-      </div>
+      {/* Store Filter Dropdown - ONLY show for admins */}
+      {userRole === "admin" && (
+        <div className="store-filter-container">
+          <label htmlFor="storeFilter">Filter by Store: </label>
+          <select 
+            id="storeFilter" 
+            value={storeFilter} 
+            onChange={handleStoreFilterChange}
+            className="store-filter-dropdown"
+          >
+            <option value="">All Stores</option>
+            {uniqueStores.map(store => (
+              <option key={store} value={store.toString()}>Store {store}</option>
+            ))}
+          </select>
+        </div>
+      )}
+      
+      {/* Current Store Display for non-admins */}
+      {userRole !== "admin" && storeNumber && (
+        <div className="current-store">
+          <p>Store: {storeNumber}</p>
+        </div>
+      )}
       
       {/* Agents Waiting Section */}
       <div className="dashboard-section">
@@ -392,11 +413,24 @@ export default function Dashboard() {
           min-width: 150px;
         }
         
+        .current-store {
+          text-align: center;
+          margin-bottom: 20px;
+          padding: 8px;
+          background-color: rgba(0, 123, 255, 0.1);
+          border-radius: var(--border-radius);
+          font-weight: bold;
+        }
+        
         @media (prefers-color-scheme: dark) {
           .store-filter-dropdown {
             background-color: #333;
             color: white;
             border-color: var(--primary-color);
+          }
+          
+          .current-store {
+            background-color: rgba(0, 123, 255, 0.2);
           }
         }
         
