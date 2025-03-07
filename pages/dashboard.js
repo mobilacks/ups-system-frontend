@@ -321,6 +321,13 @@ export default function Dashboard() {
     <div className="dashboard-container">
       <h1 className="text-2xl font-bold text-center mb-4">Dashboard</h1>
       
+      {/* Welcome Message showing logged-in user */}
+      {user && (
+        <div className="welcome-message">
+          Welcome, <span className="user-name">{agentNames[user.email]?.name || user.email}</span>
+        </div>
+      )}
+      
       {/* Store Filter Dropdown - ONLY show for admins */}
       {userRole === "admin" && (
         <div className="store-filter-container">
