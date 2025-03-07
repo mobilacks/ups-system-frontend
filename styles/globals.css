@@ -598,9 +598,24 @@ input[type="number"] {
   text-align: left;
 }
 
-.admin-table th {
-  background-color: var(--primary-color);
-  color: white;
+/* Add this to your globals.css to fix the admin table headers in dark mode */
+
+@media (prefers-color-scheme: dark) {
+  .admin-table th {
+    background-color: var(--primary-color);
+    color: white;
+  }
+  
+  .admin-section table th {
+    background-color: var(--primary-color);
+    color: white;
+  }
+  
+  /* Additional override for any other tables */
+  table th {
+    background-color: var(--primary-color) !important;
+    color: white !important;
+  }
 }
 
 @media (prefers-color-scheme: dark) {
