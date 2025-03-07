@@ -79,13 +79,22 @@ export default function Navbar() {
       <ul>
         <li><a href="/dashboard">Dashboard</a></li>
         <li><a href="/stats">Stats</a></li>
-        {role === "store_manager" && <li><a href="/logs">Logs</a></li>}
-        {role === "admin" && (
-          <>
-            <li><a href="/admin">Admin</a></li>
-            <li><a href="/logs">Logs</a></li>
-          </>
+        
+        {/* Store Manager & Admin can access Logs */}
+        {(role === "store_manager" || role === "admin") && (
+          <li><a href="/logs">Logs</a></li>
         )}
+        
+        {/* Store Manager & Admin can access Sales */}
+        {(role === "store_manager" || role === "admin") && (
+          <li><a href="/sales">Sales</a></li>
+        )}
+        
+        {/* Only Admin can access Admin page */}
+        {role === "admin" && (
+          <li><a href="/admin">Admin</a></li>
+        )}
+        
         <li><button className="logout-btn" onClick={handleLogout}>Logout</button></li>
       </ul>
     </nav>
