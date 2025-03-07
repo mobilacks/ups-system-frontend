@@ -884,3 +884,24 @@ input[type="number"] {
     background-color: rgba(244, 67, 54, 0.2); /* Darker red background for dark mode */
   }
 }
+
+/* Welcome message styling */
+.welcome-message {
+  text-align: center;
+  margin-bottom: 15px;
+  padding: 10px;
+  background-color: rgba(0, 123, 255, 0.1);
+  border-radius: var(--border-radius);
+  font-size: 18px;
+}
+
+.user-name {
+  font-weight: bold;
+  color: var(--primary-color);
+}
+
+@media (prefers-color-scheme: dark) {
+  .welcome-message {
+    background-color: rgba(0, 123, 255, 0.2);
+  }
+}
