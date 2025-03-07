@@ -107,11 +107,27 @@ export default function Dashboard() {
   }
 
   const handleQueueAction = async (action, email) => {
-    // All roles can now manage all users in the queue
+    // Special handling for move_to_with_customer which has the updated function signature
+    if (action === "move_to_with_customer") {
+      console.log("Moving agent to With Customer:", email, "Actor:", user.email);
+      const { error } = await supabase.rpc("move_to_with_customer", { 
+        p_email: email,
+        p_actor_email: user.email 
+      });
+      
+      if (error) {
+        console.error("Error moving agent to With Customer:", error);
+      } else {
+        console.log("✅ Agent moved to With Customer successfully!");
+        fetchQueueData(storeNumber);
+      }
+      return;
+    }
+    
+    // Handle other actions with the old function signatures
     const functionMap = {
       "join_queue": "join_queue",
       "move_to_agents_waiting": "move_to_agents_waiting",
-      "move_to_with_customer": "move_to_with_customer",
       "move_to_in_queue": "move_to_in_queue"
     };
 
