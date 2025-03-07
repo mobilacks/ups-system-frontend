@@ -123,26 +123,31 @@ function SalesPage() {
     try {
       console.log("Fetching sales with date range:", startDate, "to", endDate);
       
-      // Use a direct SQL query to handle timezone properly
-      const { data: salesData, error: salesError } = await supabase
-        .rpc('get_sales_by_date_range', { 
-          p_start_date: startDate,
-          p_end_date: endDate
-        });
+      let salesData = [];
       
-      if (salesError) {
-        console.error("Error from RPC function:", salesError);
-        
-        // Fallback to regular query if RPC fails
+      // Try the RPC function first
+      try {
+        const { data, error } = await supabase
+          .rpc('get_sales_by_date_range', { 
+            p_start_date: startDate,
+            p_end_date: endDate
+          });
+          
+        if (error) throw error;
+        salesData = data || [];
+      } catch (rpcError) {
+        // If RPC fails, fall back to regular query
+        console.error("Error from RPC function:", rpcError);
         console.log("Falling back to regular query");
-        const { data: fallbackData, error: fallbackError } = await supabase
+        
+        const { data, error } = await supabase
           .from("sales")
           .select("*")
           .gte("sale_date", startDate)
           .lte("sale_date", endDate + "T23:59:59");
           
-        if (fallbackError) throw fallbackError;
-        salesData = fallbackData;
+        if (error) throw error;
+        salesData = data || [];
       }
       
       console.log("Filtered sales data:", salesData);
