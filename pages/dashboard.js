@@ -106,13 +106,16 @@ export default function Dashboard() {
   async function fetchAllAgentNames() {
     const { data, error } = await supabase
       .from("agents")
-      .select("email, name");
+      .select("email, name, status");
     
     if (!error && data) {
-      // Create a mapping of email -> name
+      // Create a mapping of email -> name and email -> status
       const namesMap = {};
       data.forEach(agent => {
-        namesMap[agent.email] = agent.name;
+        namesMap[agent.email] = {
+          name: agent.name,
+          status: agent.status
+        };
       });
       setAgentNames(namesMap);
     } else {
@@ -132,7 +135,7 @@ export default function Dashboard() {
     
     console.log("Fetching queue data with role:", userRole, "storeFilter:", storeFilter);
     
-    let query = supabase.from("queue").select("*").order("queue_joined_at", { ascending: true });
+    let query = supabase.from("queue").select("*, agents!inner(status)").order("queue_joined_at", { ascending: true });
 
     // For admins, apply store filter if selected
     if (userRole === "admin" && storeFilter) {
@@ -152,6 +155,10 @@ export default function Dashboard() {
 
     if (!error && data) {
       console.log("Queue data fetched:", data.length, "records");
+      
+      // Refresh agent status information
+      fetchAllAgentNames();
+      
       setAgentsWaiting(data.filter(a => a.agents_waiting));
       setInQueue(data.filter(a => a.in_queue));
       setWithCustomer(data.filter(a => a.with_customer));
@@ -166,7 +173,9 @@ export default function Dashboard() {
       "join_queue": "join_queue",
       "move_to_agents_waiting": "move_to_agents_waiting",
       "move_to_with_customer": "move_to_with_customer",
-      "move_to_in_queue": "move_to_in_queue"
+      "move_to_in_queue": "move_to_in_queue",
+      "set_agent_on_break": "set_agent_on_break",
+      "set_agent_ready": "set_agent_ready"
     };
 
     console.log(`Performing ${action} for ${email}, actor: ${user.email}`);
@@ -258,42 +267,55 @@ export default function Dashboard() {
 
   // Helper function to get agent name or fallback to email
   const getAgentName = (email) => {
-    return agentNames[email] || email;
+    return agentNames[email]?.name || email;
+  };
+  
+  // Helper function to check if agent is on break
+  const isAgentOnBreak = (email, queueRecord) => {
+    // First check the queue record's on_break flag
+    if (queueRecord && queueRecord.on_break === true) return true;
+    
+    // Then check the agent's status in the agents table
+    return agentNames[email]?.status === 'on_break';
   };
 
-// Handle store filter change
-const handleStoreFilterChange = (e) => {
-  // Only admins can change the store filter
-  if (userRole === "admin") {
-    const newStoreFilter = e.target.value;
-    console.log("Admin changing store filter to:", newStoreFilter);
-    setStoreFilter(newStoreFilter);
-    
-    // Fetch data directly with the new filter value instead of depending on state update
-    let query = supabase.from("queue").select("*").order("queue_joined_at", { ascending: true });
-    
-    // Use the new filter value directly rather than depending on state
-    if (newStoreFilter) {
-      console.log("Filtering to store:", newStoreFilter);
-      query = query.eq("store_number", newStoreFilter);
-    } else {
-      console.log("Showing all stores");
-      // No filter needed for all stores
-    }
-    
-    // Execute the query with the new filter
-    query.then(({ data, error }) => {
-      if (!error && data) {
-        console.log("Queue data fetched with new filter:", data.length, "records");
-        setAgentsWaiting(data.filter(a => a.agents_waiting));
-        setInQueue(data.filter(a => a.in_queue));
-        setWithCustomer(data.filter(a => a.with_customer));
+  // Handle store filter change
+  const handleStoreFilterChange = (e) => {
+    // Only admins can change the store filter
+    if (userRole === "admin") {
+      const newStoreFilter = e.target.value;
+      console.log("Admin changing store filter to:", newStoreFilter);
+      setStoreFilter(newStoreFilter);
+      
+      // Fetch data directly with the new filter value instead of depending on state update
+      let query = supabase.from("queue").select("*, agents!inner(status)").order("queue_joined_at", { ascending: true });
+      
+      // Use the new filter value directly rather than depending on state
+      if (newStoreFilter) {
+        console.log("Filtering to store:", newStoreFilter);
+        query = query.eq("store_number", newStoreFilter);
       } else {
-        console.error("Error fetching queue data:", error);
+        console.log("Showing all stores");
+        // No filter needed for all stores
       }
-    });
-  }
-};
+      
+      // Execute the query with the new filter
+      query.then(({ data, error }) => {
+        if (!error && data) {
+          console.log("Queue data fetched with new filter:", data.length, "records");
+          
+          // Refresh agent status information
+          fetchAllAgentNames();
+          
+          setAgentsWaiting(data.filter(a => a.agents_waiting));
+          setInQueue(data.filter(a => a.in_queue));
+          setWithCustomer(data.filter(a => a.with_customer));
+        } else {
+          console.error("Error fetching queue data:", error);
+        }
+      });
+    }
+  };
 
   return (
     <div className="dashboard-container">
@@ -315,8 +337,8 @@ const handleStoreFilterChange = (e) => {
             ))}
           </select>
           
-          {/* Debug display - current filter */}
-          <div className="debug-info">
+          {/* Current filter display */}
+          <div className="current-filter">
             Showing: {storeFilter ? `Store ${storeFilter}` : "All Stores"}
           </div>
         </div>
@@ -343,13 +365,38 @@ const handleStoreFilterChange = (e) => {
           <tbody>
             {agentsWaiting.length > 0 ? (
               agentsWaiting.map(agent => (
-                <tr key={agent.email}>
-                  <td>{getAgentName(agent.email)}</td>
+                <tr key={agent.email} className={isAgentOnBreak(agent.email, agent) ? "on-break" : ""}>
+                  <td className={isAgentOnBreak(agent.email, agent) ? "agent-on-break" : ""}>
+                    {getAgentName(agent.email)}
+                    {isAgentOnBreak(agent.email, agent) && <span className="break-indicator"> (ON BREAK)</span>}
+                  </td>
                   <td>{agent.store_number}</td>
                   <td>
-                    <button className="btn-primary" onClick={() => handleQueueAction("join_queue", agent.email)}>
-                      Join Queue
-                    </button>
+                    {isAgentOnBreak(agent.email, agent) ? (
+                      // Show Ready button if agent is on break
+                      <button 
+                        className="btn-ready" 
+                        onClick={() => handleQueueAction("set_agent_ready", agent.email)}
+                      >
+                        READY
+                      </button>
+                    ) : (
+                      // Show Join Queue and Break buttons if agent is not on break
+                      <div className="button-group">
+                        <button 
+                          className="btn-primary" 
+                          onClick={() => handleQueueAction("join_queue", agent.email)}
+                        >
+                          Join Queue
+                        </button>
+                        <button 
+                          className="btn-break" 
+                          onClick={() => handleQueueAction("set_agent_on_break", agent.email)}
+                        >
+                          ON BREAK
+                        </button>
+                      </div>
+                    )}
                   </td>
                 </tr>
               ))
@@ -437,7 +484,7 @@ const handleStoreFilterChange = (e) => {
         </table>
       </div>
       
-      {/* Add styling for store filter and empty states */}
+      {/* Add styling for store filter, break status, and empty states */}
       <style jsx>{`
         .store-filter-container {
           margin-bottom: 20px;
@@ -456,19 +503,14 @@ const handleStoreFilterChange = (e) => {
           min-width: 150px;
         }
         
-        .current-store {
+        .current-store,
+        .current-filter {
           text-align: center;
           margin-bottom: 20px;
           padding: 8px;
           background-color: rgba(0, 123, 255, 0.1);
           border-radius: var(--border-radius);
           font-weight: bold;
-        }
-        
-        .debug-info {
-          font-size: 14px;
-          color: #666;
-          margin-top: 5px;
         }
         
         @media (prefers-color-scheme: dark) {
@@ -478,12 +520,9 @@ const handleStoreFilterChange = (e) => {
             border-color: var(--primary-color);
           }
           
-          .current-store {
+          .current-store,
+          .current-filter {
             background-color: rgba(0, 123, 255, 0.2);
-          }
-          
-          .debug-info {
-            color: #aaa;
           }
         }
         
@@ -499,15 +538,54 @@ const handleStoreFilterChange = (e) => {
           color: #777;
         }
         
-        .action-buttons {
+        .action-buttons,
+        .button-group {
           display: flex;
           flex-wrap: wrap;
           gap: 5px;
         }
         
+        .agent-on-break {
+          color: #f44336; /* Red text for agents on break */
+          font-weight: bold;
+        }
+        
+        .break-indicator {
+          font-style: italic;
+          font-size: 0.9em;
+        }
+        
+        .btn-break {
+          background-color: #f44336; /* Red button for ON BREAK */
+          color: white;
+          border: none;
+          padding: 8px 12px;
+          border-radius: var(--border-radius);
+          cursor: pointer;
+          font-weight: bold;
+        }
+        
+        .btn-ready {
+          background-color: #4caf50; /* Green button for READY */
+          color: white;
+          border: none;
+          padding: 8px 12px;
+          border-radius: var(--border-radius);
+          cursor: pointer;
+          font-weight: bold;
+        }
+        
+        .on-break {
+          background-color: rgba(244, 67, 54, 0.1); /* Light red background for rows */
+        }
+        
         @media (prefers-color-scheme: dark) {
           .no-agents {
             color: #aaa;
+          }
+          
+          .on-break {
+            background-color: rgba(244, 67, 54, 0.2); /* Darker red background for dark mode */
           }
         }
       `}</style>
