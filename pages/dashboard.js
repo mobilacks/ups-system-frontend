@@ -107,11 +107,7 @@ export default function Dashboard() {
   }
 
   const handleQueueAction = async (action, email) => {
-    if (userRole !== "admin" && email !== user.email) {
-      alert("You can only manage your own queue status!");
-      return;
-    }
-
+    // All roles can now manage all users in the queue
     const functionMap = {
       "join_queue": "join_queue",
       "move_to_agents_waiting": "move_to_agents_waiting",
@@ -128,11 +124,7 @@ export default function Dashboard() {
   };
 
   async function handleSaleClosure(email) {
-    if (userRole !== "admin" && email !== user.email) {
-      alert("You can only log your own sales!");
-      return;
-    }
-
+    // All roles can now manage sales for all users
     let contractNumber;
     while (!contractNumber) {
       contractNumber = prompt("Enter Contract # (Required)");
@@ -162,11 +154,7 @@ export default function Dashboard() {
   }
 
   async function handleNoSale(email) {
-    if (userRole !== "admin" && email !== user.email) {
-      alert("You can only log your own no-sale reasons!");
-      return;
-    }
-
+    // All roles can now manage no-sales for all users
     let reason;
     while (!reason) {
       reason = prompt(
@@ -222,11 +210,10 @@ export default function Dashboard() {
                 <td>{getAgentName(agent.email)}</td>
                 <td>{agent.store_number}</td>
                 <td>
-                  {(agent.email === user.email || userRole === "admin") && (
-                    <button className="btn-primary" onClick={() => handleQueueAction("join_queue", agent.email)}>
-                      Join Queue
-                    </button>
-                  )}
+                  {/* All roles can manage all users */}
+                  <button className="btn-primary" onClick={() => handleQueueAction("join_queue", agent.email)}>
+                    Join Queue
+                  </button>
                 </td>
               </tr>
             ))}
@@ -251,16 +238,15 @@ export default function Dashboard() {
                 <td>{getAgentName(agent.email)}</td>
                 <td>{agent.store_number}</td>
                 <td>
-                  {(agent.email === user.email || userRole === "admin") && (
-                    <>
-                      <button className="btn-green" onClick={() => handleQueueAction("move_to_with_customer", agent.email)}>
-                        With Customer
-                      </button>
-                      <button className="btn-red" onClick={() => handleQueueAction("move_to_agents_waiting", agent.email)}>
-                        Move to Agents Waiting
-                      </button>
-                    </>
-                  )}
+                  {/* All roles can manage all users */}
+                  <>
+                    <button className="btn-green" onClick={() => handleQueueAction("move_to_with_customer", agent.email)}>
+                      With Customer
+                    </button>
+                    <button className="btn-red" onClick={() => handleQueueAction("move_to_agents_waiting", agent.email)}>
+                      Move to Agents Waiting
+                    </button>
+                  </>
                 </td>
               </tr>
             ))}
@@ -284,19 +270,18 @@ export default function Dashboard() {
                 <td>{getAgentName(agent.email)}</td>
                 <td>{agent.store_number}</td>
                 <td>
-                  {(agent.email === user.email || userRole === "admin") && (
-                    <>
-                      <button className="btn-primary" onClick={() => handleQueueAction("move_to_in_queue", agent.email)}>
-                        Back to Queue
-                      </button>
-                      <button className="btn-green" onClick={() => handleSaleClosure(agent.email)}>
-                        Close Sale
-                      </button>
-                      <button className="btn-yellow" onClick={() => handleNoSale(agent.email)}>
-                        No Sale
-                      </button>
-                    </>
-                  )}
+                  {/* All roles can manage all users */}
+                  <>
+                    <button className="btn-primary" onClick={() => handleQueueAction("move_to_in_queue", agent.email)}>
+                      Back to Queue
+                    </button>
+                    <button className="btn-green" onClick={() => handleSaleClosure(agent.email)}>
+                      Close Sale
+                    </button>
+                    <button className="btn-yellow" onClick={() => handleNoSale(agent.email)}>
+                      No Sale
+                    </button>
+                  </>
                 </td>
               </tr>
             ))}
