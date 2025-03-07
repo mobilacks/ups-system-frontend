@@ -130,43 +130,6 @@ export default function Dashboard() {
     }
   }
 
-  async function fetchQueueData() {
-    if (!userRole) return; // Don't fetch if role isn't set yet
-    
-    console.log("Fetching queue data with role:", userRole, "storeFilter:", storeFilter);
-    
-    let query = supabase.from("queue").select("*, agents!inner(status)").order("queue_joined_at", { ascending: true });
-
-    // For admins, apply store filter if selected
-    if (userRole === "admin" && storeFilter) {
-      console.log("Admin with store filter:", storeFilter);
-      query = query.eq("store_number", storeFilter);
-    } else if (userRole === "admin" && !storeFilter) {
-      // Admin with no filter - show all stores
-      console.log("Admin with no filter - showing all stores");
-      // No additional filter needed
-    } else {
-      // Non-admins always see only their store
-      console.log("Non-admin - filtering to store:", storeNumber);
-      query = query.eq("store_number", storeNumber);
-    }
-
-    const { data, error } = await query;
-
-    if (!error && data) {
-      console.log("Queue data fetched:", data.length, "records");
-      
-      // Refresh agent status information
-      fetchAllAgentNames();
-      
-      setAgentsWaiting(data.filter(a => a.agents_waiting));
-      setInQueue(data.filter(a => a.in_queue));
-      setWithCustomer(data.filter(a => a.with_customer));
-    } else {
-      console.error("Error fetching queue data:", error);
-    }
-  }
-
   const handleQueueAction = async (action, email) => {
     // All of our functions now use the new signature with actor email
     const functionMap = {
@@ -209,7 +172,7 @@ export default function Dashboard() {
 
     saleAmount = parseFloat(saleAmount);
 
-    console.log(`Recording sale for ${email}, amount: $${saleAmount}, contract: ${contractNumber}, actor: ${user.email}`);
+    console.log(`Recording sale for ${email}, amount: ${saleAmount}, contract: ${contractNumber}, actor: ${user.email}`);
     
     // Pass both the target email and the actor email (current user)
     const { error } = await supabase.rpc("close_sale", {
@@ -316,6 +279,43 @@ export default function Dashboard() {
       });
     }
   };
+
+  async function fetchQueueData() {
+    if (!userRole) return; // Don't fetch if role isn't set yet
+    
+    console.log("Fetching queue data with role:", userRole, "storeFilter:", storeFilter);
+    
+    let query = supabase.from("queue").select("*, agents!inner(status)").order("queue_joined_at", { ascending: true });
+
+    // For admins, apply store filter if selected
+    if (userRole === "admin" && storeFilter) {
+      console.log("Admin with store filter:", storeFilter);
+      query = query.eq("store_number", storeFilter);
+    } else if (userRole === "admin" && !storeFilter) {
+      // Admin with no filter - show all stores
+      console.log("Admin with no filter - showing all stores");
+      // No additional filter needed
+    } else {
+      // Non-admins always see only their store
+      console.log("Non-admin - filtering to store:", storeNumber);
+      query = query.eq("store_number", storeNumber);
+    }
+
+    const { data, error } = await query;
+
+    if (!error && data) {
+      console.log("Queue data fetched:", data.length, "records");
+      
+      // Refresh agent status information
+      fetchAllAgentNames();
+      
+      setAgentsWaiting(data.filter(a => a.agents_waiting));
+      setInQueue(data.filter(a => a.in_queue));
+      setWithCustomer(data.filter(a => a.with_customer));
+    } else {
+      console.error("Error fetching queue data:", error);
+    }
+  }
 
   return (
     <div className="dashboard-container">
@@ -483,112 +483,5 @@ export default function Dashboard() {
           </tbody>
         </table>
       </div>
-      
-      {/* Add styling for store filter, break status, and empty states */}
-      <style jsx>{`
-        .store-filter-container {
-          margin-bottom: 20px;
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          justify-content: center;
-          gap: 10px;
-        }
-        
-        .store-filter-dropdown {
-          padding: 8px;
-          border-radius: var(--border-radius);
-          border: 2px solid var(--primary-color);
-          background-color: white;
-          min-width: 150px;
-        }
-        
-        .current-store,
-        .current-filter {
-          text-align: center;
-          margin-bottom: 20px;
-          padding: 8px;
-          background-color: rgba(0, 123, 255, 0.1);
-          border-radius: var(--border-radius);
-          font-weight: bold;
-        }
-        
-        @media (prefers-color-scheme: dark) {
-          .store-filter-dropdown {
-            background-color: #333;
-            color: white;
-            border-color: var(--primary-color);
-          }
-          
-          .current-store,
-          .current-filter {
-            background-color: rgba(0, 123, 255, 0.2);
-          }
-        }
-        
-        .store-filter-dropdown:focus {
-          outline: none;
-          box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
-        }
-        
-        .no-agents {
-          text-align: center;
-          padding: 15px;
-          font-style: italic;
-          color: #777;
-        }
-        
-        .action-buttons,
-        .button-group {
-          display: flex;
-          flex-wrap: wrap;
-          gap: 5px;
-        }
-        
-        .agent-on-break {
-          color: #f44336; /* Red text for agents on break */
-          font-weight: bold;
-        }
-        
-        .break-indicator {
-          font-style: italic;
-          font-size: 0.9em;
-        }
-        
-        .btn-break {
-          background-color: #f44336; /* Red button for ON BREAK */
-          color: white;
-          border: none;
-          padding: 8px 12px;
-          border-radius: var(--border-radius);
-          cursor: pointer;
-          font-weight: bold;
-        }
-        
-        .btn-ready {
-          background-color: #4caf50; /* Green button for READY */
-          color: white;
-          border: none;
-          padding: 8px 12px;
-          border-radius: var(--border-radius);
-          cursor: pointer;
-          font-weight: bold;
-        }
-        
-        .on-break {
-          background-color: rgba(244, 67, 54, 0.1); /* Light red background for rows */
-        }
-        
-        @media (prefers-color-scheme: dark) {
-          .no-agents {
-            color: #aaa;
-          }
-          
-          .on-break {
-            background-color: rgba(244, 67, 54, 0.2); /* Darker red background for dark mode */
-          }
-        }
-      `}</style>
     </div>
   );
-}
