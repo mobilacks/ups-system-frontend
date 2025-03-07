@@ -107,20 +107,44 @@ function SalesPage() {
     setEndDate(newEndDate ? newEndDate.toISOString().split("T")[0] : "");
   };
 
-  // Fetch sales data with agent names
-  const fetchSales = async () => {
-    setLoading(true);
+// Replace your current fetchSales function with this debug version
+const fetchSales = async () => {
+  setLoading(true);
+  
+  try {
+    console.log("Fetching sales with date range:", startDate, "to", endDate);
     
-    try {
-      // First, fetch all sales for the selected date range
-      const { data: salesData, error: salesError } = await supabase
-        .from("sales")
-        .select("*")
-        .gte("sale_date", startDate)
-        .lte("sale_date", endDate);
-        
-      if (salesError) throw salesError;
+    // First, let's fetch without date filtering to see all data
+    const { data: allSalesData, error: allSalesError } = await supabase
+      .from("sales")
+      .select("*");
       
+    if (allSalesError) throw allSalesError;
+    console.log("All sales data:", allSalesData);
+    
+    // Then, fetch with date filtering
+    const { data: salesData, error: salesError } = await supabase
+      .from("sales")
+      .select("*")
+      .gte("sale_date", startDate)
+      .lte("sale_date", endDate);
+      
+    if (salesError) throw salesError;
+    console.log("Filtered sales data:", salesData);
+    
+    // Log today's sales separately to check
+    const today = new Date().toISOString().split('T')[0];
+    console.log("Today's date for comparison:", today);
+    const todaySales = allSalesData.filter(sale => 
+      sale.sale_date.startsWith(today)
+    );
+    console.log("Today's sales found in raw data:", todaySales);
+    
+    // Continue with your existing code...
+    const { data: agentsData, error: agentsError } = await supabase
+      .from("agents")
+      .select("email, name, store_number");
+    // ...rest of your function
       // Then fetch agent information to get names
       const { data: agentsData, error: agentsError } = await supabase
         .from("agents")
