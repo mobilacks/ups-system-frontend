@@ -40,13 +40,13 @@ function SalesPage() {
           .single();
           
         if (data && !error) {
-          if (data.role === "admin") {
-            setIsAdmin(true);
-          } else {
-            // Redirect non-admin users
-            alert("You don't have permission to access this page.");
-            router.push("/dashboard");
-          }
+          if (data.role === "admin" || data.role === "store_manager") {
+  setIsAdmin(true);
+} else {
+  // Redirect users who are neither admin nor store_manager
+  alert("You don't have permission to access this page.");
+  router.push("/dashboard");
+}
         }
       }
     };
