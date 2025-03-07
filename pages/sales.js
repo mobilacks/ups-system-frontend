@@ -291,8 +291,7 @@ function SalesPage() {
   return (
     <div className="sales-container">
       <h1>Sales Management</h1>
-      <p className="admin-note">This page is only accessible to admins.</p>
-
+<p className="admin-note">This page is only accessible to admins and store managers.</p>
       {/* Filters Section */}
       <div className="filters">
         <input
