@@ -163,7 +163,7 @@ export default function Dashboard() {
   };
 
   async function handleSaleClosure(email) {
-    // All roles can now manage sales for all users
+    // Updated to include actor tracking
     let contractNumber;
     while (!contractNumber) {
       contractNumber = prompt("Enter Contract # (Required)");
@@ -178,7 +178,9 @@ export default function Dashboard() {
 
     saleAmount = parseFloat(saleAmount);
 
-    // Updated to include the actor email
+    console.log(`Recording sale for ${email}, amount: $${saleAmount}, contract: ${contractNumber}, actor: ${user.email}`);
+    
+    // Pass both the target email and the actor email (current user)
     const { error } = await supabase.rpc("close_sale", {
       p_email: email,
       p_contract_number: contractNumber,
@@ -191,11 +193,12 @@ export default function Dashboard() {
       fetchQueueData(storeFilter || storeNumber);
     } else {
       console.error("❌ Error closing sale:", error);
+      alert("Error recording sale. Please try again.");
     }
   }
 
   async function handleNoSale(email) {
-    // All roles can now manage no-sales for all users
+    // Updated to include actor tracking
     let reason;
     while (!reason) {
       reason = prompt(
@@ -213,7 +216,9 @@ export default function Dashboard() {
       }
     }
 
-    // Updated to include the actor email
+    console.log(`Recording no sale for ${email}, reason: ${reason.reason_text}, actor: ${user.email}`);
+    
+    // Pass both the target email and the actor email (current user)
     const { error } = await supabase.rpc("no_sale", {
       p_email: email,
       p_reason: reason.reason_text,
@@ -225,6 +230,7 @@ export default function Dashboard() {
       fetchQueueData(storeFilter || storeNumber);
     } else {
       console.error("❌ Error logging no sale:", error);
+      alert("Error recording no sale. Please try again.");
     }
   }
 
