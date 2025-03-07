@@ -343,21 +343,7 @@ function SalesPage() {
         </div>
       </div>
 
-      {/* Summary Stats */}
-      <div className="sales-summary">
-        <div className="summary-item">
-          <div className="summary-label">Total Sales:</div>
-          <div className="summary-value">${totalSales.toFixed(2)}</div>
-        </div>
-        <div className="summary-item">
-          <div className="summary-label">Sales Count:</div>
-          <div className="summary-value">{filteredSales.length}</div>
-        </div>
-        <div className="summary-item">
-          <div className="summary-label">Date Range:</div>
-          <div className="summary-value">{startDate} to {endDate}</div>
-        </div>
-      </div>
+
 
       {/* Sales Table */}
       <div className="table-container">
