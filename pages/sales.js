@@ -23,6 +23,7 @@ function SalesPage() {
   // State for UI
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [totalSales, setTotalSales] = useState(0);
   
   const router = useRouter();
 
@@ -122,31 +123,29 @@ function SalesPage() {
     try {
       console.log("Fetching sales with date range:", startDate, "to", endDate);
       
-      // First, let's fetch without date filtering to see all data
-      const { data: allSalesData, error: allSalesError } = await supabase
-        .from("sales")
-        .select("*");
-        
-      if (allSalesError) throw allSalesError;
-      console.log("All sales data:", allSalesData);
-      
-      // Then, fetch with date filtering
+      // Use a direct SQL query to handle timezone properly
       const { data: salesData, error: salesError } = await supabase
-        .from("sales")
-        .select("*")
-        .gte("sale_date", startDate)
-        .lte("sale_date", endDate);
-        
-      if (salesError) throw salesError;
-      console.log("Filtered sales data:", salesData);
+        .rpc('get_sales_by_date_range', { 
+          p_start_date: startDate,
+          p_end_date: endDate
+        });
       
-      // Log today's sales separately to check
-      const today = new Date().toISOString().split('T')[0];
-      console.log("Today's date for comparison:", today);
-      const todaySales = allSalesData.filter(sale => 
-        sale.sale_date && sale.sale_date.startsWith(today)
-      );
-      console.log("Today's sales found in raw data:", todaySales);
+      if (salesError) {
+        console.error("Error from RPC function:", salesError);
+        
+        // Fallback to regular query if RPC fails
+        console.log("Falling back to regular query");
+        const { data: fallbackData, error: fallbackError } = await supabase
+          .from("sales")
+          .select("*")
+          .gte("sale_date", startDate)
+          .lte("sale_date", endDate + "T23:59:59");
+          
+        if (fallbackError) throw fallbackError;
+        salesData = fallbackData;
+      }
+      
+      console.log("Filtered sales data:", salesData);
       
       // Then fetch agent information to get names
       const { data: agentsData, error: agentsError } = await supabase
@@ -165,13 +164,18 @@ function SalesPage() {
       });
       
       // Combine sales data with agent information
-      const combinedData = salesData.map(sale => ({
+      const combinedData = (salesData || []).map(sale => ({
         ...sale,
         name: agentMap[sale.email]?.name || "Unknown",
         store_number: agentMap[sale.email]?.store_number || 0
       }));
       
       console.log("✅ Combined sales data:", combinedData);
+      
+      // Calculate total sales amount
+      const total = combinedData.reduce((sum, sale) => sum + (parseFloat(sale.sale_amount) || 0), 0);
+      setTotalSales(total);
+      
       setSales(combinedData);
       setFilteredSales(combinedData);
     } catch (error) {
@@ -334,9 +338,20 @@ function SalesPage() {
         </div>
       </div>
 
-      {/* Current Date Range Display for debugging */}
-      <div className="debug-info">
-        <p>Showing sales from {startDate} to {endDate}</p>
+      {/* Summary Stats */}
+      <div className="sales-summary">
+        <div className="summary-item">
+          <div className="summary-label">Total Sales:</div>
+          <div className="summary-value">${totalSales.toFixed(2)}</div>
+        </div>
+        <div className="summary-item">
+          <div className="summary-label">Sales Count:</div>
+          <div className="summary-value">{filteredSales.length}</div>
+        </div>
+        <div className="summary-item">
+          <div className="summary-label">Date Range:</div>
+          <div className="summary-value">{startDate} to {endDate}</div>
+        </div>
       </div>
 
       {/* Sales Table */}
@@ -400,8 +415,8 @@ function SalesPage() {
                       <td>{sale.name}</td>
                       <td>{sale.store_number}</td>
                       <td>{sale.contract_number}</td>
-                      <td>${sale.sale_amount?.toFixed(2) || "0.00"}</td>
-                      <td>{sale.sale_date ? new Date(sale.sale_date).toLocaleDateString() : "N/A"}</td>
+                      <td>${parseFloat(sale.sale_amount).toFixed(2)}</td>
+                      <td>{new Date(sale.sale_date).toLocaleDateString()}</td>
                       <td className="action-buttons">
                         <button
                           onClick={() => handleEditClick(sale)}
