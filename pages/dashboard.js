@@ -261,20 +261,39 @@ export default function Dashboard() {
     return agentNames[email] || email;
   };
 
-  // Handle store filter change
-  const handleStoreFilterChange = (e) => {
-    // Only admins can change the store filter
-    if (userRole === "admin") {
-      const newStoreFilter = e.target.value;
-      console.log("Admin changing store filter to:", newStoreFilter);
-      setStoreFilter(newStoreFilter);
-      
-      // Use setTimeout to ensure state is updated before fetching
-      setTimeout(() => {
-        fetchQueueData();
-      }, 10);
+// Handle store filter change
+const handleStoreFilterChange = (e) => {
+  // Only admins can change the store filter
+  if (userRole === "admin") {
+    const newStoreFilter = e.target.value;
+    console.log("Admin changing store filter to:", newStoreFilter);
+    setStoreFilter(newStoreFilter);
+    
+    // Fetch data directly with the new filter value instead of depending on state update
+    let query = supabase.from("queue").select("*").order("queue_joined_at", { ascending: true });
+    
+    // Use the new filter value directly rather than depending on state
+    if (newStoreFilter) {
+      console.log("Filtering to store:", newStoreFilter);
+      query = query.eq("store_number", newStoreFilter);
+    } else {
+      console.log("Showing all stores");
+      // No filter needed for all stores
     }
-  };
+    
+    // Execute the query with the new filter
+    query.then(({ data, error }) => {
+      if (!error && data) {
+        console.log("Queue data fetched with new filter:", data.length, "records");
+        setAgentsWaiting(data.filter(a => a.agents_waiting));
+        setInQueue(data.filter(a => a.in_queue));
+        setWithCustomer(data.filter(a => a.with_customer));
+      } else {
+        console.error("Error fetching queue data:", error);
+      }
+    });
+  }
+};
 
   return (
     <div className="dashboard-container">
