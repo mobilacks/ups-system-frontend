@@ -755,3 +755,132 @@ input[type="number"] {
     flex-direction: column;
   }
 }
+
+/* ✅ ADDED: Dashboard-specific styles from dashboard.js */
+.store-filter-container {
+  margin-bottom: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+
+.store-filter-dropdown {
+  padding: 8px;
+  border-radius: var(--border-radius);
+  border: 2px solid var(--primary-color);
+  background-color: white;
+  min-width: 150px;
+}
+
+.current-store,
+.current-filter {
+  text-align: center;
+  margin-bottom: 20px;
+  padding: 8px;
+  background-color: rgba(0, 123, 255, 0.1);
+  border-radius: var(--border-radius);
+  font-weight: bold;
+}
+
+@media (prefers-color-scheme: dark) {
+  .store-filter-dropdown {
+    background-color: #333;
+    color: white;
+    border-color: var(--primary-color);
+  }
+  
+  .current-store,
+  .current-filter {
+    background-color: rgba(0, 123, 255, 0.2);
+  }
+}
+
+.store-filter-dropdown:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+}
+
+.no-agents {
+  text-align: center;
+  padding: 15px;
+  font-style: italic;
+  color: #777;
+}
+
+.action-buttons,
+.button-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+
+.agent-on-break {
+  color: #f44336; /* Red text for agents on break */
+  font-weight: bold;
+}
+
+.break-indicator {
+  font-style: italic;
+  font-size: 0.9em;
+}
+
+.btn-break {
+  background-color: #f44336; /* Red button for ON BREAK */
+  color: white;
+  border: none;
+  padding: 8px 12px;
+  border-radius: var(--border-radius);
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.btn-ready {
+  background-color: #4caf50; /* Green button for READY */
+  color: white;
+  border: none;
+  padding: 8px 12px;
+  border-radius: var(--border-radius);
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.on-break {
+  background-color: rgba(244, 67, 54, 0.1); /* Light red background for rows */
+}
+
+/* Button color styles */
+.btn-primary {
+  background-color: var(--primary-color);
+  color: white;
+  border: none;
+}
+
+.btn-green {
+  background-color: #4caf50;
+  color: white;
+  border: none;
+}
+
+.btn-red {
+  background-color: #f44336;
+  color: white;
+  border: none;
+}
+
+.btn-yellow {
+  background-color: #ffc107;
+  color: black;
+  border: none;
+}
+
+@media (prefers-color-scheme: dark) {
+  .no-agents {
+    color: #aaa;
+  }
+  
+  .on-break {
+    background-color: rgba(244, 67, 54, 0.2); /* Darker red background for dark mode */
+  }
+}
