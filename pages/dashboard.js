@@ -14,12 +14,56 @@ export default function Dashboard() {
   const [agentNames, setAgentNames] = useState({}); // New state to store agent names
   const [storeFilter, setStoreFilter] = useState(""); // Store filter state
   const [uniqueStores, setUniqueStores] = useState([]); // Unique store numbers
+  const [dataInitialized, setDataInitialized] = useState(false); // Track if data has been initialized
   const router = useRouter();
 
+  // Initial setup on component mount
   useEffect(() => {
-    if (!storeNumber) return;
+    const fetchInitialData = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        setUser(user);
+        // Fetch user's store and role
+        const { data, error } = await supabase
+          .from("agents")
+          .select("store_number, role")
+          .eq("email", user.email)
+          .single();
+
+        if (!error && data) {
+          setStoreNumber(data.store_number);
+          setUserRole(data.role);
+          
+          // Set initial store filter based on role
+          if (data.role === "admin") {
+            // For admins, initialize with no filter (show all stores)
+            setStoreFilter("");
+            // And fetch all stores for the dropdown
+            fetchUniqueStores();
+          } else {
+            // For non-admins, set to their own store
+            setStoreFilter(data.store_number.toString());
+          }
+          
+          // Fetch other necessary data
+          fetchReasons();
+          fetchAllAgentNames();
+          
+          // Mark initialization as complete
+          setDataInitialized(true);
+        }
+      } else {
+        router.push("/login");
+      }
+    };
     
-    fetchQueueData(storeFilter || storeNumber);
+    fetchInitialData();
+  }, []);
+
+  // Subscribe to queue changes once the initial data is loaded
+  useEffect(() => {
+    if (!dataInitialized) return;
+    
     console.log("✅ Subscribing to Supabase Realtime...");
     const queueSubscription = supabase
       .channel("realtime_queue")
@@ -28,36 +72,19 @@ export default function Dashboard() {
         { event: "*", schema: "public", table: "queue" },
         (payload) => {
           console.log("🔄 Queue update detected:", payload);
-          fetchQueueData(storeFilter || storeNumber);
+          fetchQueueData();
         }
       )
       .subscribe();
 
+    // Initial data fetch
+    fetchQueueData();
+      
     return () => {
       console.log("❌ Unsubscribing from Supabase Realtime...");
       supabase.removeChannel(queueSubscription);
     };
-  }, [storeNumber, storeFilter]);
-
-  useEffect(() => {
-    async function fetchUser() {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        setUser(user);
-        fetchUserStore(user.email);
-        fetchReasons();
-        fetchAllAgentNames(); // Fetch all agent names
-        
-        // Only fetch stores if user is admin
-        if (userRole === "admin") {
-          fetchUniqueStores();
-        }
-      } else {
-        router.push("/login");
-      }
-    }
-    fetchUser();
-  }, [userRole]);
+  }, [dataInitialized]);
 
   // New function to fetch all unique store numbers
   async function fetchUniqueStores() {
@@ -93,57 +120,43 @@ export default function Dashboard() {
     }
   }
 
-  async function fetchUserStore(email) {
-    const { data, error } = await supabase
-      .from("agents")
-      .select("store_number, role")
-      .eq("email", email)
-      .single();
-
-    if (!error && data) {
-      setStoreNumber(data.store_number);
-      setUserRole(data.role);
-      
-      // If admin, allow store filtering, but for others, always filter to their store
-      if (data.role === "admin") {
-        setStoreFilter("");
-        // Fetch stores for admins
-        fetchUniqueStores();
-      } else {
-        // For non-admins, set their store as the filter and don't allow changing
-        setStoreFilter(data.store_number.toString());
-      }
-      
-      fetchQueueData(data.store_number, data.role);
-    }
-  }
-
-  async function fetchQueueData(storeNum, userRole) {
-    let query = supabase.from("queue").select("*").order("queue_joined_at", { ascending: true });
-
-    // For admins, apply store filter if selected
-    if (userRole === "admin" && storeFilter) {
-      query = query.eq("store_number", storeFilter);
-    } else if (userRole === "admin" && !storeFilter) {
-      // Admin with no filter - show all stores
-    } else {
-      // Non-admins always see only their store
-      query = query.eq("store_number", storeNum);
-    }
-
-    const { data, error } = await query;
-
-    if (!error) {
-      setAgentsWaiting(data.filter(a => a.agents_waiting));
-      setInQueue(data.filter(a => a.in_queue));
-      setWithCustomer(data.filter(a => a.with_customer));
-    }
-  }
-
   async function fetchReasons() {
     const { data, error } = await supabase.from("reasons").select("*");
     if (!error) {
       setReasons(data);
+    }
+  }
+
+  async function fetchQueueData() {
+    if (!userRole) return; // Don't fetch if role isn't set yet
+    
+    console.log("Fetching queue data with role:", userRole, "storeFilter:", storeFilter);
+    
+    let query = supabase.from("queue").select("*").order("queue_joined_at", { ascending: true });
+
+    // For admins, apply store filter if selected
+    if (userRole === "admin" && storeFilter) {
+      console.log("Admin with store filter:", storeFilter);
+      query = query.eq("store_number", storeFilter);
+    } else if (userRole === "admin" && !storeFilter) {
+      // Admin with no filter - show all stores
+      console.log("Admin with no filter - showing all stores");
+      // No additional filter needed
+    } else {
+      // Non-admins always see only their store
+      console.log("Non-admin - filtering to store:", storeNumber);
+      query = query.eq("store_number", storeNumber);
+    }
+
+    const { data, error } = await query;
+
+    if (!error && data) {
+      console.log("Queue data fetched:", data.length, "records");
+      setAgentsWaiting(data.filter(a => a.agents_waiting));
+      setInQueue(data.filter(a => a.in_queue));
+      setWithCustomer(data.filter(a => a.with_customer));
+    } else {
+      console.error("Error fetching queue data:", error);
     }
   }
 
@@ -167,7 +180,7 @@ export default function Dashboard() {
       console.error(`Error with ${action}:`, error);
     } else {
       console.log(`✅ ${action} completed successfully!`);
-      fetchQueueData(storeFilter || storeNumber, userRole);
+      fetchQueueData();
     }
   };
 
@@ -199,7 +212,7 @@ export default function Dashboard() {
 
     if (!error) {
       console.log("✅ Sale recorded successfully!");
-      fetchQueueData(storeFilter || storeNumber, userRole);
+      fetchQueueData();
     } else {
       console.error("❌ Error closing sale:", error);
       alert("Error recording sale. Please try again.");
@@ -236,7 +249,7 @@ export default function Dashboard() {
 
     if (!error) {
       console.log("✅ No Sale recorded successfully!");
-      fetchQueueData(storeFilter || storeNumber, userRole);
+      fetchQueueData();
     } else {
       console.error("❌ Error logging no sale:", error);
       alert("Error recording no sale. Please try again.");
@@ -253,8 +266,13 @@ export default function Dashboard() {
     // Only admins can change the store filter
     if (userRole === "admin") {
       const newStoreFilter = e.target.value;
+      console.log("Admin changing store filter to:", newStoreFilter);
       setStoreFilter(newStoreFilter);
-      fetchQueueData(newStoreFilter || storeNumber, userRole);
+      
+      // Use setTimeout to ensure state is updated before fetching
+      setTimeout(() => {
+        fetchQueueData();
+      }, 10);
     }
   };
 
@@ -277,6 +295,11 @@ export default function Dashboard() {
               <option key={store} value={store.toString()}>Store {store}</option>
             ))}
           </select>
+          
+          {/* Debug display - current filter */}
+          <div className="debug-info">
+            Showing: {storeFilter ? `Store ${storeFilter}` : "All Stores"}
+          </div>
         </div>
       )}
       
@@ -400,6 +423,7 @@ export default function Dashboard() {
         .store-filter-container {
           margin-bottom: 20px;
           display: flex;
+          flex-direction: column;
           align-items: center;
           justify-content: center;
           gap: 10px;
@@ -422,6 +446,12 @@ export default function Dashboard() {
           font-weight: bold;
         }
         
+        .debug-info {
+          font-size: 14px;
+          color: #666;
+          margin-top: 5px;
+        }
+        
         @media (prefers-color-scheme: dark) {
           .store-filter-dropdown {
             background-color: #333;
@@ -431,6 +461,10 @@ export default function Dashboard() {
           
           .current-store {
             background-color: rgba(0, 123, 255, 0.2);
+          }
+          
+          .debug-info {
+            color: #aaa;
           }
         }
         
