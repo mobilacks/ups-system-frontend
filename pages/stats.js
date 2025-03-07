@@ -219,6 +219,23 @@ function StatsPage() {
   const uniqueAgents = [...new Set(stats.map((stat) => stat.email))];
   const uniqueStores = [...new Set(stats.map((stat) => stat.store_number))];
 
+  // Define the expected reason columns in the order you want them to appear
+  const expectedReasonOrder = [
+    "Credit Issue",
+    "Payments",
+    "Service Issues",
+    "Spouse Approval",
+    "Measurements",
+    "We Dont Have It",
+    "Building home",
+    "Exchange"
+  ];
+
+  // Order the reason columns according to the expected order
+  const orderedReasonColumns = expectedReasonOrder.filter(reason => 
+    reasonColumns.includes(reason)
+  );
+
   return (
     <div className="stats-container">
       {/* Tab Navigation */}
@@ -337,7 +354,7 @@ function StatsPage() {
               <tr>
                 <th>Agent Name</th>
                 <th>Store #</th>
-                {reasonColumns.map((reason) => <th key={reason}>{reason}</th>)}
+                {orderedReasonColumns.map((reason) => <th key={reason}>{reason}</th>)}
               </tr>
             </thead>
             <tbody>
@@ -346,14 +363,14 @@ function StatsPage() {
                   <tr key={`${stat.agent_name || stat.email}-${index}`}>
                     <td>{stat.agent_name || stat.email}</td>
                     <td>{stat.store_number}</td>
-                    {reasonColumns.map((reason) => (
+                    {orderedReasonColumns.map((reason) => (
                       <td key={reason}>{stat[reason] || 0}</td>
                     ))}
                   </tr>
                 ))
               ) : (
                 <tr>
-                  <td colSpan={2 + reasonColumns.length} className="no-stats">No No-Sale stats available.</td>
+                  <td colSpan={2 + orderedReasonColumns.length} className="no-stats">No No-Sale stats available.</td>
                 </tr>
               )}
             </tbody>
