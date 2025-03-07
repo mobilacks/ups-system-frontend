@@ -9,12 +9,13 @@ function StatsPage() {
   const [filteredStats, setFilteredStats] = useState([]);
   const [agentFilter, setAgentFilter] = useState("");
   const [storeFilter, setStoreFilter] = useState("");
-  const [roleFilter, setRoleFilter] = useState(""); 
+  const [roleFilter, setRoleFilter] = useState("agent"); 
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [sortColumn, setSortColumn] = useState("total_sales");
   const [sortOrder, setSortOrder] = useState("desc");
   const [selectedDateRange, setSelectedDateRange] = useState("today");
+  const [currentUserStore, setCurrentUserStore] = useState(null);
   
   // No Sale Stats State
   const [noSaleStats, setNoSaleStats] = useState([]);
@@ -24,6 +25,30 @@ function StatsPage() {
   // UI State
   const [activeTab, setActiveTab] = useState("sales"); // Control which section is visible
 
+  // Fetch current user data on initial load
+  useEffect(() => {
+    const fetchCurrentUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (user) {
+        // Get user's store for default filtering
+        const { data, error } = await supabase
+          .from("agents")
+          .select("store_number")
+          .eq("email", user.email)
+          .single();
+          
+        if (data && !error) {
+          console.log("✅ Current user's store number:", data.store_number);
+          setCurrentUserStore(data.store_number.toString());
+          setStoreFilter(data.store_number.toString());
+        }
+      }
+    };
+    
+    fetchCurrentUser();
+  }, []);
+
   useEffect(() => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
@@ -32,7 +57,6 @@ function StatsPage() {
     setStartDate(formattedToday);
     setEndDate(formattedToday);
     setSelectedDateRange("today");
-    setRoleFilter("agent");
   }, []);
 
   useEffect(() => {
@@ -272,12 +296,12 @@ function StatsPage() {
               <tr>
                 <th onClick={() => setSortColumn("name")}>Name</th>
                 <th onClick={() => setSortColumn("store_number")}>Store #</th>
-                <th onClick={() => setSortColumn("role")}>Role</th>
                 <th onClick={() => setSortColumn("ups_count")}># of UPS</th>
                 <th onClick={() => setSortColumn("sale_count")}># of Sales</th>
                 <th onClick={() => setSortColumn("total_sales")}>Total Sales</th>
                 <th onClick={() => setSortColumn("close_rate")}>Close Rate</th>
                 <th onClick={() => setSortColumn("avg_sale")}>Average Sales</th>
+                <th onClick={() => setSortColumn("sales_per_up")}>Sales per UPS</th>
               </tr>
             </thead>
             <tbody>
@@ -286,12 +310,12 @@ function StatsPage() {
                   <tr key={stat.email}>
                     <td>{stat.name}</td>
                     <td>{stat.store_number}</td>
-                    <td>{stat.role}</td>
                     <td>{stat.ups_count}</td>
                     <td>{stat.sale_count}</td>
                     <td>${(stat.total_sales || 0).toFixed(2)}</td>
                     <td>{(stat.close_rate || 0).toFixed(2)}%</td>
                     <td>${(stat.avg_sale || 0).toFixed(2)}</td>
+                    <td>${(stat.sales_per_up || 0).toFixed(2)}</td>
                   </tr>
                 ))
               ) : (
