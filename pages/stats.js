@@ -166,91 +166,27 @@ function StatsPage() {
     }
   };
 
-  // Fetch Requested Items
+  // Fetch Requested Items using our database function
   const fetchRequestedItems = async (startDate, endDate) => {
     if (!startDate || !endDate) return;
 
-    const formattedStartDate = new Date(startDate).toISOString();
-    const formattedEndDate = new Date(endDate);
-    formattedEndDate.setHours(23, 59, 59, 999); // Set to end of day
-    const formattedEndDateStr = formattedEndDate.toISOString();
+    const formattedStartDate = new Date(startDate).toISOString().split("T")[0];
+    const formattedEndDate = new Date(endDate).toISOString().split("T")[0];
 
-    console.log("📅 Fetching requested items for:", formattedStartDate, "to", formattedEndDateStr);
+    console.log("📅 Fetching requested items for:", formattedStartDate, "to", formattedEndDate);
 
-    // First try a simpler query to see if we have any data
-    const { data: checkData, error: checkError } = await supabase
-      .from('ups_tracking')
-      .select('requested_item')
-      .not('requested_item', 'is', null)
-      .limit(5);
-      
-    console.log("🔍 Check for any requested items:", checkData);
-    
-    if (checkError) {
-      console.error("❌ Error checking requested items:", checkError);
-    }
-    
-    // Modified query - simpler join approach
-    const { data, error } = await supabase
-      .from('ups_tracking')
-      .select(`
-        id,
-        email,
-        store_number,
-        requested_item,
-        timestamp
-      `)
-      .not('requested_item', 'is', null)
-      .gte('timestamp', formattedStartDate)
-      .lte('timestamp', formattedEndDateStr)
-      .order('timestamp', { ascending: false });
+    // Call the database function to get requested items
+    const { data, error } = await supabase.rpc("get_requested_items", {
+      p_start_date: formattedStartDate,
+      p_end_date: formattedEndDate,
+    });
 
     if (error) {
       console.error("❌ Error fetching requested items:", error);
     } else {
       console.log("✅ Requested Items Fetched:", data);
-      
-      // If we have data, fetch the agent names separately
-      if (data && data.length > 0) {
-        // Get unique emails
-        const emails = [...new Set(data.map(item => item.email))];
-        
-        // Fetch agent names
-        const { data: agentsData, error: agentsError } = await supabase
-          .from('agents')
-          .select('email, name')
-          .in('email', emails);
-          
-        if (agentsError) {
-          console.error("❌ Error fetching agent names:", agentsError);
-        }
-        
-        console.log("✅ Agent names fetched:", agentsData);
-        
-        // Create a map of email -> name
-        const nameMap = {};
-        if (agentsData) {
-          agentsData.forEach(agent => {
-            nameMap[agent.email] = agent.name;
-          });
-        }
-        
-        // Format data to include name from agents
-        const formattedData = data.map(item => ({
-          id: item.id,
-          name: nameMap[item.email] || item.email,
-          email: item.email,
-          store_number: item.store_number,
-          requested_item: item.requested_item,
-          timestamp: item.timestamp
-        }));
-        
-        setRequestedItems(formattedData);
-        setFilteredRequestedItems(formattedData);
-      } else {
-        setRequestedItems([]);
-        setFilteredRequestedItems([]);
-      }
+      setRequestedItems(data || []);
+      setFilteredRequestedItems(data || []);
     }
   };
 
@@ -539,7 +475,7 @@ function StatsPage() {
                     <td>{item.name}</td>
                     <td>{item.store_number}</td>
                     <td>{item.requested_item}</td>
-                    <td>{formatDate(item.timestamp)}</td>
+                    <td>{formatDate(item.item_timestamp)}</td>
                   </tr>
                 ))
               ) : (
