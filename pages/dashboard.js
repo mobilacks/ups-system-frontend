@@ -223,25 +223,6 @@ export default function Dashboard() {
       if (!confirmContinue) return; // User chose to cancel the entire operation
     }
   }
- }
-  console.log(`Recording no sale for ${email}, reason: ${reason.reason_text}, requested item: ${requestedItem || 'None'}, actor: ${user.email}`);
-  
-  // Pass both the target email, actor email, and requested item
-  const { error } = await supabase.rpc("no_sale", {
-    p_email: email,
-    p_reason: reason.reason_text,
-    p_actor_email: user.email,
-    p_requested_item: requestedItem
-  });
-
-  if (!error) {
-    console.log("✅ No Sale recorded successfully!");
-    fetchQueueData();
-  } else {
-    console.error("❌ Error logging no sale:", error);
-    alert("Error recording no sale. Please try again.");
-  }
-}
 
   console.log(`Recording no sale for ${email}, reason: ${reason.reason_text}, requested item: ${requestedItem || 'None'}, actor: ${user.email}`);
   
@@ -261,6 +242,24 @@ export default function Dashboard() {
     alert("Error recording no sale. Please try again.");
   }
 }
+
+  
+  // Pass both the target email, actor email, and requested item
+  const { error } = await supabase.rpc("no_sale", {
+    p_email: email,
+    p_reason: reason.reason_text,
+    p_actor_email: user.email,
+    p_requested_item: requestedItem
+  });
+
+  if (!error) {
+    console.log("✅ No Sale recorded successfully!");
+    fetchQueueData();
+  } else {
+    console.error("❌ Error logging no sale:", error);
+    alert("Error recording no sale. Please try again.");
+  }
+
 
   // Helper function to get agent name or fallback to email
   const getAgentName = (email) => {
