@@ -191,7 +191,7 @@ export default function Dashboard() {
     }
   }
 
-  async function handleNoSale(email) {
+ async function handleNoSale(email) {
   // Updated to include requested item tracking
   let reason;
   while (!reason) {
@@ -210,9 +210,11 @@ export default function Dashboard() {
     }
   }
 
-  // Check if this is the "we don't have it" inventory reason
+  // Check if this is the "We Dont Have It" inventory reason
   let requestedItem = null;
-  if (reason.reason_text === "We dont have it") {
+  console.log("Selected reason:", reason.reason_text); // Debug line to see the exact reason text
+
+  if (reason.reason_text === "We Dont Have It") {
     requestedItem = prompt("Please enter the specific item that was requested:");
     
     // If user cancels the requested item prompt, we'll still proceed but with null value
@@ -221,6 +223,25 @@ export default function Dashboard() {
       if (!confirmContinue) return; // User chose to cancel the entire operation
     }
   }
+
+  console.log(`Recording no sale for ${email}, reason: ${reason.reason_text}, requested item: ${requestedItem || 'None'}, actor: ${user.email}`);
+  
+  // Pass both the target email, actor email, and requested item
+  const { error } = await supabase.rpc("no_sale", {
+    p_email: email,
+    p_reason: reason.reason_text,
+    p_actor_email: user.email,
+    p_requested_item: requestedItem
+  });
+
+  if (!error) {
+    console.log("✅ No Sale recorded successfully!");
+    fetchQueueData();
+  } else {
+    console.error("❌ Error logging no sale:", error);
+    alert("Error recording no sale. Please try again.");
+  }
+}
 
   console.log(`Recording no sale for ${email}, reason: ${reason.reason_text}, requested item: ${requestedItem || 'None'}, actor: ${user.email}`);
   
