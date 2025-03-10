@@ -905,3 +905,32 @@ input[type="number"] {
     background-color: rgba(0, 123, 255, 0.2);
   }
 }
+/* Add these styles to your CSS file */
+
+/* Push the feedback link to the right side of the navbar */
+.navbar ul {
+  display: flex;
+  align-items: center;
+}
+
+.feedback-link {
+  margin-left: auto; /* This pushes it to the right */
+  font-size: 0.75rem;
+}
+
+.feedback-link a {
+  color: #666;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  transition: background-color 0.2s;
+}
+
+.feedback-link a:hover {
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+/* If your navbar already has flex display, just add this: */
+.feedback-link {
+  margin-left: auto;
+  font-size: 0.75rem;
+}
