@@ -192,41 +192,54 @@ export default function Dashboard() {
   }
 
   async function handleNoSale(email) {
-    // Updated to include actor tracking
-    let reason;
-    while (!reason) {
-      reason = prompt(
-        "Select a reason:\n" +
-        reasons.map((r, index) => `${index + 1}. ${r.reason_text}`).join("\n")
-      );
+  // Updated to include requested item tracking
+  let reason;
+  while (!reason) {
+    reason = prompt(
+      "Select a reason:\n" +
+      reasons.map((r, index) => `${index + 1}. ${r.reason_text}`).join("\n")
+    );
 
-      if (reason === null) return;
-      const selectedReason = reasons[parseInt(reason) - 1];
+    if (reason === null) return;
+    const selectedReason = reasons[parseInt(reason) - 1];
 
-      if (selectedReason) {
-        reason = selectedReason;
-      } else {
-        alert("Invalid selection. Please choose again.");
-      }
-    }
-
-    console.log(`Recording no sale for ${email}, reason: ${reason.reason_text}, actor: ${user.email}`);
-    
-    // Pass both the target email and the actor email (current user)
-    const { error } = await supabase.rpc("no_sale", {
-      p_email: email,
-      p_reason: reason.reason_text,
-      p_actor_email: user.email
-    });
-
-    if (!error) {
-      console.log("✅ No Sale recorded successfully!");
-      fetchQueueData();
+    if (selectedReason) {
+      reason = selectedReason;
     } else {
-      console.error("❌ Error logging no sale:", error);
-      alert("Error recording no sale. Please try again.");
+      alert("Invalid selection. Please choose again.");
     }
   }
+
+  // Check if this is the "we don't have it" inventory reason
+  let requestedItem = null;
+  if (reason.reason_text === "We don't have it") {
+    requestedItem = prompt("Please enter the specific item that was requested:");
+    
+    // If user cancels the requested item prompt, we'll still proceed but with null value
+    if (requestedItem === null) {
+      const confirmContinue = confirm("No item specified. Continue with no inventory information?");
+      if (!confirmContinue) return; // User chose to cancel the entire operation
+    }
+  }
+
+  console.log(`Recording no sale for ${email}, reason: ${reason.reason_text}, requested item: ${requestedItem || 'None'}, actor: ${user.email}`);
+  
+  // Pass both the target email, actor email, and requested item
+  const { error } = await supabase.rpc("no_sale", {
+    p_email: email,
+    p_reason: reason.reason_text,
+    p_actor_email: user.email,
+    p_requested_item: requestedItem
+  });
+
+  if (!error) {
+    console.log("✅ No Sale recorded successfully!");
+    fetchQueueData();
+  } else {
+    console.error("❌ Error logging no sale:", error);
+    alert("Error recording no sale. Please try again.");
+  }
+}
 
   // Helper function to get agent name or fallback to email
   const getAgentName = (email) => {
