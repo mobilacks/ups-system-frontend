@@ -223,7 +223,7 @@ export default function Dashboard() {
       if (!confirmContinue) return; // User chose to cancel the entire operation
     }
   }
-
+ }
   console.log(`Recording no sale for ${email}, reason: ${reason.reason_text}, requested item: ${requestedItem || 'None'}, actor: ${user.email}`);
   
   // Pass both the target email, actor email, and requested item
