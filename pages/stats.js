@@ -22,6 +22,11 @@ function StatsPage() {
   const [filteredNoSaleStats, setFilteredNoSaleStats] = useState([]);
   const [reasonColumns, setReasonColumns] = useState([]);
   
+  // Requested Items State
+  const [requestedItems, setRequestedItems] = useState([]);
+  const [filteredRequestedItems, setFilteredRequestedItems] = useState([]);
+  const [itemSearchQuery, setItemSearchQuery] = useState("");
+  
   // UI State
   const [activeTab, setActiveTab] = useState("sales"); // Control which section is visible
 
@@ -63,6 +68,7 @@ function StatsPage() {
     if (startDate && endDate) {
       fetchStats(startDate, endDate);
       fetchNoSaleStats(startDate, endDate);
+      fetchRequestedItems(startDate, endDate);
     }
   }, [startDate, endDate]);
 
@@ -104,6 +110,7 @@ function StatsPage() {
     if (newStartDate && newEndDate) {
       fetchStats(newStartDate.toISOString().split("T")[0], newEndDate.toISOString().split("T")[0]);
       fetchNoSaleStats(newStartDate.toISOString().split("T")[0], newEndDate.toISOString().split("T")[0]);
+      fetchRequestedItems(newStartDate.toISOString().split("T")[0], newEndDate.toISOString().split("T")[0]);
     }
   };
 
@@ -156,6 +163,53 @@ function StatsPage() {
       
       setNoSaleStats(data);
       setFilteredNoSaleStats(data);
+    }
+  };
+
+  // Fetch Requested Items
+  const fetchRequestedItems = async (startDate, endDate) => {
+    if (!startDate || !endDate) return;
+
+    const formattedStartDate = new Date(startDate).toISOString();
+    const formattedEndDate = new Date(endDate);
+    formattedEndDate.setHours(23, 59, 59, 999); // Set to end of day
+    const formattedEndDateStr = formattedEndDate.toISOString();
+
+    console.log("📅 Fetching requested items for:", formattedStartDate, "to", formattedEndDateStr);
+
+    // Query to get requested items with agent information
+    const { data, error } = await supabase
+      .from('ups_tracking')
+      .select(`
+        id,
+        email,
+        store_number,
+        requested_item,
+        timestamp,
+        agents:email (name)
+      `)
+      .not('requested_item', 'is', null)
+      .gte('timestamp', formattedStartDate)
+      .lte('timestamp', formattedEndDateStr)
+      .order('timestamp', { ascending: false });
+
+    if (error) {
+      console.error("❌ Error fetching requested items:", error);
+    } else {
+      console.log("✅ Requested Items Fetched:", data);
+      
+      // Format data to include name from agents table
+      const formattedData = data.map(item => ({
+        id: item.id,
+        name: item.agents?.name || item.email,
+        email: item.email,
+        store_number: item.store_number,
+        requested_item: item.requested_item,
+        timestamp: item.timestamp
+      }));
+      
+      setRequestedItems(formattedData);
+      setFilteredRequestedItems(formattedData);
     }
   };
 
@@ -215,6 +269,30 @@ function StatsPage() {
     setFilteredNoSaleStats(filtered);
   }, [agentFilter, storeFilter, noSaleStats]);
 
+  // Handle Requested Items Filters
+  useEffect(() => {
+    let filtered = requestedItems;
+
+    if (itemSearchQuery.trim()) {
+      const lowercasedQuery = itemSearchQuery.toLowerCase();
+      filtered = filtered.filter((item) =>
+        item.requested_item?.toLowerCase().includes(lowercasedQuery) ||
+        item.name?.toLowerCase().includes(lowercasedQuery) ||
+        item.email?.toLowerCase().includes(lowercasedQuery)
+      );
+    }
+
+    if (agentFilter) {
+      filtered = filtered.filter((item) => item.email === agentFilter);
+    }
+
+    if (storeFilter) {
+      filtered = filtered.filter((item) => item.store_number.toString() === storeFilter);
+    }
+
+    setFilteredRequestedItems(filtered);
+  }, [itemSearchQuery, agentFilter, storeFilter, requestedItems]);
+
   // Get unique values for dropdown filters
   const uniqueAgents = [...new Set(stats.map((stat) => stat.email))];
   const uniqueStores = [...new Set(stats.map((stat) => stat.store_number))];
@@ -236,6 +314,12 @@ function StatsPage() {
     reasonColumns.includes(reason)
   );
 
+  // Format date for display
+  const formatDate = (dateString) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+  };
+
   return (
     <div className="stats-container">
       {/* Tab Navigation */}
@@ -252,6 +336,12 @@ function StatsPage() {
         >
           No Sale Reason Analysis
         </button>
+        <button 
+          className={`tab-button ${activeTab === 'requested-items' ? 'active' : ''}`}
+          onClick={() => setActiveTab('requested-items')}
+        >
+          Requested Items
+        </button>
       </div>
 
       {/* Common Filters Section */}
@@ -262,6 +352,16 @@ function StatsPage() {
             placeholder="Search agent..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
+            className="search-bar"
+          />
+        )}
+
+        {activeTab === 'requested-items' && (
+          <input
+            type="text"
+            placeholder="Search requested items..."
+            value={itemSearchQuery}
+            onChange={(e) => setItemSearchQuery(e.target.value)}
             className="search-bar"
           />
         )}
@@ -371,6 +471,39 @@ function StatsPage() {
               ) : (
                 <tr>
                   <td colSpan={2 + orderedReasonColumns.length} className="no-stats">No No-Sale stats available.</td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </>
+      )}
+
+      {/* Requested Items Table (show if activeTab is 'requested-items') */}
+      {activeTab === 'requested-items' && (
+        <>
+          <h2>Requested Items</h2>
+          <table className="stats-table">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Store #</th>
+                <th>Requested Item</th>
+                <th>Date</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredRequestedItems.length > 0 ? (
+                filteredRequestedItems.map((item) => (
+                  <tr key={item.id}>
+                    <td>{item.name}</td>
+                    <td>{item.store_number}</td>
+                    <td>{item.requested_item}</td>
+                    <td>{formatDate(item.timestamp)}</td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan="4" className="no-stats">No requested items available.</td>
                 </tr>
               )}
             </tbody>
