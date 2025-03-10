@@ -177,7 +177,20 @@ function StatsPage() {
 
     console.log("📅 Fetching requested items for:", formattedStartDate, "to", formattedEndDateStr);
 
-    // Query to get requested items with agent information
+    // First try a simpler query to see if we have any data
+    const { data: checkData, error: checkError } = await supabase
+      .from('ups_tracking')
+      .select('requested_item')
+      .not('requested_item', 'is', null)
+      .limit(5);
+      
+    console.log("🔍 Check for any requested items:", checkData);
+    
+    if (checkError) {
+      console.error("❌ Error checking requested items:", checkError);
+    }
+    
+    // Modified query - simpler join approach
     const { data, error } = await supabase
       .from('ups_tracking')
       .select(`
@@ -185,8 +198,7 @@ function StatsPage() {
         email,
         store_number,
         requested_item,
-        timestamp,
-        agents:email (name)
+        timestamp
       `)
       .not('requested_item', 'is', null)
       .gte('timestamp', formattedStartDate)
@@ -198,18 +210,47 @@ function StatsPage() {
     } else {
       console.log("✅ Requested Items Fetched:", data);
       
-      // Format data to include name from agents table
-      const formattedData = data.map(item => ({
-        id: item.id,
-        name: item.agents?.name || item.email,
-        email: item.email,
-        store_number: item.store_number,
-        requested_item: item.requested_item,
-        timestamp: item.timestamp
-      }));
-      
-      setRequestedItems(formattedData);
-      setFilteredRequestedItems(formattedData);
+      // If we have data, fetch the agent names separately
+      if (data && data.length > 0) {
+        // Get unique emails
+        const emails = [...new Set(data.map(item => item.email))];
+        
+        // Fetch agent names
+        const { data: agentsData, error: agentsError } = await supabase
+          .from('agents')
+          .select('email, name')
+          .in('email', emails);
+          
+        if (agentsError) {
+          console.error("❌ Error fetching agent names:", agentsError);
+        }
+        
+        console.log("✅ Agent names fetched:", agentsData);
+        
+        // Create a map of email -> name
+        const nameMap = {};
+        if (agentsData) {
+          agentsData.forEach(agent => {
+            nameMap[agent.email] = agent.name;
+          });
+        }
+        
+        // Format data to include name from agents
+        const formattedData = data.map(item => ({
+          id: item.id,
+          name: nameMap[item.email] || item.email,
+          email: item.email,
+          store_number: item.store_number,
+          requested_item: item.requested_item,
+          timestamp: item.timestamp
+        }));
+        
+        setRequestedItems(formattedData);
+        setFilteredRequestedItems(formattedData);
+      } else {
+        setRequestedItems([]);
+        setFilteredRequestedItems([]);
+      }
     }
   };
 
