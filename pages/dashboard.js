@@ -212,7 +212,7 @@ export default function Dashboard() {
 
   // Check if this is the "we don't have it" inventory reason
   let requestedItem = null;
-  if (reason.reason_text === "We don't have it") {
+  if (reason.reason_text === "We dont have it") {
     requestedItem = prompt("Please enter the specific item that was requested:");
     
     // If user cancels the requested item prompt, we'll still proceed but with null value
