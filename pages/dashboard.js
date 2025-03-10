@@ -194,39 +194,51 @@ export default function Dashboard() {
   };
 
   async function handleSaleClosure(email) {
-    // Updated to include actor tracking
-    let contractNumber;
-    while (!contractNumber) {
-      contractNumber = prompt("Enter Contract # (Required)");
-      if (contractNumber === null) return;
-    }
-
-    let saleAmount;
-    while (!saleAmount || isNaN(saleAmount) || parseFloat(saleAmount) <= 0) {
-      saleAmount = prompt("Enter Sale Amount (Required, must be a number)");
-      if (saleAmount === null) return;
-    }
-
-    saleAmount = parseFloat(saleAmount);
-
-    console.log(`Recording sale for ${email}, amount: $${saleAmount}, contract: ${contractNumber}, actor: ${user.email}`);
+  // Updated with 6-digit contract number validation
+  let contractNumber;
+  let isValid = false;
+  
+  // Keep prompting until a valid 6-digit number is entered, or user cancels
+  while (!isValid) {
+    contractNumber = prompt("Enter Contract # (Required - must be exactly 6 digits)");
     
-    // Pass both the target email and the actor email (current user)
-    const { error } = await supabase.rpc("close_sale", {
-      p_email: email,
-      p_contract_number: contractNumber,
-      p_sale_amount: saleAmount,
-      p_actor_email: user.email
-    });
-
-    if (!error) {
-      console.log("✅ Sale recorded successfully!");
-      fetchQueueData();
+    // If user clicks cancel, exit the function
+    if (contractNumber === null) return;
+    
+    // Check if the input is exactly 6 digits
+    if (/^\d{6}$/.test(contractNumber)) {
+      isValid = true;
     } else {
-      console.error("❌ Error closing sale:", error);
-      alert("Error recording sale. Please try again.");
+      alert("Contract number must be exactly 6 digits");
     }
   }
+
+  let saleAmount;
+  while (!saleAmount || isNaN(saleAmount) || parseFloat(saleAmount) <= 0) {
+    saleAmount = prompt("Enter Sale Amount (Required, must be a number)");
+    if (saleAmount === null) return;
+  }
+
+  saleAmount = parseFloat(saleAmount);
+
+  console.log(`Recording sale for ${email}, amount: $${saleAmount}, contract: ${contractNumber}, actor: ${user.email}`);
+  
+  // Pass both the target email and the actor email (current user)
+  const { error } = await supabase.rpc("close_sale", {
+    p_email: email,
+    p_contract_number: contractNumber,
+    p_sale_amount: saleAmount,
+    p_actor_email: user.email
+  });
+
+  if (!error) {
+    console.log("✅ Sale recorded successfully!");
+    fetchQueueData();
+  } else {
+    console.error("❌ Error closing sale:", error);
+    alert("Error recording sale. Please try again.");
+  }
+}
 
   async function handleNoSale(email) {
     // Updated to include requested item tracking
