@@ -130,6 +130,43 @@ export default function Dashboard() {
     }
   }
 
+  async function fetchQueueData() {
+    if (!userRole) return; // Don't fetch if role isn't set yet
+    
+    console.log("Fetching queue data with role:", userRole, "storeFilter:", storeFilter);
+    
+    let query = supabase.from("queue").select("*, agents!inner(status)").order("queue_joined_at", { ascending: true });
+
+    // For admins, apply store filter if selected
+    if (userRole === "admin" && storeFilter) {
+      console.log("Admin with store filter:", storeFilter);
+      query = query.eq("store_number", storeFilter);
+    } else if (userRole === "admin" && !storeFilter) {
+      // Admin with no filter - show all stores
+      console.log("Admin with no filter - showing all stores");
+      // No additional filter needed
+    } else {
+      // Non-admins always see only their store
+      console.log("Non-admin - filtering to store:", storeNumber);
+      query = query.eq("store_number", storeNumber);
+    }
+
+    const { data, error } = await query;
+
+    if (!error && data) {
+      console.log("Queue data fetched:", data.length, "records");
+      
+      // Refresh agent status information
+      fetchAllAgentNames();
+      
+      setAgentsWaiting(data.filter(a => a.agents_waiting));
+      setInQueue(data.filter(a => a.in_queue));
+      setWithCustomer(data.filter(a => a.with_customer));
+    } else {
+      console.error("Error fetching queue data:", error);
+    }
+  }
+
   const handleQueueAction = async (action, email) => {
     // All of our functions now use the new signature with actor email
     const functionMap = {
@@ -172,7 +209,7 @@ export default function Dashboard() {
 
     saleAmount = parseFloat(saleAmount);
 
-    console.log(`Recording sale for ${email}, amount: ${saleAmount}, contract: ${contractNumber}, actor: ${user.email}`);
+    console.log(`Recording sale for ${email}, amount: $${saleAmount}, contract: ${contractNumber}, actor: ${user.email}`);
     
     // Pass both the target email and the actor email (current user)
     const { error } = await supabase.rpc("close_sale", {
@@ -191,75 +228,57 @@ export default function Dashboard() {
     }
   }
 
- async function handleNoSale(email) {
-  // Updated to include requested item tracking
-  let reason;
-  while (!reason) {
-    reason = prompt(
-      "Select a reason:\n" +
-      reasons.map((r, index) => `${index + 1}. ${r.reason_text}`).join("\n")
-    );
+  async function handleNoSale(email) {
+    // Updated to include requested item tracking
+    let reason;
+    while (!reason) {
+      reason = prompt(
+        "Select a reason:\n" +
+        reasons.map((r, index) => `${index + 1}. ${r.reason_text}`).join("\n")
+      );
 
-    if (reason === null) return;
-    const selectedReason = reasons[parseInt(reason) - 1];
+      if (reason === null) return;
+      const selectedReason = reasons[parseInt(reason) - 1];
 
-    if (selectedReason) {
-      reason = selectedReason;
-    } else {
-      alert("Invalid selection. Please choose again.");
+      if (selectedReason) {
+        reason = selectedReason;
+      } else {
+        alert("Invalid selection. Please choose again.");
+      }
     }
-  }
 
-  // Check if this is the "We Dont Have It" inventory reason
-  let requestedItem = null;
-  console.log("Selected reason:", reason.reason_text); // Debug line to see the exact reason text
+    // Check if this is the "We Dont Have It" inventory reason
+    let requestedItem = null;
+    console.log("Selected reason:", reason.reason_text); // Debug line to see the exact reason text
 
-  if (reason.reason_text === "We Dont Have It") {
-    requestedItem = prompt("Please enter the specific item that was requested:");
+    if (reason.reason_text === "We Dont Have It") {
+      requestedItem = prompt("Please enter the specific item that was requested:");
+      
+      // If user cancels the requested item prompt, we'll still proceed but with null value
+      if (requestedItem === null) {
+        const confirmContinue = confirm("No item specified. Continue with no inventory information?");
+        if (!confirmContinue) return; // User chose to cancel the entire operation
+      }
+    }
+
+    console.log(`Recording no sale for ${email}, reason: ${reason.reason_text}, requested item: ${requestedItem || 'None'}, actor: ${user.email}`);
     
-    // If user cancels the requested item prompt, we'll still proceed but with null value
-    if (requestedItem === null) {
-      const confirmContinue = confirm("No item specified. Continue with no inventory information?");
-      if (!confirmContinue) return; // User chose to cancel the entire operation
+    // Pass both the target email, actor email, and requested item
+    const { error } = await supabase.rpc("no_sale", {
+      p_email: email,
+      p_reason: reason.reason_text,
+      p_actor_email: user.email,
+      p_requested_item: requestedItem
+    });
+
+    if (!error) {
+      console.log("✅ No Sale recorded successfully!");
+      fetchQueueData();
+    } else {
+      console.error("❌ Error logging no sale:", error);
+      alert("Error recording no sale. Please try again.");
     }
   }
-
-  console.log(`Recording no sale for ${email}, reason: ${reason.reason_text}, requested item: ${requestedItem || 'None'}, actor: ${user.email}`);
-  
-  // Pass both the target email, actor email, and requested item
-  const { error } = await supabase.rpc("no_sale", {
-    p_email: email,
-    p_reason: reason.reason_text,
-    p_actor_email: user.email,
-    p_requested_item: requestedItem
-  });
-
-  if (!error) {
-    console.log("✅ No Sale recorded successfully!");
-    fetchQueueData();
-  } else {
-    console.error("❌ Error logging no sale:", error);
-    alert("Error recording no sale. Please try again.");
-  }
-}
-
-  
-  // Pass both the target email, actor email, and requested item
-  const { error } = await supabase.rpc("no_sale", {
-    p_email: email,
-    p_reason: reason.reason_text,
-    p_actor_email: user.email,
-    p_requested_item: requestedItem
-  });
-
-  if (!error) {
-    console.log("✅ No Sale recorded successfully!");
-    fetchQueueData();
-  } else {
-    console.error("❌ Error logging no sale:", error);
-    alert("Error recording no sale. Please try again.");
-  }
-
 
   // Helper function to get agent name or fallback to email
   const getAgentName = (email) => {
@@ -312,43 +331,6 @@ export default function Dashboard() {
       });
     }
   };
-
-  async function fetchQueueData() {
-    if (!userRole) return; // Don't fetch if role isn't set yet
-    
-    console.log("Fetching queue data with role:", userRole, "storeFilter:", storeFilter);
-    
-    let query = supabase.from("queue").select("*, agents!inner(status)").order("queue_joined_at", { ascending: true });
-
-    // For admins, apply store filter if selected
-    if (userRole === "admin" && storeFilter) {
-      console.log("Admin with store filter:", storeFilter);
-      query = query.eq("store_number", storeFilter);
-    } else if (userRole === "admin" && !storeFilter) {
-      // Admin with no filter - show all stores
-      console.log("Admin with no filter - showing all stores");
-      // No additional filter needed
-    } else {
-      // Non-admins always see only their store
-      console.log("Non-admin - filtering to store:", storeNumber);
-      query = query.eq("store_number", storeNumber);
-    }
-
-    const { data, error } = await query;
-
-    if (!error && data) {
-      console.log("Queue data fetched:", data.length, "records");
-      
-      // Refresh agent status information
-      fetchAllAgentNames();
-      
-      setAgentsWaiting(data.filter(a => a.agents_waiting));
-      setInQueue(data.filter(a => a.in_queue));
-      setWithCustomer(data.filter(a => a.with_customer));
-    } else {
-      console.error("Error fetching queue data:", error);
-    }
-  }
 
   return (
     <div className="dashboard-container">
