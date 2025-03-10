@@ -14,14 +14,12 @@ export default function Navbar() {
       if (user) {
         setIsLoggedIn(true);
         setUserEmail(user.email);
-
         // ✅ Fetch role from Supabase agents table
         const { data, error } = await supabase
           .from("agents")
           .select("role")
           .eq("email", user.email)
           .single();
-
         if (!error && data) {
           setRole(data.role);
         }
@@ -29,7 +27,6 @@ export default function Navbar() {
         setIsLoggedIn(false);
       }
     };
-
     fetchUserRole();
   }, []);
 
@@ -37,19 +34,16 @@ export default function Navbar() {
   const handleLogout = async () => {
     if (userEmail) {
       console.log(`🔄 Setting ${userEmail} status to offline and resetting queue status...`);
-
       // ✅ Update agent's status to offline
       const { error: statusError } = await supabase
         .from("agents")
         .update({ status: "offline" })
         .eq("email", userEmail);
-
       if (statusError) {
         console.error("❌ Error updating agent status:", statusError);
       } else {
         console.log("✅ Agent status updated to offline.");
       }
-
       // ✅ Reset queue status for the agent
       const { error: queueError } = await supabase
         .from("queue")
@@ -59,14 +53,12 @@ export default function Navbar() {
           with_customer: false
         })
         .eq("email", userEmail);
-
       if (queueError) {
         console.error("❌ Error resetting queue status:", queueError);
       } else {
         console.log("✅ Agent queue status reset successfully.");
       }
     }
-
     await supabase.auth.signOut();
     router.push("/login"); // Redirect to login page
   };
@@ -96,6 +88,18 @@ export default function Navbar() {
         )}
         
         <li><button className="logout-btn" onClick={handleLogout}>Logout</button></li>
+        
+        {/* Feedback Link */}
+        <li className="feedback-link">
+          <a 
+            href="https://forms.office.com/r/ZwsavbAN0i" 
+            target="_blank" 
+            rel="noopener noreferrer"
+            title="Contact Us"
+          >
+            🐛/💡
+          </a>
+        </li>
       </ul>
     </nav>
   );
